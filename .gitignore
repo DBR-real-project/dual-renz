@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# 모델 가중치 / 체크포인트 (용량 큼, 저장소에 넣지 않음)
+models/**
+!models/.gitkeep
+*.p
+*.pth
+*.pt
+*.ckpt
+*.onnx
+*.h5
+
+# 외부 레포 클론 (FaceForensics 등)
+external/
+
+# 데이터: 테스트 클립과 추출 프레임은 재생성 가능하므로 제외
+data/test_clips/
+data/frames_output/
+!data/.gitkeep
+
+# 로컬 설정
+.claude/settings.local.json
+
+# OS
+Thumbs.db
+desktop.ini
