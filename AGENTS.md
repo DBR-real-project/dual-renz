@@ -8,9 +8,22 @@
 
 - **content_risk** — 강동연 담당. STT → LLM으로 8대 사회공학 기법 분류. 아직 없어서
   `src/content_analysis/content_risk_stub.py`의 해시 기반 더미로 대역.
-- **media_risk** — 이상원 담당. AASIST(음성 스푸핑) + 딥페이크 탐지(영상). 아직 모델 미연동이라
-  `src/media_detection/media_risk_dummy.py`의 더미값 사용.
+- **media_risk** — 이상원 담당. `src/media_detection/media_risk.py`가 정식 진입점.
+  영상 딥페이크는 실제 모델 추론, 음성 스푸핑(AASIST)은 아직 더미.
 - **통합** — `src/scoring/fraud_risk_score.py`. 이 부분은 완성 상태.
+
+### src/media_detection 구성
+
+| 파일 | 역할 |
+|---|---|
+| `media_risk.py` | **정식 진입점.** 영상=실제 모델, 오디오=더미. 추론 실패 시 더미 폴백 |
+| `media_risk_dummy.py` | 전체 더미. 오프라인 데모 안전판이므로 지우지 말 것 |
+| `deepfake_detector.py` | HuggingFace ViT 백엔드 (현재 기본값) |
+| `faceforensics_detector.py` | FF++ Xception 백엔드 (가중치 필요) |
+| `face_utils.py` | Haar cascade 얼굴 검출/크롭. dlib 대체 |
+
+**⚠ 현재 ViT 모델은 실제 사진을 위조로 판정한다** (실측: 진짜 사진이 Deepfake 70%).
+점수를 탐지 근거로 쓰면 안 된다. 자세한 내용과 수치는 `docs/model_research.md`의 "실측 결과" 참고.
 
 ## 중요한 미결 사항 (임의로 결정하지 말 것)
 
@@ -27,17 +40,23 @@ scoring 모듈은 이 계약만 알고 있으면 되도록 설계돼 있음.
 
 ## 환경 (중요)
 
-- **`python`은 Windows 스토어 스텁이라 동작하지 않음.** 반드시 아래 인터프리터를 쓸 것:
-  `C:\Users\migle\AppData\Local\Programs\Python\Python39\python.exe` (또는 `py -3.9`)
-- 설치돼 있음: `cv2`, `numpy`, `requests`, ffmpeg CLI
-- 없음: `torch`, `torchvision`, `transformers`, `PIL`, `dlib` — 딥페이크 모델 붙이려면 설치 필요
-- Python 3.9라서 최신 패키지 버전 핀에 주의
+- **`python`은 Windows 스토어 스텁이라 동작하지 않음.** 항상 `.venv\Scripts\python.exe`를 쓸 것.
+  (venv 밖에서 돌려야 하면 `py -3.9`)
+- venv는 Python 3.9.7 기반. 패키지는 `requirements.txt` 참고.
+- **opencv는 4.x로 고정.** 5.0에는 `cv2.CascadeClassifier`가 없어서 얼굴 크롭이 죽는다.
+- **dlib은 설치하지 않았고 필요 없다.** 얼굴 검출은 `face_utils.py`의 Haar cascade로 대체했다.
+  dlib을 요구하는 코드를 만나면 설치하지 말고 `face_utils`로 갈아끼울 것.
+- torch는 CPU 전용 휠. `--extra-index-url https://download.pytorch.org/whl/cpu` 없이 설치하면
+  CUDA 휠 2GB를 받으려 하니 주의.
 
 ## 실행
 
 ```
-py -3.9 scripts/demo_fraud_risk_score.py
-py -3.9 scripts/extract_frames.py --input data/test_clips/synthetic_test_clip.mp4 --fps 1 --size 256
+.venv\Scripts\python.exe scripts\demo_full_pipeline.py          # 영상 -> 추론 -> 통합 점수 전체
+.venv\Scripts\python.exe scripts\demo_fraud_risk_score.py       # 스코어링 로직만 (모델 불필요)
+.venv\Scripts\python.exe scripts\detect_deepfake.py --input <영상>
+.venv\Scripts\python.exe scripts\detect_deepfake.py --image <이미지>   # 모델 판별력 확인용
+.venv\Scripts\python.exe scripts\extract_frames.py --input <영상> --fps 1 --size 256
 ```
 
 ## 컨벤션

@@ -1,0 +1,30 @@
+# DualGuard 미디어 분석 파트 의존성 (Python 3.9, Windows, CPU 전용)
+#
+# 설치:
+#   py -3.9 -m venv .venv
+#   .venv\Scripts\python.exe -m pip install --upgrade pip
+#   .venv\Scripts\python.exe -m pip install -r requirements.txt
+#
+# 주의 1: torch는 CPU 전용 휠을 쓴다. 아래 --extra-index-url이 없으면
+#         pip가 CUDA 포함 휠(2GB+)을 받으려 해서 해커톤 환경에서 시간을 태운다.
+# 주의 2: 시스템 PATH의 `python`은 Windows 스토어 스텁이라 동작하지 않는다.
+#         반드시 .venv\Scripts\python.exe 또는 py -3.9 를 쓸 것.
+
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+# --- 딥페이크 탐지 (HuggingFace ViT 경로, 현재 동작하는 정식 경로) ---
+torch==2.8.0+cpu
+torchvision==0.23.0+cpu
+transformers==4.57.6
+pillow==11.3.0
+
+# --- 프레임 추출 / 얼굴 검출 (Haar cascade는 opencv 내장, dlib 불필요) ---
+# 4.x로 고정한 이유: opencv-python 5.0에는 cv2.CascadeClassifier가 없다
+# (objdetect 모듈이 빠짐). 5.0을 쓰면 얼굴 크롭이 AttributeError로 죽는다.
+opencv-python==4.11.0.86
+numpy==2.0.2
+
+# --- FaceForensics(FF++ Xception) 경로용 ---
+# external/FaceForensics/classification/network/models.py가 import한다.
+# 원본 레포는 dlib도 요구하지만, 얼굴 검출을 opencv Haar cascade로 대체했으므로 불필요.
+pretrainedmodels==0.7.4

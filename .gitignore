@@ -21,6 +21,9 @@ external/
 # 데이터: 테스트 클립과 추출 프레임은 재생성 가능하므로 제외
 data/test_clips/
 data/frames_output/
+# 모델 판별력 확인용 샘플 이미지. 외부 저작물이라 저장소에 넣지 않는다
+# (재다운로드 방법은 docs/model_research.md "재현 방법" 참고)
+data/sanity/
 !data/.gitkeep
 
 # 로컬 설정
