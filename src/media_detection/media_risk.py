@@ -21,10 +21,10 @@ TODO(팀 논의): audio/video 결합 방식(max vs weighted_average) - 더미 �
 
 from typing import Optional
 
+from . import faceforensics_detector as ff_backend
 from .deepfake_detector import (
     DEFAULT_MODEL_ID,
     FrameAggregation,
-    VideoDeepfakeResult,
     get_shared_detector,
 )
 from .media_risk_dummy import (
@@ -32,6 +32,19 @@ from .media_risk_dummy import (
     get_audio_spoof_score,  # AASIST 연동 전까지 더미 그대로 사용
 )
 from .media_risk_dummy import get_deepfake_score as get_deepfake_score_dummy
+
+# 백엔드 선택
+#   "auto" : FF++ 가중치가 준비돼 있으면 FF++, 아니면 ViT (기본값)
+#   "ff"   : FF++ Xception 강제 (가중치 없으면 예외)
+#   "vit"  : HuggingFace ViT 강제
+DEFAULT_BACKEND = "auto"
+
+
+def resolve_backend(backend: str = DEFAULT_BACKEND) -> str:
+    """'auto'를 실제 백엔드 이름으로 확정한다."""
+    if backend != "auto":
+        return backend
+    return "ff" if ff_backend.is_available() else "vit"
 
 
 def analyze_video(
@@ -41,16 +54,33 @@ def analyze_video(
     aggregation: FrameAggregation = FrameAggregation.TOPK_MEAN,
     use_face_crop: bool = True,
     model_id: str = DEFAULT_MODEL_ID,
-) -> VideoDeepfakeResult:
-    """영상 딥페이크 분석 전체 결과(프레임별 점수 포함)를 반환. 대시보드 근거용."""
-    detector = get_shared_detector(model_id)
-    return detector.score_video(
-        video_path,
-        target_fps=target_fps,
-        max_frames=max_frames,
-        aggregation=aggregation,
-        use_face_crop=use_face_crop,
-    )
+    backend: str = DEFAULT_BACKEND,
+):
+    """
+    영상 딥페이크 분석 전체 결과(프레임별 점수 포함)를 반환. 대시보드 근거용.
+    반환 타입은 백엔드에 따라 VideoDeepfakeResult 또는 FFVideoResult지만
+    둘 다 .deepfake_score / .as_dict() 를 갖는다.
+    """
+    resolved = resolve_backend(backend)
+
+    if resolved == "ff":
+        return ff_backend.get_shared_detector().score_video(
+            video_path,
+            target_fps=target_fps,
+            max_frames=max_frames,
+            aggregation=aggregation,
+        )
+
+    if resolved == "vit":
+        return get_shared_detector(model_id).score_video(
+            video_path,
+            target_fps=target_fps,
+            max_frames=max_frames,
+            aggregation=aggregation,
+            use_face_crop=use_face_crop,
+        )
+
+    raise ValueError(f"알 수 없는 backend: {backend}")
 
 
 def get_deepfake_score(video_path: str, **kwargs) -> float:
@@ -76,8 +106,11 @@ def get_media_risk(
     오디오 스푸핑 점수 + 영상 딥페이크 점수를 하나의 media_risk로 합쳐 반환.
     media_risk_dummy.get_media_risk()와 반환 키가 호환되며, 아래가 추가된다:
       - deepfake_is_real_model: 영상 점수가 실제 모델 추론인지 여부
+      - deepfake_backend: 실제로 쓰인 백엔드 ("ff" | "vit" | "dummy")
       - fallback_reason: 폴백했다면 그 이유
       - video_detail: 프레임별 점수 등 근거 (성공했을 때만)
+
+    video_kwargs로 backend="ff"|"vit"|"auto" 를 넘겨 백엔드를 고를 수 있다.
     """
     if video_path is None and audio_path is None:
         return {
@@ -96,7 +129,9 @@ def get_media_risk(
     is_real_model = False
     fallback_reason = None
 
+    backend_used = None
     if video_path:
+        backend_used = resolve_backend(video_kwargs.get("backend", DEFAULT_BACKEND))
         try:
             result = analyze_video(video_path, **video_kwargs)
             video_score = round(result.deepfake_score, 2)
@@ -105,6 +140,7 @@ def get_media_risk(
         except Exception as exc:
             video_score = get_deepfake_score_dummy(video_path)
             fallback_reason = f"{type(exc).__name__}: {exc}"
+            backend_used = "dummy"
 
     if mode == MediaCombineMode.MAX:
         media_risk = max(audio_score, video_score)
@@ -119,6 +155,7 @@ def get_media_risk(
         "deepfake_score": video_score,
         "mode": mode.value,
         "deepfake_is_real_model": is_real_model,
+        "deepfake_backend": backend_used,   # "ff" | "vit" | "dummy" | None
         "audio_spoof_is_real_model": False,  # AASIST 미연동
     }
     if fallback_reason:

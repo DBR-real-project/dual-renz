@@ -45,6 +45,10 @@ def main():
         choices=[a.value for a in FrameAggregation],
     )
     parser.add_argument("--no-face-crop", action="store_true")
+    parser.add_argument(
+        "--backend", default="auto", choices=["auto", "ff", "vit"],
+        help="auto=FF++ 가중치 있으면 FF++, 없으면 ViT",
+    )
     args = parser.parse_args()
 
     video_path = Path(args.input)
@@ -61,6 +65,7 @@ def main():
         max_frames=args.max_frames,
         aggregation=FrameAggregation(args.aggregation),
         use_face_crop=not args.no_face_crop,
+        backend=args.backend,
     )
 
     detail = media.pop("video_detail", None)
@@ -93,8 +98,14 @@ def main():
         marker = " (기본값)" if strategy == ScoringStrategy.MULTIPLICATIVE_BONUS else ""
         print(f"    [{strategy.value}]{marker} -> {result.fraud_risk_score:.2f}")
 
+    backend_label = {
+        "ff": "실제 모델 (FF++ Xception)",
+        "vit": "실제 모델 (HuggingFace ViT - 판별력 미검증, docs/model_research.md 참고)",
+        "dummy": "더미 폴백",
+    }.get(media.get("deepfake_backend"), "알 수 없음")
+
     print("\n=== 요약 ===")
-    print(f"    영상 딥페이크 추론: {'실제 모델' if media['deepfake_is_real_model'] else '더미 폴백'}")
+    print(f"    영상 딥페이크 추론: {backend_label}")
     print(f"    음성 스푸핑(AASIST): 미연동 (더미)")
     print(f"    콘텐츠 분석: 미연동 (더미)")
 
