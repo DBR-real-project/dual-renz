@@ -57,6 +57,7 @@ scoring 모듈은 이 계약만 알고 있으면 되도록 설계돼 있음.
 .venv\Scripts\python.exe scripts\detect_deepfake.py --input <영상>
 .venv\Scripts\python.exe scripts\detect_deepfake.py --image <이미지>   # 모델 판별력 확인용
 .venv\Scripts\python.exe scripts\extract_frames.py --input <영상> --fps 1 --size 256
+.venv\Scripts\python.exe scripts\download_ff_weights.py    # FF++ 가중치 (444MB, 이어받기 지원)
 ```
 
 ## 컨벤션

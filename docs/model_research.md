@@ -110,10 +110,29 @@ FF++ README에 따르면 모델은 *"slightly enlarged face crops with a scale f
 
 - 코드: **준비 완료** (`src/media_detection/faceforensics_detector.py`, `--backend ff`)
 - 의존성: `pretrainedmodels` 설치 완료, dlib 불필요
-- 가중치: `faceforensics++_models.zip` 다운로드 **진행 중 — TUM 서버가 매우 느리다**
-  (`http://kaldir.vc.in.tum.de/FaceForensics/models/faceforensics++_models.zip`,
-   미러 없음. 리서치 문서에 적힌 `tum.de:/FaceForensics` 는 콜론 오타)
+- 가중치: `faceforensics++_models.zip`, **444.7 MB**. 미러 없음.
+  (리서치 표에 적힌 `tum.de:/FaceForensics` 는 콜론 오타. 콜론 빼야 받아진다)
 - 가중치만 도착하면 바로 돌려볼 수 있는 상태
+
+### TUM 서버가 느린 문제 → 분할 병렬 다운로드로 해결
+
+단일 연결 처리량이 **44 KB/s**밖에 안 나온다. 444 MB면 4시간이 넘는다.
+서버가 Range 요청을 지원하는 걸 확인해서 연결을 늘려봤더니 거의 선형으로 빨라졌다:
+
+| 동시 연결 | 처리량 |
+|---|---|
+| 1 | 44.2 KB/s |
+| 4 | 157.0 KB/s |
+
+→ `scripts/download_ff_weights.py` 작성. 12개 구간으로 나눠 동시에 받고,
+   끊기면 구간별 `.part` 파일에서 **이어받는다**. 완료 후 zip 무결성까지 검사한다.
+
+```
+.venv\Scripts\python.exe scripts\download_ff_weights.py --connections 12
+```
+
+발표장 네트워크에서 다시 받아야 할 상황이면 이 스크립트를 쓸 것. 중간에 끊겨도
+다시 실행하면 받던 지점부터 이어간다.
 
 ## 재현 방법
 
