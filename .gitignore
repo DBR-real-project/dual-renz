@@ -18,12 +18,14 @@ models/**
 # 외부 레포 클론 (FaceForensics 등)
 external/
 
-# 데이터: 테스트 클립과 추출 프레임은 재생성 가능하므로 제외
-data/test_clips/
-data/frames_output/
-# 모델 판별력 확인용 샘플 이미지. 외부 저작물이라 저장소에 넣지 않는다
-# (재다운로드 방법은 docs/model_research.md "재현 방법" 참고)
-data/sanity/
+# 데이터 전체 제외. 모두 scripts/ 로 재생성/재다운로드 가능하고,
+# 외부 저작물(FF++ 영상, ASVspoof 음성, 샘플 이미지)이라 재배포하면 안 된다.
+#   data/ff_samples/       fetch_ff_samples.py
+#   data/asvspoof_samples/ fetch_asvspoof_samples.py
+#   data/demo_clips/       make_demo_clips.py
+#   data/test_clips/       make_synthetic_test_clip.py
+#   data/sanity/           docs/model_research.md "재현 방법" 참고
+data/*
 !data/.gitkeep
 
 # 로컬 설정

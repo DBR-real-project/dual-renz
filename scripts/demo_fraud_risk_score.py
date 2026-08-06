@@ -17,7 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 from scoring.fraud_risk_score import ScoringStrategy, compute_fraud_risk_score, compute_timeline
 from media_detection.media_risk_dummy import get_media_risk
-from content_analysis.content_risk_stub import get_content_risk_dummy
+from content_analysis.content_risk import classify_by_keywords
 
 
 def demo_single_score():
@@ -54,22 +54,24 @@ def demo_timeline():
     segments = []
     t = 0.0
     for text in fake_transcripts:
-        content_risk = get_content_risk_dummy(text)
+        breakdown = classify_by_keywords(text)
         media = get_media_risk(video_path=f"data/frames_output/seg_{int(t)}.mp4")
         segments.append({
             "start": t, "end": t + 5.0,
-            "content_risk": content_risk,
+            "content_risk": breakdown.content_risk,
             "media_risk": media["media_risk"],
             "transcript": text,
+            "top_category": breakdown.as_dict()["top_category_label"],
         })
         t += 5.0
 
     timeline = compute_timeline(segments, media_risk_is_dummy=True)
     for seg in timeline:
+        cat = seg.get("top_category") or "-"
         print(
             f"  [{seg['start']:>4.0f}s-{seg['end']:>4.0f}s] "
             f"content={seg['content_risk']:>5.1f} media={seg['media_risk']:>5.1f} "
-            f"-> Fraud Risk Score={seg['fraud_risk_score']:>5.1f}  ({seg['transcript']})"
+            f"-> FRS={seg['fraud_risk_score']:>5.1f}  [{cat}] {seg['transcript']}"
         )
 
 

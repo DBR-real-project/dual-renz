@@ -16,11 +16,15 @@
 
 | 파일 | 역할 |
 |---|---|
-| `media_risk.py` | **정식 진입점.** 영상=실제 모델, 오디오=더미. 추론 실패 시 더미 폴백 |
+| `media_risk.py` | **정식 진입점.** 영상+음성 둘 다 실제 모델. 실패 시 더미 폴백 |
 | `media_risk_dummy.py` | 전체 더미. 오프라인 데모 안전판이므로 지우지 말 것 |
-| `faceforensics_detector.py` | **FF++ Xception 백엔드 — 정식 경로** |
-| `deepfake_detector.py` | HuggingFace ViT 백엔드 — 폴백 전용 |
+| `faceforensics_detector.py` | **FF++ Xception (영상) — 정식 경로** |
+| `audio_spoof_detector.py` | **AASIST (음성) — 정확도 98%로 가장 신뢰도 높음** |
+| `deepfake_detector.py` | HuggingFace ViT (영상) — 폴백 전용 |
 | `face_utils.py` | Haar cascade 얼굴 검출/크롭. dlib 대체 |
+
+`get_media_risk(video_path=...)` 에 영상만 줘도 ffmpeg으로 오디오 트랙을 뽑아
+두 엔진을 모두 돌린다. 오디오 트랙이 없으면 조용히 건너뛰고 `audio_note`에 이유를 남긴다.
 
 백엔드는 `backend="auto"`(기본값)가 고른다. `models/`에 FF++ 가중치가 있으면 FF++,
 없으면 ViT. 결과 dict의 `deepfake_backend`로 실제 뭐가 쓰였는지 확인할 수 있다.
@@ -59,13 +63,24 @@ scoring 모듈은 이 계약만 알고 있으면 되도록 설계돼 있음.
 ## 실행
 
 ```
-.venv\Scripts\python.exe scripts\demo_full_pipeline.py          # 영상 -> 추론 -> 통합 점수 전체
-.venv\Scripts\python.exe scripts\demo_fraud_risk_score.py       # 스코어링 로직만 (모델 불필요)
+.venv\Scripts\python.exe scripts\demo_full_pipeline.py          # 영상 -> 두 엔진 -> 통합 점수
+.venv\Scripts\python.exe scripts\demo_cross_validation.py       # 교차검증 4조합 (발표용)
+.venv\Scripts\python.exe scripts\demo_fraud_risk_score.py       # 스코어링만 (모델 불필요)
+.venv\Scripts\python.exe scripts\validate_detector.py           # 영상 성능 실측
+.venv\Scripts\python.exe scripts\validate_audio_spoof.py        # 음성 성능 실측
 .venv\Scripts\python.exe scripts\detect_deepfake.py --input <영상>
-.venv\Scripts\python.exe scripts\detect_deepfake.py --image <이미지>   # 모델 판별력 확인용
-.venv\Scripts\python.exe scripts\extract_frames.py --input <영상> --fps 1 --size 256
-.venv\Scripts\python.exe scripts\download_ff_weights.py    # FF++ 가중치 (444MB, 이어받기 지원)
+.venv\Scripts\python.exe scripts\download_ff_weights.py         # FF++ 가중치 (444MB, 이어받기)
 ```
+
+전체 목록과 각 스크립트 설명은 `README.md` 참고.
+
+## 데이터셋을 부분만 받는 패턴
+
+공개 데이터셋이 통짜 대용량 파일로 배포되는 경우가 많다(FF++ 16.66GB zip,
+ASVspoof 464MB parquet). `scripts/_http_range.py`의 `HttpRangeFile`이
+HTTP Range로 원격 파일을 로컬 파일처럼 읽게 해줘서, zipfile과 pyarrow 둘 다
+그대로 쓸 수 있다. **전체를 받지 말고 이 패턴을 먼저 검토할 것.**
+(실적: FF++ 영상 50개를 91.9MB로, ASVspoof 음성 50개를 14.2MB로 확보)
 
 ## 컨벤션
 

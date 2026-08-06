@@ -31,3 +31,13 @@ pretrainedmodels==0.7.4
 # pretrainedmodels가 six를 쓰면서 의존성 선언을 안 해놨다. 없으면 가중치 로드가
 # ModuleNotFoundError로 죽는다.
 six==1.17.0
+
+# --- 음성 스푸핑 탐지 (AASIST) ---
+# flac/wav 읽기. 영상에서 오디오를 뽑을 때는 ffmpeg CLI가 별도로 필요하다.
+soundfile==0.13.1
+
+# --- 데이터셋 부분 추출 ---
+# ASVspoof 샘플이 parquet으로 배포돼 있어 row group 단위로 읽는 데 쓴다.
+pyarrow==21.0.0
+# Kaggle 데이터(DFDC 등) 다운로드용. 자격증명이 없으면 스크립트가 안내만 하고 종료한다.
+kaggle==1.7.4.5

@@ -25,7 +25,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from content_analysis.content_risk_stub import get_content_risk_dummy
+from content_analysis.content_risk import classify_by_keywords
 from media_detection.deepfake_detector import FrameAggregation
 from media_detection.media_risk import get_media_risk
 from scoring.fraud_risk_score import ScoringStrategy, compute_fraud_risk_score
@@ -68,24 +68,41 @@ def main():
         backend=args.backend,
     )
 
-    detail = media.pop("video_detail", None)
-    print(f"    {json.dumps(media, ensure_ascii=False)}")
-    if detail:
-        print(f"    분석 프레임 {detail['frames_analyzed']}장, "
-              f"얼굴 검출률 {detail['face_detection_rate']:.0%}, "
-              f"집계방식 {detail['aggregation']}")
-        print(f"    프레임별 점수: {detail['frame_scores']}")
-        if detail["faces_detected"] == 0:
-            print("    [경고] 얼굴이 하나도 검출되지 않았습니다 -> 전체 프레임으로 추론했습니다.")
-            print("           이 영상의 점수는 탐지 성능의 근거로 쓸 수 없습니다.")
-    if not media["deepfake_is_real_model"]:
-        print(f"    [경고] 실제 모델 추론에 실패해 더미값으로 폴백했습니다: "
-              f"{media.get('fallback_reason')}")
+    vdetail = media.pop("video_detail", None)
+    adetail = media.pop("audio_detail", None)
 
-    print("\n=== 2. 콘텐츠 위험도 (강동연 파트 미완성 - 더미) ===")
-    content_risk = get_content_risk_dummy(args.transcript)
+    print(f"    media_risk = {media['media_risk']}  (결합방식 {media['mode']})")
+    print(f"      ├ 영상 딥페이크 : {media['deepfake_score']}")
+    if vdetail:
+        print(f"      │   프레임 {vdetail['frames_analyzed']}장, "
+              f"얼굴 검출률 {vdetail['face_detection_rate']:.0%}, "
+              f"집계 {vdetail['aggregation']}")
+        print(f"      │   프레임별: {vdetail['frame_scores']}")
+        if vdetail["faces_detected"] == 0:
+            print("      │   [경고] 얼굴 미검출 -> 전체 프레임으로 추론. 근거로 쓸 수 없음")
+    print(f"      └ 음성 스푸핑   : {media['audio_spoof_score']}")
+    if adetail:
+        print(f"          {adetail['duration_sec']}초, 4초 창 {adetail['windows_analyzed']}개")
+        print(f"          창별: {adetail['window_scores']}")
+    if media.get("audio_note"):
+        print(f"          [참고] {media['audio_note']}")
+
+    if not media["deepfake_is_real_model"]:
+        print(f"    [경고] 영상 추론 실패, 더미 폴백: {media.get('fallback_reason')}")
+
+    print("\n=== 2. 콘텐츠 위험도 (LLM 연동 전 - 키워드 규칙 대역) ===")
+    breakdown = classify_by_keywords(args.transcript)
+    cb = breakdown.as_dict()
+    content_risk = cb["content_risk"]
     print(f"    transcript: {args.transcript}")
-    print(f"    content_risk: {content_risk}")
+    print(f"    content_risk: {content_risk}  "
+          f"(= 0.5×최고 {cb['top_score']} + 0.5×상위3평균 {cb['top3_mean']})")
+    if cb["top_category_label"]:
+        print(f"    최고 위험 카테고리: {cb['top_category_label']}")
+    for cat, terms in cb["matched_terms"].items():
+        print(f"      걸린 표현 [{cat}]: {', '.join(terms)}")
+    if not cb["matched_terms"]:
+        print("      걸린 표현 없음")
 
     print("\n=== 3. 통합 Fraud Risk Score ===")
     for strategy in ScoringStrategy:
@@ -104,10 +121,13 @@ def main():
         "dummy": "더미 폴백",
     }.get(media.get("deepfake_backend"), "알 수 없음")
 
+    audio_label = ("실제 모델 (AASIST)" if media.get("audio_spoof_is_real_model")
+                   else "미분석 / 더미")
+
     print("\n=== 요약 ===")
-    print(f"    영상 딥페이크 추론: {backend_label}")
-    print(f"    음성 스푸핑(AASIST): 미연동 (더미)")
-    print(f"    콘텐츠 분석: 미연동 (더미)")
+    print(f"    영상 딥페이크: {backend_label}")
+    print(f"    음성 스푸핑  : {audio_label}")
+    print(f"    콘텐츠 분석  : LLM 미연동 (키워드 규칙 대역, 집계 공식은 기획서대로 구현됨)")
 
 
 if __name__ == "__main__":

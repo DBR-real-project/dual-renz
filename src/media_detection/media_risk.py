@@ -21,16 +21,15 @@ TODO(팀 논의): audio/video 결합 방식(max vs weighted_average) - 더미 �
 
 from typing import Optional
 
+from . import audio_spoof_detector as aasist_backend
 from . import faceforensics_detector as ff_backend
 from .deepfake_detector import (
     DEFAULT_MODEL_ID,
     FrameAggregation,
     get_shared_detector,
 )
-from .media_risk_dummy import (
-    MediaCombineMode,
-    get_audio_spoof_score,  # AASIST 연동 전까지 더미 그대로 사용
-)
+from .media_risk_dummy import MediaCombineMode
+from .media_risk_dummy import get_audio_spoof_score as get_audio_spoof_score_dummy
 from .media_risk_dummy import get_deepfake_score as get_deepfake_score_dummy
 
 # 백엔드 선택
@@ -83,6 +82,31 @@ def analyze_video(
     raise ValueError(f"알 수 없는 backend: {backend}")
 
 
+def analyze_audio(
+    audio_path: str,
+    aggregation: FrameAggregation = FrameAggregation.TOPK_MEAN,
+    max_windows: int = 8,
+):
+    """
+    음성 스푸핑 분석 전체 결과(4초 창별 점수 포함)를 반환. 대시보드 근거용.
+    영상 경로를 넣어도 된다 (ffmpeg으로 오디오 트랙을 뽑아 쓴다).
+    """
+    return aasist_backend.get_shared_detector().score_audio(
+        audio_path, aggregation=aggregation, max_windows=max_windows
+    )
+
+
+def get_audio_spoof_score(audio_path: str, **kwargs) -> float:
+    """
+    음성 스푸핑 위험도를 0~100으로 반환. media_risk_dummy와 시그니처 호환.
+    AASIST를 쓸 수 없으면 예외를 올리지 않고 더미로 폴백한다.
+    """
+    try:
+        return round(analyze_audio(audio_path, **kwargs).spoof_score, 2)
+    except Exception:
+        return get_audio_spoof_score_dummy(audio_path)
+
+
 def get_deepfake_score(video_path: str, **kwargs) -> float:
     """
     영상 딥페이크 위험도를 0~100으로 반환. media_risk_dummy와 시그니처 호환.
@@ -100,17 +124,23 @@ def get_media_risk(
     mode: MediaCombineMode = MediaCombineMode.MAX,
     audio_weight: float = 0.5,
     video_weight: float = 0.5,
+    audio_from_video: bool = True,
     **video_kwargs,
 ) -> dict:
     """
     오디오 스푸핑 점수 + 영상 딥페이크 점수를 하나의 media_risk로 합쳐 반환.
     media_risk_dummy.get_media_risk()와 반환 키가 호환되며, 아래가 추가된다:
-      - deepfake_is_real_model: 영상 점수가 실제 모델 추론인지 여부
-      - deepfake_backend: 실제로 쓰인 백엔드 ("ff" | "vit" | "dummy")
-      - fallback_reason: 폴백했다면 그 이유
-      - video_detail: 프레임별 점수 등 근거 (성공했을 때만)
+      - deepfake_is_real_model / audio_spoof_is_real_model: 실제 모델 추론 여부
+      - deepfake_backend: 실제로 쓰인 영상 백엔드 ("ff" | "vit" | "dummy")
+      - fallback_reason / audio_note: 폴백하거나 건너뛰었다면 그 이유
+      - video_detail / audio_detail: 프레임별·구간별 점수 등 근거
 
-    video_kwargs로 backend="ff"|"vit"|"auto" 를 넘겨 백엔드를 고를 수 있다.
+    audio_path를 따로 주지 않아도 audio_from_video=True(기본)면 영상에서 오디오 트랙을
+    뽑아 분석한다. 기획서 흐름("업로드된 파일에서 오디오·비디오 트랙이 분리되고
+    두 엔진이 병렬로 작동")에 맞추기 위한 것으로, 화상통화 파일 하나로 두 엔진을
+    모두 돌릴 수 있다. 오디오 트랙이 없는 영상이면 조용히 건너뛴다.
+
+    video_kwargs로 backend="ff"|"vit"|"auto" 를 넘겨 영상 백엔드를 고를 수 있다.
     """
     if video_path is None and audio_path is None:
         return {
@@ -119,10 +149,36 @@ def get_media_risk(
             "deepfake_score": None,
             "mode": mode.value,
             "deepfake_is_real_model": False,
+            "audio_spoof_is_real_model": False,
             "fallback_reason": "video/audio 경로 없음 - 완전 고정 더미값 사용",
         }
 
-    audio_score = get_audio_spoof_score(audio_path) if audio_path else 0.0
+    # --- 오디오 (AASIST) ---
+    audio_source = audio_path or (video_path if audio_from_video else None)
+    audio_score = 0.0
+    audio_detail = None
+    audio_is_real_model = False
+    audio_note = None
+
+    if audio_source:
+        try:
+            ar = analyze_audio(audio_source)
+            audio_score = round(ar.spoof_score, 2)
+            audio_detail = ar.as_dict()
+            audio_is_real_model = True
+        except Exception as exc:
+            if audio_path:
+                # 오디오를 명시적으로 준 경우엔 실패를 더미로 덮되 이유를 남긴다
+                audio_score = get_audio_spoof_score_dummy(audio_path)
+                audio_note = f"AASIST 실패, 더미 폴백: {type(exc).__name__}: {exc}"
+            else:
+                # 영상에서 뽑으려다 실패 - 오디오 트랙이 없는 영상일 수 있다.
+                # 이때 더미값을 넣으면 media_risk가 근거 없이 부풀어 오르므로 0으로 둔다.
+                audio_score = 0.0
+                audio_note = (f"영상에서 오디오를 분석하지 못해 제외했습니다 "
+                              f"({type(exc).__name__})")
+    else:
+        audio_note = "오디오 분석 안 함 (audio_from_video=False)"
 
     video_score = 0.0
     video_detail = None
@@ -156,10 +212,14 @@ def get_media_risk(
         "mode": mode.value,
         "deepfake_is_real_model": is_real_model,
         "deepfake_backend": backend_used,   # "ff" | "vit" | "dummy" | None
-        "audio_spoof_is_real_model": False,  # AASIST 미연동
+        "audio_spoof_is_real_model": audio_is_real_model,
     }
     if fallback_reason:
         out["fallback_reason"] = fallback_reason
+    if audio_note:
+        out["audio_note"] = audio_note
     if video_detail:
         out["video_detail"] = video_detail
+    if audio_detail:
+        out["audio_detail"] = audio_detail
     return out
