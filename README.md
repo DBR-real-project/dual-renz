@@ -20,6 +20,9 @@
 측정 근거와 조건은 **[docs/validation_report.md](docs/validation_report.md)** 참고.
 숫자를 발표에 쓰기 전에 그 문서의 전제(학습 도메인 내 측정)를 반드시 확인할 것.
 
+> **처음 보는 사람은 [docs/blocked_and_next.md](docs/blocked_and_next.md) 부터.**
+> 막힌 것, 팀이 정해야 할 것, 다음 작업이 한 문서에 정리돼 있다.
+
 ---
 
 ## 빠른 시작
@@ -79,8 +82,9 @@ scripts/
   download_kaggle_data.py      DFDC 등 Kaggle 데이터 (계정 필요)
 
 docs/
+  blocked_and_next.md          ★ 여기부터. 막힌 것 / 팀 결정 사항 / 다음 작업
   validation_report.md         성능 실측 보고 ★ 발표 자료의 근거
-  spec_reconciliation.md       기획서 2종 대조 + 팀 결정 필요 사항 ★
+  spec_reconciliation.md       기획서 2종 대조 + 팀 결정 필요 사항
   model_research.md            모델 후보 리서치 + 세팅 실측
 ```
 
