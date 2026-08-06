@@ -42,12 +42,19 @@ def run_image(backend_name: str, image_path: str) -> None:
         print(f"가중치: {detector.weights_path}")
         face = ff_backend.crop_face_square(image)
 
-    full_score = detector.score_frames([image])[0]
-    print(f"전체 이미지 위조 확률: {full_score:.2f}")
     if face is not None:
-        print(f"얼굴 크롭 위조 확률: {detector.score_frames([face])[0]:.2f}")
+        print(f"얼굴 크롭 위조 확률: {detector.score_frames([face])[0]:.2f}   <- 이 값을 볼 것")
+    elif backend_name == "ff":
+        # FF++ face_detection 계열은 얼굴 크롭 전용이다. 전체 이미지를 넣으면
+        # 분포 밖 입력이라 아무 값이나 나온다 (실측: 축구 사진 전체를 넣으니 98.07).
+        print("얼굴 검출 실패 - FF++는 얼굴 크롭 전용이라 판정할 수 없습니다.")
+        return
     else:
-        print("얼굴 검출 실패 - 전체 이미지 점수만 참고하세요.")
+        print("얼굴 검출 실패 - 전체 이미지로 판정합니다 (참고용).")
+
+    full_score = detector.score_frames([image])[0]
+    print(f"전체 이미지 위조 확률: {full_score:.2f}"
+          + ("   (참고용, FF++는 크롭 기준으로 판단할 것)" if backend_name == "ff" else ""))
 
 
 def main():

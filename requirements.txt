@@ -28,3 +28,6 @@ numpy==2.0.2
 # external/FaceForensics/classification/network/models.py가 import한다.
 # 원본 레포는 dlib도 요구하지만, 얼굴 검출을 opencv Haar cascade로 대체했으므로 불필요.
 pretrainedmodels==0.7.4
+# pretrainedmodels가 six를 쓰면서 의존성 선언을 안 해놨다. 없으면 가중치 로드가
+# ModuleNotFoundError로 죽는다.
+six==1.17.0

@@ -35,13 +35,19 @@
 | 8 | megvii-research/CADDM | ResNet-34/EfficientNet-B3·B4 | FF++ | Google Drive | Apache-2.0 | FF++ AUC 99.79%로 최고치, 전처리 단계 많음 |
 | 9 | SCLBD/DeepfakeBench | 36개 탐지기 통합 벤치마크 | FF++/Celeb-DF/DFDC | GitHub Releases | CC BY-NC 4.0 | 여러 모델 한번에 비교하고 싶을 때 |
 
+> **⚠ 이 문서 상단의 표는 웹 조사 결과이고, 실제로 돌려본 결과는 아래 "실측 결과" 절에 있다.**
+> **결론이 표와 다르다.** 2순위로 적어둔 ViT는 판별을 못 하고, 1순위 FF++는 dlib 없이도 잘 된다.
+
 ## 다음 액션
-- [x] `ondyari/FaceForensics` clone 후 CPU에서 세팅 난이도 실측 → 아래 "실측 결과" 참고
-- [x] HuggingFace ViT 파이프라인 연동 (해커톤 데모 안전판)
+- [x] `ondyari/FaceForensics` clone 후 CPU에서 세팅 난이도 실측
+- [x] HuggingFace ViT 파이프라인 연동
 - [x] get_deepfake_score()를 실제 모델 추론으로 교체 → `src/media_detection/media_risk.py`
-- [ ] FF++ 가중치 다운로드 완료 후 `--backend ff` 실측 (진행 중, 서버가 느림)
-- [ ] AASIST(clovaai/aasist) 음성 스푸핑 연동
-- [ ] **실제 딥페이크 샘플 확보** — 아래 실측 결과의 가장 큰 공백
+- [x] FF++ 가중치 다운로드 + `--backend ff` 실측 → **성공, 정식 경로로 확정**
+- [ ] AASIST(clovaai/aasist) 음성 스푸핑 연동 ← **다음 작업**
+- [ ] 실제 딥페이크 샘플 확보 — 지금은 "진짜를 진짜로 판정"만 확인했고
+      "가짜를 가짜로 판정"은 아직 확인 못 했다. 가장 큰 남은 공백.
+- [ ] 통화 영상은 정면 얼굴이 아닐 때가 있음 — Haar cascade 검출률이 실영상에서
+      얼마나 나오는지 확인 필요 (검출 실패 시 FF++는 점수를 못 낸다)
 
 ---
 
@@ -93,26 +99,77 @@ FF++ README에 따르면 모델은 *"slightly enlarged face crops with a scale f
 **진짜 사진을 위조로 판정하고 있고, 입력 성격과 무관하게 55~77의 좁은 밴드에 몰린다.**
 사실상 판별 신호가 없다는 뜻이다. 리서치 표에 적힌 92.12% acc는 우리 입력에서 재현되지 않는다.
 
-가능한 원인 (아직 확정 못 함):
-- 라벨 순서가 뒤집혔을 가능성 — `id2label`은 `{0: Realism, 1: Deepfake}`인데 학습과 다를 수 있다
-- 학습 분포와 우리 입력이 너무 다름 (lena는 1972년 스캔본)
-- 모델 자체의 성능 한계
-
-**확인하려면 확실한 딥페이크 샘플이 필요한데 아직 없다.** 진짜/가짜 각 몇 장만 있어도
-라벨 뒤집힘 여부는 바로 판별된다.
+**라벨 뒤집힘 가능성은 FF++ 결과로 배제됐다.** 같은 입력에 FF++는 0.0~0.64를 주는데
+ViT는 69를 준다. 라벨만 뒤집힌 거라면 일관되게 반대로 나와야 하는데, ViT는 진짜/가짜
+구분 없이 중간값에 몰린다. 즉 **신호 자체가 없다.**
 
 ### 팀에 대한 결론
-> **ViT 점수를 심사 자료의 탐지 근거로 쓰지 말 것.** 현재 이 경로의 역할은
-> "미디어 분석 파이프라인이 실제 추론으로 끝까지 돈다"를 보여주는 것까지다.
-> 정확도 근거가 필요하면 FF++ 경로를 써야 한다.
+> **ViT 점수를 심사 자료의 탐지 근거로 쓰지 말 것.** 정식 경로는 FF++ (`backend="ff"`)다.
+> ViT는 FF++ 가중치를 못 쓰는 환경(가중치 없음/오프라인)에서 파이프라인이
+> 죽지 않게 하는 폴백으로만 남겨둔다.
 
-## FF++ 경로 현황
+## ✅ FF++ 경로 성공 — 이쪽을 정식 경로로 쓴다
 
-- 코드: **준비 완료** (`src/media_detection/faceforensics_detector.py`, `--backend ff`)
-- 의존성: `pretrainedmodels` 설치 완료, dlib 불필요
-- 가중치: `faceforensics++_models.zip`, **444.7 MB**. 미러 없음.
-  (리서치 표에 적힌 `tum.de:/FaceForensics` 는 콜론 오타. 콜론 빼야 받아진다)
-- 가중치만 도착하면 바로 돌려볼 수 있는 상태
+**dlib 없이 FF++ Xception이 CPU에서 돌아간다. 판별도 제대로 한다.**
+
+같은 입력에 대한 두 백엔드 비교 (실제 인물 사진 / 그 사진으로 만든 6초 영상):
+
+| 입력 | FF++ Xception | ViT |
+|---|---|---|
+| lena 얼굴 크롭 (진짜) | **0.00** | 70.43 |
+| lena 얼굴 영상 6초, 6프레임 (진짜) | **0.64** | 68.89 |
+| 프레임별 점수 (FF++) | 0.94 / 0.02 / 0.0 / 0.0 / 0.04 / 0.33 | 54~73 |
+
+FF++는 진짜 얼굴을 **0에 가깝게** 판정한다. ViT는 같은 입력을 69로 판정한다.
+→ **ViT의 라벨이 뒤집힌 게 아니라 그냥 판별을 못 하는 것**으로 보인다.
+   (뒤집혔다면 FF++와 반대로 일관되게 나와야 하는데, ViT는 진짜/가짜 구분 없이 중간값에 몰린다)
+
+### 가중치 선택 주의 — 섞으면 결과가 망가진다
+
+배포본에 두 계열이 들어있고 **입력 형태가 다르다**:
+
+| 경로 | 학습 입력 | 우리 용도 |
+|---|---|---|
+| `face_detection/xception/all_c23.p` | 얼굴 크롭 | **← 이걸 쓴다** |
+| `full/xception/full_c23.p` | 전체 프레임 | 안 씀 |
+
+`default_weights()`가 `face_detection` 계열 + `c23`을 자동으로 고른다.
+(c23은 FF++ 논문 기준 실제 통화/유튜브 영상의 압축률에 가장 가깝다)
+
+얼굴 크롭 모델에 전체 프레임을 넣으면 분포 밖 입력이라 값이 튄다
+(실측: 축구 사진 전체를 넣으니 98.07). 그래서 얼굴 검출 실패 시 FF++ 경로는
+점수를 내지 않고 **명시적으로 실패**한다.
+
+### 세팅 중 걸린 것들 (다음에 다시 할 때 참고)
+
+| 문제 | 해결 |
+|---|---|
+| `six` 없음 → 가중치 로드가 `ModuleNotFoundError`로 죽음 | `pretrainedmodels`가 의존성 선언을 안 함. `pip install six` |
+| torch 2.6+ 기본값 `weights_only=True`로 로드 실패 | `weights_only=False` 명시 (TUM 공식 배포본에 한함) |
+| `SourceChangeWarning` 폭탄 | 2019년 pickle이라 클래스마다 경고. 무해하므로 억제 |
+| 가중치 URL 404 | 리서치 표의 `tum.de:/FaceForensics` 는 콜론 오타 |
+
+### TUM 서버가 느린 문제 → 분할 병렬 다운로드로 해결
+
+단일 연결 처리량이 **44 KB/s**밖에 안 나온다. 444.7 MB면 4시간이 넘는다.
+서버가 Range 요청을 지원하는 걸 확인해서 연결을 늘려봤더니 거의 선형으로 빨라졌다:
+
+| 동시 연결 | 처리량 | 444.7MB 예상 시간 |
+|---|---|---|
+| 1 | 44.2 KB/s | 4시간+ |
+| 4 | 157.0 KB/s | 48분 |
+| 12 | **~570 KB/s** | **15분 (실측 878초)** |
+
+→ `scripts/download_ff_weights.py` 작성. 12개 구간으로 나눠 동시에 받고,
+   끊기면 구간별 `.part` 파일에서 **이어받는다**. 완료 후 zip 무결성까지 검사한다.
+
+```
+.venv\Scripts\python.exe scripts\download_ff_weights.py --connections 12
+.venv\Scripts\python.exe -c "import zipfile; zipfile.ZipFile(r'models\faceforensics++_models.zip').extractall(r'models')"
+```
+
+발표장 네트워크에서 다시 받아야 할 상황이면 이 스크립트를 쓸 것. 중간에 끊겨도
+다시 실행하면 받던 지점부터 이어간다.
 
 ### TUM 서버가 느린 문제 → 분할 병렬 다운로드로 해결
 

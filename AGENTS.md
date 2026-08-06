@@ -18,12 +18,19 @@
 |---|---|
 | `media_risk.py` | **정식 진입점.** 영상=실제 모델, 오디오=더미. 추론 실패 시 더미 폴백 |
 | `media_risk_dummy.py` | 전체 더미. 오프라인 데모 안전판이므로 지우지 말 것 |
-| `deepfake_detector.py` | HuggingFace ViT 백엔드 (현재 기본값) |
-| `faceforensics_detector.py` | FF++ Xception 백엔드 (가중치 필요) |
+| `faceforensics_detector.py` | **FF++ Xception 백엔드 — 정식 경로** |
+| `deepfake_detector.py` | HuggingFace ViT 백엔드 — 폴백 전용 |
 | `face_utils.py` | Haar cascade 얼굴 검출/크롭. dlib 대체 |
 
-**⚠ 현재 ViT 모델은 실제 사진을 위조로 판정한다** (실측: 진짜 사진이 Deepfake 70%).
-점수를 탐지 근거로 쓰면 안 된다. 자세한 내용과 수치는 `docs/model_research.md`의 "실측 결과" 참고.
+백엔드는 `backend="auto"`(기본값)가 고른다. `models/`에 FF++ 가중치가 있으면 FF++,
+없으면 ViT. 결과 dict의 `deepfake_backend`로 실제 뭐가 쓰였는지 확인할 수 있다.
+
+**⚠ ViT는 판별을 못 한다.** 실측에서 진짜 얼굴을 Deepfake 69로 판정했다
+(같은 입력에 FF++는 0.64). 폴백으로만 두고, **점수를 탐지 근거로 쓰지 말 것.**
+수치와 근거는 `docs/model_research.md`의 "실측 결과" 참고.
+
+**⚠ FF++는 얼굴 크롭 전용이다.** 얼굴이 검출 안 되면 점수를 내지 않고 예외를 던진다.
+이건 버그가 아니라 의도된 동작 — 전체 프레임을 넣으면 아무 값이나 나온다.
 
 ## 중요한 미결 사항 (임의로 결정하지 말 것)
 

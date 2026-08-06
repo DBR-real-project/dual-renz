@@ -26,6 +26,7 @@ docs/model_research.md 1순위 경로. FF++ 데이터로 학습된 공식 Xcepti
 """
 
 import sys
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional, Sequence
@@ -81,17 +82,29 @@ def find_weights(models_dir: Path = MODELS_DIR) -> List[Path]:
 
 def default_weights(models_dir: Path = MODELS_DIR) -> Optional[Path]:
     """
-    기본 가중치 선택. FF++ 배포본에는 압축률별(c0/c23/c40) 모델이 들어있는데,
-    c23이 실제 통화/유튜브 영상의 압축률에 가장 가깝다는 게 FF++ 논문의 권장이다.
+    기본 가중치 선택.
+
+    배포본에는 두 계열이 들어있고 **입력 형태가 다르다. 섞으면 결과가 망가진다**:
+      - face_detection/xception/all_*.p : 얼굴 크롭으로 학습  <- 우리가 쓸 것
+      - full/xception/full_*.p          : 전체 프레임으로 학습
+
+    이 모듈은 crop_face_square()로 얼굴을 잘라 넣으므로 반드시 face_detection 계열이어야 한다.
+
+    압축률은 c23 우선. FF++ 논문 기준 c23이 실제 통화/유튜브 영상의 압축률에 가장 가깝다.
+    (raw는 무압축이라 압축된 실영상에서 성능이 떨어지고, c40은 과압축)
     """
     candidates = find_weights(models_dir)
     if not candidates:
         return None
-    for keyword in ("c23", "c40", "raw", "c0"):
-        for path in candidates:
-            if keyword in path.name.lower() or keyword in str(path.parent).lower():
+
+    face_crop_models = [p for p in candidates if "face_detection" in p.parts]
+    pool = face_crop_models or candidates
+
+    for keyword in ("c23", "c40", "raw"):
+        for path in pool:
+            if keyword in path.name.lower():
                 return path
-    return candidates[0]
+    return pool[0]
 
 
 class FaceForensicsDetector:
@@ -129,9 +142,15 @@ class FaceForensicsDetector:
         if str(FF_CLASSIFICATION_DIR) not in sys.path:
             sys.path.insert(0, str(FF_CLASSIFICATION_DIR))
 
-        loaded = torch.load(
-            str(self.weights_path), map_location=self.device, weights_only=False
-        )
+        # 2019년에 만든 pickle이라 torch가 클래스 정의 변경 경고를 클래스마다 쏟아낸다.
+        # (Conv2d, BatchNorm2d, ...) 가중치 로드 자체에는 문제가 없으므로 억제한다.
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", category=torch.serialization.SourceChangeWarning
+            )
+            loaded = torch.load(
+                str(self.weights_path), map_location=self.device, weights_only=False
+            )
 
         if isinstance(loaded, torch.nn.Module):
             model = loaded
