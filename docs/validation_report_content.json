@@ -11,13 +11,13 @@
       "n_scored": 14,
       "elapsed_sec": 0.0,
       "separation": {
-        "real_max": 60.0,
-        "real_mean": 12.0,
+        "real_max": 53.33,
+        "real_mean": 10.666,
         "real_min": 0.0,
         "fake_max": 80.0,
         "fake_mean": 51.85333333333333,
         "fake_min": 26.67,
-        "gap": -33.33
+        "gap": -26.659999999999997
       },
       "at_threshold_50": {
         "threshold": 50.0,
@@ -241,8 +241,8 @@
             "money_transfer": 80.0,
             "credentials": 80.0,
             "urgency": 40.0,
-            "secrecy": 40.0,
             "authority": 0.0,
+            "secrecy": 0.0,
             "emotional": 0.0,
             "trust_building": 0.0,
             "isolation": 0.0
@@ -324,25 +324,21 @@
           "id": "normal_05",
           "label": "real",
           "channel": "call",
-          "score": 60.0,
+          "score": 53.33,
           "top_category": "credentials",
           "expected_techniques": [],
           "category_scores": {
             "credentials": 80.0,
-            "secrecy": 40.0,
             "urgency": 0.0,
             "authority": 0.0,
             "money_transfer": 0.0,
+            "secrecy": 0.0,
             "emotional": 0.0,
             "trust_building": 0.0,
             "isolation": 0.0
           }
         }
       ]
-    },
-    "llm": {
-      "backend": "llm",
-      "note": "API 키 없음 — 실행하지 않음"
     }
   }
 }

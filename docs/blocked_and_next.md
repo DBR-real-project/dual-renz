@@ -38,6 +38,7 @@ $env:DUALGUARD_LLM_PROVIDER = "gemini"   # auto(기본) | anthropic | gemini
 
 # 성능 실측 (LLM이 규칙보다 얼마나 나은지가 발표 자료의 핵심)
 .venv\Scripts\python.exe scripts\validate_content_risk.py --backend both
+.venv\Scripts\python.exe scripts\grade_content_rubric.py --backend both   # 카테고리별 정밀 채점
 
 # 파이프라인 확인
 .venv\Scripts\python.exe scripts\analyze_call.py --input data\korean_calls\scam_call.wav
@@ -144,6 +145,42 @@ $env:DUALGUARD_LLM_PROVIDER = "gemini"   # auto(기본) | anthropic | gemini
 .venv\Scripts\python.exe -c "import sys; sys.path.insert(0,'src'); from content_analysis.rag import get_shared_retriever; print(get_shared_retriever().rebuild())"
 ```
 
+### 3-2-1. 콘텐츠 채점 검증셋 확충 — 경계 케이스
+
+`data_seed/content_test_scenarios.json`(14건)은 사기/정상이 비교적 뚜렷이 갈리는
+케이스뿐이다. **애매한 경계 케이스**(예: 정상 은행원이 급하게 말하는 경우,
+가족 사이의 정당한 비밀 이야기, 실제 이체를 요청하는 정상 업무 통화)가 없어서
+지금 수치는 "쉬운 문제에서의 성능"만 보여준다.
+
+시나리오를 추가할 때 스키마:
+```json
+{
+  "id": "boundary_01",
+  "label": "fraud | normal",
+  "title": "한 줄 설명",
+  "channel": "call | video_call",
+  "techniques": ["urgency", "authority", ...],   // 기존 이진 참고 라벨 (선택)
+  "expected_scores": {
+    "urgency": {"band": "none|weak|clear|definitive", "evidence": "인용문 (band가 none이 아니면 필수 권장)"},
+    "authority": {"band": "..."},
+    "money_transfer": {"band": "..."},
+    "credentials": {"band": "..."},
+    "secrecy": {"band": "..."},
+    "emotional": {"band": "..."},
+    "trust_building": {"band": "..."},
+    "isolation": {"band": "..."}
+  },
+  "turns": [{"speaker": "...", "text": "..."}]
+}
+```
+8개 카테고리 전부를 채워야 한다(없으면 `"band": "none"`). 밴드 기준은
+`llm_classifier.SYSTEM_PROMPT`와 동일: none(0) / weak(1~30) / clear(31~70) /
+definitive(71~100). 추가 후:
+```powershell
+.venv\Scripts\python.exe scripts\validate_content_risk.py --backend both
+.venv\Scripts\python.exe scripts\grade_content_rubric.py --backend both
+```
+
 ### 3-3. 메모리 문제 (구조적 제약)
 
 전체 파이프라인이 Whisper + AASIST + Xception + 임베딩 모델을 순차로 쓴다.
@@ -197,6 +234,7 @@ cd C:\Users\migle\DualGuard-MediaAnalysis
 .venv\Scripts\python.exe scripts\validate_detector.py --backend ff
 .venv\Scripts\python.exe scripts\validate_audio_spoof.py
 .venv\Scripts\python.exe scripts\validate_content_risk.py   # 데이터 다운로드 불필요
+.venv\Scripts\python.exe scripts\grade_content_rubric.py    # 카테고리별 정밀 채점 (기대 점수대 vs 실제)
 ```
 
 데이터가 없다면 (git에 포함 안 됨):

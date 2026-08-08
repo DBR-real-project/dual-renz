@@ -1,0 +1,469 @@
+{
+  "dataset": "C:\\Users\\tkddn\\OneDrive\\바탕 화면\\헤커톤\\dual-renz\\data_seed\\content_test_scenarios.json",
+  "n_scenarios": 14,
+  "backends": {
+    "keyword": {
+      "backend": "keyword",
+      "engine": "키워드 규칙",
+      "n_scenarios": 14,
+      "n_scored": 14,
+      "elapsed_sec": 0.0,
+      "per_category": {
+        "urgency": {
+          "hit": 8,
+          "total": 14,
+          "rate": 0.5714
+        },
+        "authority": {
+          "hit": 9,
+          "total": 14,
+          "rate": 0.6429
+        },
+        "money_transfer": {
+          "hit": 7,
+          "total": 14,
+          "rate": 0.5
+        },
+        "credentials": {
+          "hit": 12,
+          "total": 14,
+          "rate": 0.8571
+        },
+        "secrecy": {
+          "hit": 11,
+          "total": 14,
+          "rate": 0.7857
+        },
+        "emotional": {
+          "hit": 7,
+          "total": 14,
+          "rate": 0.5
+        },
+        "trust_building": {
+          "hit": 7,
+          "total": 14,
+          "rate": 0.5
+        },
+        "isolation": {
+          "hit": 8,
+          "total": 14,
+          "rate": 0.5714
+        }
+      },
+      "overall_rate": 0.6161,
+      "under_scored": 38,
+      "over_scored": 5,
+      "scenarios": [
+        {
+          "id": "fraud_01",
+          "label": "fraud",
+          "band_match": 2,
+          "band_total": 8,
+          "mismatches": [
+            {
+              "category": "urgency",
+              "category_label": "긴급성 조성",
+              "expected_band": "weak(1~30)",
+              "actual_score": 40.0,
+              "evidence": "오늘 안에 통관업체 계좌로 보내줄 수 있어?"
+            },
+            {
+              "category": "authority",
+              "category_label": "권위 사칭",
+              "expected_band": "weak(1~30)",
+              "actual_score": 0.0,
+              "evidence": "군 소속으로는 직접 세관에 연락할 수가 없어서"
+            },
+            {
+              "category": "money_transfer",
+              "category_label": "금전 이체 요구",
+              "expected_band": "definitive(71~100)",
+              "actual_score": 40.0,
+              "evidence": "오늘 안에 통관업체 계좌로 보내줄 수 있어?"
+            },
+            {
+              "category": "secrecy",
+              "category_label": "비밀 유지 강요",
+              "expected_band": "definitive(71~100)",
+              "actual_score": 0.0,
+              "evidence": "아무한테도 말하지 말고"
+            },
+            {
+              "category": "trust_building",
+              "category_label": "신뢰 구축 화법",
+              "expected_band": "clear(31~70)",
+              "actual_score": 0.0,
+              "evidence": "지난주에 말했던 소포, 오늘 드디어 발송했어"
+            },
+            {
+              "category": "isolation",
+              "category_label": "제3자 확인 회피 유도",
+              "expected_band": "weak(1~30)",
+              "actual_score": 0.0,
+              "evidence": "군 소속으로는 직접 세관에 연락할 수가 없어서 자기가 대신 처리해줘야 해"
+            }
+          ]
+        },
+        {
+          "id": "fraud_02",
+          "label": "fraud",
+          "band_match": 4,
+          "band_total": 8,
+          "mismatches": [
+            {
+              "category": "urgency",
+              "category_label": "긴급성 조성",
+              "expected_band": "none(0~0)",
+              "actual_score": 80.0,
+              "evidence": null
+            },
+            {
+              "category": "authority",
+              "category_label": "권위 사칭",
+              "expected_band": "clear(31~70)",
+              "actual_score": 0.0,
+              "evidence": "은행 쪽에서... 담당 매니저가"
+            },
+            {
+              "category": "emotional",
+              "category_label": "감정적 압박",
+              "expected_band": "weak(1~30)",
+              "actual_score": 0.0,
+              "evidence": "나는 지금 계좌 접근이 막혀서 너무 답답해"
+            },
+            {
+              "category": "isolation",
+              "category_label": "제3자 확인 회피 유도",
+              "expected_band": "definitive(71~100)",
+              "actual_score": 0.0,
+              "evidence": "다른 창구로 문의하면 오히려 이상 거래로 잡혀서 자산이 동결된대"
+            }
+          ]
+        },
+        {
+          "id": "fraud_03",
+          "label": "fraud",
+          "band_match": 5,
+          "band_total": 8,
+          "mismatches": [
+            {
+              "category": "money_transfer",
+              "category_label": "금전 이체 요구",
+              "expected_band": "definitive(71~100)",
+              "actual_score": 40.0,
+              "evidence": "200만 원만 먼저 넣어두면"
+            },
+            {
+              "category": "emotional",
+              "category_label": "감정적 압박",
+              "expected_band": "weak(1~30)",
+              "actual_score": 0.0,
+              "evidence": "몸 안 힘들어?"
+            },
+            {
+              "category": "trust_building",
+              "category_label": "신뢰 구축 화법",
+              "expected_band": "definitive(71~100)",
+              "actual_score": 0.0,
+              "evidence": "요즘 야근 많다고 했잖아... 지난번에 넣은 게 조금 올랐더라"
+            }
+          ]
+        },
+        {
+          "id": "fraud_04",
+          "label": "fraud",
+          "band_match": 2,
+          "band_total": 8,
+          "mismatches": [
+            {
+              "category": "authority",
+              "category_label": "권위 사칭",
+              "expected_band": "definitive(71~100)",
+              "actual_score": 0.0,
+              "evidence": "유명 사업가 얼굴로 딥페이크 화상통화 — 신원 사칭 그 자체"
+            },
+            {
+              "category": "money_transfer",
+              "category_label": "금전 이체 요구",
+              "expected_band": "definitive(71~100)",
+              "actual_score": 40.0,
+              "evidence": "우선 100만 원 정도 보내보세요"
+            },
+            {
+              "category": "secrecy",
+              "category_label": "비밀 유지 강요",
+              "expected_band": "weak(1~30)",
+              "actual_score": 0.0,
+              "evidence": "이건 저만 아는 내부 프로젝트라"
+            },
+            {
+              "category": "emotional",
+              "category_label": "감정적 압박",
+              "expected_band": "weak(1~30)",
+              "actual_score": 0.0,
+              "evidence": "당신처럼 성실한 팬을 보면"
+            },
+            {
+              "category": "trust_building",
+              "category_label": "신뢰 구축 화법",
+              "expected_band": "clear(31~70)",
+              "actual_score": 0.0,
+              "evidence": "지난번 얘기했던 회사 지갑으로"
+            },
+            {
+              "category": "isolation",
+              "category_label": "제3자 확인 회피 유도",
+              "expected_band": "definitive(71~100)",
+              "actual_score": 0.0,
+              "evidence": "회사 다른 채널로 확인하려 하면 오히려 보안팀에서 계정을 막아버려요"
+            }
+          ]
+        },
+        {
+          "id": "fraud_05",
+          "label": "fraud",
+          "band_match": 3,
+          "band_total": 8,
+          "mismatches": [
+            {
+              "category": "authority",
+              "category_label": "권위 사칭",
+              "expected_band": "definitive(71~100)",
+              "actual_score": 40.0,
+              "evidence": "국경없는의사회 소속으로 파견 나온 거 알지"
+            },
+            {
+              "category": "money_transfer",
+              "category_label": "금전 이체 요구",
+              "expected_band": "definitive(71~100)",
+              "actual_score": 40.0,
+              "evidence": "지금 병원 계좌로 조금만 먼저 보내주면"
+            },
+            {
+              "category": "emotional",
+              "category_label": "감정적 압박",
+              "expected_band": "definitive(71~100)",
+              "actual_score": 0.0,
+              "evidence": "사고로 손을 다쳤어... 골든타임을 놓칠 수도"
+            },
+            {
+              "category": "trust_building",
+              "category_label": "신뢰 구축 화법",
+              "expected_band": "weak(1~30)",
+              "actual_score": 0.0,
+              "evidence": "국경없는의사회 소속으로 파견 나온 거 알지"
+            },
+            {
+              "category": "isolation",
+              "category_label": "제3자 확인 회피 유도",
+              "expected_band": "clear(31~70)",
+              "actual_score": 0.0,
+              "evidence": "본부 지원은 절차가 길어서 며칠 걸려, 그때는 너무 늦어"
+            }
+          ]
+        },
+        {
+          "id": "fraud_06",
+          "label": "fraud",
+          "band_match": 4,
+          "band_total": 8,
+          "mismatches": [
+            {
+              "category": "urgency",
+              "category_label": "긴급성 조성",
+              "expected_band": "definitive(71~100)",
+              "actual_score": 40.0,
+              "evidence": "오늘 마감이라... 지금 결정 안 하면 이 자리는 없어져"
+            },
+            {
+              "category": "money_transfer",
+              "category_label": "금전 이체 요구",
+              "expected_band": "definitive(71~100)",
+              "actual_score": 0.0,
+              "evidence": "계약금 150만 원만 먼저 넣어두자"
+            },
+            {
+              "category": "emotional",
+              "category_label": "감정적 압박",
+              "expected_band": "weak(1~30)",
+              "actual_score": 0.0,
+              "evidence": "우리 미래를 위한 거잖아"
+            },
+            {
+              "category": "trust_building",
+              "category_label": "신뢰 구축 화법",
+              "expected_band": "definitive(71~100)",
+              "actual_score": 0.0,
+              "evidence": "자기가 나중에 카페 차리고 싶다고 했었지"
+            }
+          ]
+        },
+        {
+          "id": "fraud_07",
+          "label": "fraud",
+          "band_match": 5,
+          "band_total": 8,
+          "mismatches": [
+            {
+              "category": "urgency",
+              "category_label": "긴급성 조성",
+              "expected_band": "none(0~0)",
+              "actual_score": 40.0,
+              "evidence": null
+            },
+            {
+              "category": "money_transfer",
+              "category_label": "금전 이체 요구",
+              "expected_band": "definitive(71~100)",
+              "actual_score": 0.0,
+              "evidence": "초기 재고비로 80만 원만 먼저 보내줘"
+            },
+            {
+              "category": "credentials",
+              "category_label": "개인정보·OTP 요구",
+              "expected_band": "definitive(71~100)",
+              "actual_score": 40.0,
+              "evidence": "문자로 오는 인증번호만 불러주면 돼"
+            }
+          ]
+        },
+        {
+          "id": "fraud_08",
+          "label": "fraud",
+          "band_match": 1,
+          "band_total": 8,
+          "mismatches": [
+            {
+              "category": "urgency",
+              "category_label": "긴급성 조성",
+              "expected_band": "definitive(71~100)",
+              "actual_score": 40.0,
+              "evidence": "지금 처리 안 하면 동결이 풀려서 자금이 빠져나갑니다"
+            },
+            {
+              "category": "authority",
+              "category_label": "권위 사칭",
+              "expected_band": "clear(31~70)",
+              "actual_score": 0.0,
+              "evidence": "로맨스스캠 피해자 지원 변호사입니다"
+            },
+            {
+              "category": "money_transfer",
+              "category_label": "금전 이체 요구",
+              "expected_band": "definitive(71~100)",
+              "actual_score": 0.0,
+              "evidence": "착수금을 먼저 내셔야... 50만 원이면 됩니다"
+            },
+            {
+              "category": "secrecy",
+              "category_label": "비밀 유지 강요",
+              "expected_band": "weak(1~30)",
+              "actual_score": 0.0,
+              "evidence": "수사 보안상 다른 상담기관에 문의하시면"
+            },
+            {
+              "category": "emotional",
+              "category_label": "감정적 압박",
+              "expected_band": "weak(1~30)",
+              "actual_score": 0.0,
+              "evidence": "정말 돈을 돌려받을 수 있나요? (희망 자극)"
+            },
+            {
+              "category": "trust_building",
+              "category_label": "신뢰 구축 화법",
+              "expected_band": "weak(1~30)",
+              "actual_score": 0.0,
+              "evidence": "이전에 당하신 피해금 환수 절차 — 피해 사실을 이미 아는 척"
+            },
+            {
+              "category": "isolation",
+              "category_label": "제3자 확인 회피 유도",
+              "expected_band": "definitive(71~100)",
+              "actual_score": 0.0,
+              "evidence": "다른 상담기관에 문의하시면 오히려 절차가 꼬이니 저와만 진행해주세요"
+            }
+          ]
+        },
+        {
+          "id": "fraud_09",
+          "label": "fraud",
+          "band_match": 4,
+          "band_total": 8,
+          "mismatches": [
+            {
+              "category": "urgency",
+              "category_label": "긴급성 조성",
+              "expected_band": "none(0~0)",
+              "actual_score": 40.0,
+              "evidence": null
+            },
+            {
+              "category": "emotional",
+              "category_label": "감정적 압박",
+              "expected_band": "weak(1~30)",
+              "actual_score": 0.0,
+              "evidence": "어제 회사 스트레스 받았다고 했잖아, 오늘은 좀 풀렸어?"
+            },
+            {
+              "category": "trust_building",
+              "category_label": "신뢰 구축 화법",
+              "expected_band": "definitive(71~100)",
+              "actual_score": 0.0,
+              "evidence": "어제 회사 스트레스 받았다고 했잖아... 내가 소개한 투자 플랫폼"
+            },
+            {
+              "category": "isolation",
+              "category_label": "제3자 확인 회피 유도",
+              "expected_band": "definitive(71~100)",
+              "actual_score": 0.0,
+              "evidence": "검색하지 말고 나한테만 물어봐줘"
+            }
+          ]
+        },
+        {
+          "id": "normal_01",
+          "label": "normal",
+          "band_match": 8,
+          "band_total": 8,
+          "mismatches": []
+        },
+        {
+          "id": "normal_02",
+          "label": "normal",
+          "band_match": 8,
+          "band_total": 8,
+          "mismatches": []
+        },
+        {
+          "id": "normal_03",
+          "label": "normal",
+          "band_match": 8,
+          "band_total": 8,
+          "mismatches": []
+        },
+        {
+          "id": "normal_04",
+          "label": "normal",
+          "band_match": 8,
+          "band_total": 8,
+          "mismatches": []
+        },
+        {
+          "id": "normal_05",
+          "label": "normal",
+          "band_match": 7,
+          "band_total": 8,
+          "mismatches": [
+            {
+              "category": "credentials",
+              "category_label": "개인정보·OTP 요구",
+              "expected_band": "none(0~0)",
+              "actual_score": 80.0,
+              "evidence": "'계좌번호나 비밀번호를 절대 요구하지 않으니'는 요구가 아니라 요구하지 않는다는 경고문이다. 단어만 보면 credentials로 오판하기 쉽다"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

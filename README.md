@@ -108,6 +108,7 @@ scripts/
   validate_detector.py         영상 성능 실측
   validate_audio_spoof.py      음성 성능 실측
   validate_content_risk.py     콘텐츠(8대 기법) 성능 실측 — 키워드 vs LLM 비교
+  grade_content_rubric.py      콘텐츠 카테고리별 정밀 채점 — 기대 점수대(밴드) vs 실제
   _metrics.py                  세 validate_* 스크립트 공용 지표 (정탐/오탐/분리도)
   fetch_ff_samples.py          FF++ 검증 샘플 (16GB zip에서 필요분만)
   fetch_asvspoof_samples.py    ASVspoof 검증 샘플 (parquet 부분 읽기)

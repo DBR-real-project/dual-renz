@@ -7,7 +7,8 @@
     "주의": [
       "techniques는 사람이 붙인 참고 라벨이다. 채점은 label(fraud/normal)로만 하고, techniques는 '어떤 기법을 놓쳤는지' 분석에만 쓴다.",
       "RAG용 data_seed/scam_cases.json 과 목적이 다르다. 저쪽은 검색 대상 사례집, 이쪽은 분류기 채점용 정답지다. 서로 섞지 말 것.",
-      "팀이 직접 작성한 시나리오라 실제 통화 녹취가 아니다. 발표에 수치를 인용할 때 '자체 구성 데이터셋'임을 반드시 밝힐 것."
+      "팀이 직접 작성한 시나리오라 실제 통화 녹취가 아니다. 발표에 수치를 인용할 때 '자체 구성 데이터셋'임을 반드시 밝힐 것.",
+      "expected_scores: 8개 카테고리 전부에 대한 기대 점수대(none/weak/clear/definitive, content_risk.ScoreBand와 동일 척도)를 사람이 대사를 읽고 직접 매겼다. techniques(이진 참고 라벨)와 값이 다를 수 있다 — techniques에 없어도 expected_scores에는 있을 수 있다(예: fraud_01의 secrecy). 재현: scripts/grade_content_rubric.py"
     ]
   },
   "scenarios": [
@@ -44,7 +45,40 @@
           "speaker": "발신자",
           "text": "군 소속으로는 직접 세관에 연락할 수가 없어서 자기가 대신 처리해줘야 해. 부대에 알려지면 나 징계받을 수도 있으니까 아무한테도 말하지 말고, 오늘 안에 통관업체 계좌로 보내줄 수 있어?"
         }
-      ]
+      ],
+      "expected_scores": {
+        "urgency": {
+          "band": "weak",
+          "evidence": "오늘 안에 통관업체 계좌로 보내줄 수 있어?"
+        },
+        "authority": {
+          "band": "weak",
+          "evidence": "군 소속으로는 직접 세관에 연락할 수가 없어서"
+        },
+        "money_transfer": {
+          "band": "definitive",
+          "evidence": "오늘 안에 통관업체 계좌로 보내줄 수 있어?"
+        },
+        "credentials": {
+          "band": "none"
+        },
+        "secrecy": {
+          "band": "definitive",
+          "evidence": "아무한테도 말하지 말고"
+        },
+        "emotional": {
+          "band": "clear",
+          "evidence": "부대에 알려지면 나 징계받을 수도 있으니까"
+        },
+        "trust_building": {
+          "band": "clear",
+          "evidence": "지난주에 말했던 소포, 오늘 드디어 발송했어"
+        },
+        "isolation": {
+          "band": "weak",
+          "evidence": "군 소속으로는 직접 세관에 연락할 수가 없어서 자기가 대신 처리해줘야 해"
+        }
+      }
     },
     {
       "id": "fraud_02",
@@ -78,7 +112,37 @@
           "speaker": "발신자",
           "text": "다른 창구로 문의하면 오히려 이상 거래로 잡혀서 자산이 동결된대. 나만 믿고 매니저가 알려준 계좌로 인증 송금 부탁해, 확인되면 바로 풀린다고 했어."
         }
-      ]
+      ],
+      "expected_scores": {
+        "urgency": {
+          "band": "none"
+        },
+        "authority": {
+          "band": "clear",
+          "evidence": "은행 쪽에서... 담당 매니저가"
+        },
+        "money_transfer": {
+          "band": "definitive",
+          "evidence": "매니저가 알려준 계좌로 인증 송금 부탁해"
+        },
+        "credentials": {
+          "band": "none"
+        },
+        "secrecy": {
+          "band": "none"
+        },
+        "emotional": {
+          "band": "weak",
+          "evidence": "나는 지금 계좌 접근이 막혀서 너무 답답해"
+        },
+        "trust_building": {
+          "band": "none"
+        },
+        "isolation": {
+          "band": "definitive",
+          "evidence": "다른 창구로 문의하면 오히려 이상 거래로 잡혀서 자산이 동결된대"
+        }
+      }
     },
     {
       "id": "fraud_03",
@@ -111,7 +175,37 @@
           "speaker": "발신자",
           "text": "응, 지금 아니면 진짜 늦어. 200만 원만 먼저 넣어두면 내가 바로 배정 신청해줄게."
         }
-      ]
+      ],
+      "expected_scores": {
+        "urgency": {
+          "band": "definitive",
+          "evidence": "오늘 저녁에 딱 30분만... 지금 아니면 진짜 늦어"
+        },
+        "authority": {
+          "band": "none"
+        },
+        "money_transfer": {
+          "band": "definitive",
+          "evidence": "200만 원만 먼저 넣어두면"
+        },
+        "credentials": {
+          "band": "none"
+        },
+        "secrecy": {
+          "band": "none"
+        },
+        "emotional": {
+          "band": "weak",
+          "evidence": "몸 안 힘들어?"
+        },
+        "trust_building": {
+          "band": "definitive",
+          "evidence": "요즘 야근 많다고 했잖아... 지난번에 넣은 게 조금 올랐더라"
+        },
+        "isolation": {
+          "band": "none"
+        }
+      }
     },
     {
       "id": "fraud_04",
@@ -145,7 +239,39 @@
           "speaker": "발신자(유명 사업가 얼굴)",
           "text": "우선 100만 원 정도 보내보세요. 제가 명함에 있는 은행 계좌 알려드릴게요."
         }
-      ]
+      ],
+      "expected_scores": {
+        "urgency": {
+          "band": "none"
+        },
+        "authority": {
+          "band": "definitive",
+          "evidence": "유명 사업가 얼굴로 딥페이크 화상통화 — 신원 사칭 그 자체"
+        },
+        "money_transfer": {
+          "band": "definitive",
+          "evidence": "우선 100만 원 정도 보내보세요"
+        },
+        "credentials": {
+          "band": "none"
+        },
+        "secrecy": {
+          "band": "weak",
+          "evidence": "이건 저만 아는 내부 프로젝트라"
+        },
+        "emotional": {
+          "band": "weak",
+          "evidence": "당신처럼 성실한 팬을 보면"
+        },
+        "trust_building": {
+          "band": "clear",
+          "evidence": "지난번 얘기했던 회사 지갑으로"
+        },
+        "isolation": {
+          "band": "definitive",
+          "evidence": "회사 다른 채널로 확인하려 하면 오히려 보안팀에서 계정을 막아버려요"
+        }
+      }
     },
     {
       "id": "fraud_05",
@@ -179,7 +305,39 @@
           "speaker": "발신자",
           "text": "본부 지원은 절차가 길어서 며칠 걸려, 그때는 너무 늦어. 자기가 지금 병원 계좌로 조금만 먼저 보내주면 본부 지원금 나오는 대로 바로 갚을게."
         }
-      ]
+      ],
+      "expected_scores": {
+        "urgency": {
+          "band": "definitive",
+          "evidence": "오늘 안에 수술비를 못 내면 골든타임을 놓칠 수도 있대"
+        },
+        "authority": {
+          "band": "definitive",
+          "evidence": "국경없는의사회 소속으로 파견 나온 거 알지"
+        },
+        "money_transfer": {
+          "band": "definitive",
+          "evidence": "지금 병원 계좌로 조금만 먼저 보내주면"
+        },
+        "credentials": {
+          "band": "none"
+        },
+        "secrecy": {
+          "band": "none"
+        },
+        "emotional": {
+          "band": "definitive",
+          "evidence": "사고로 손을 다쳤어... 골든타임을 놓칠 수도"
+        },
+        "trust_building": {
+          "band": "weak",
+          "evidence": "국경없는의사회 소속으로 파견 나온 거 알지"
+        },
+        "isolation": {
+          "band": "clear",
+          "evidence": "본부 지원은 절차가 길어서 며칠 걸려, 그때는 너무 늦어"
+        }
+      }
     },
     {
       "id": "fraud_06",
@@ -212,7 +370,37 @@
           "speaker": "발신자",
           "text": "지금 결정 안 하면 이 자리는 없어져. 계약금 150만 원만 먼저 넣어두자, 우리 미래를 위한 거잖아."
         }
-      ]
+      ],
+      "expected_scores": {
+        "urgency": {
+          "band": "definitive",
+          "evidence": "오늘 마감이라... 지금 결정 안 하면 이 자리는 없어져"
+        },
+        "authority": {
+          "band": "none"
+        },
+        "money_transfer": {
+          "band": "definitive",
+          "evidence": "계약금 150만 원만 먼저 넣어두자"
+        },
+        "credentials": {
+          "band": "none"
+        },
+        "secrecy": {
+          "band": "none"
+        },
+        "emotional": {
+          "band": "weak",
+          "evidence": "우리 미래를 위한 거잖아"
+        },
+        "trust_building": {
+          "band": "definitive",
+          "evidence": "자기가 나중에 카페 차리고 싶다고 했었지"
+        },
+        "isolation": {
+          "band": "none"
+        }
+      }
     },
     {
       "id": "fraud_07",
@@ -246,7 +434,37 @@
           "speaker": "발신자",
           "text": "이건 우리 둘만 아는 비밀 프로젝트니까 가족한테는 말하지 마. 초기 재고비로 80만 원만 먼저 보내줘, 판매되면 바로 나눠줄게."
         }
-      ]
+      ],
+      "expected_scores": {
+        "urgency": {
+          "band": "none"
+        },
+        "authority": {
+          "band": "none"
+        },
+        "money_transfer": {
+          "band": "definitive",
+          "evidence": "초기 재고비로 80만 원만 먼저 보내줘"
+        },
+        "credentials": {
+          "band": "definitive",
+          "evidence": "문자로 오는 인증번호만 불러주면 돼"
+        },
+        "secrecy": {
+          "band": "definitive",
+          "evidence": "이건 우리 둘만 아는 비밀 프로젝트니까 가족한테는 말하지 마"
+        },
+        "emotional": {
+          "band": "clear",
+          "evidence": "자기밖에 없어서 하는 말인데"
+        },
+        "trust_building": {
+          "band": "none"
+        },
+        "isolation": {
+          "band": "none"
+        }
+      }
     },
     {
       "id": "fraud_08",
@@ -280,7 +498,40 @@
           "speaker": "발신자",
           "text": "50만 원이면 됩니다. 이 건은 수사 보안상 다른 상담기관에 문의하시면 오히려 절차가 꼬이니 저와만 진행해주세요."
         }
-      ]
+      ],
+      "expected_scores": {
+        "urgency": {
+          "band": "definitive",
+          "evidence": "지금 처리 안 하면 동결이 풀려서 자금이 빠져나갑니다"
+        },
+        "authority": {
+          "band": "clear",
+          "evidence": "로맨스스캠 피해자 지원 변호사입니다"
+        },
+        "money_transfer": {
+          "band": "definitive",
+          "evidence": "착수금을 먼저 내셔야... 50만 원이면 됩니다"
+        },
+        "credentials": {
+          "band": "none"
+        },
+        "secrecy": {
+          "band": "weak",
+          "evidence": "수사 보안상 다른 상담기관에 문의하시면"
+        },
+        "emotional": {
+          "band": "weak",
+          "evidence": "정말 돈을 돌려받을 수 있나요? (희망 자극)"
+        },
+        "trust_building": {
+          "band": "weak",
+          "evidence": "이전에 당하신 피해금 환수 절차 — 피해 사실을 이미 아는 척"
+        },
+        "isolation": {
+          "band": "definitive",
+          "evidence": "다른 상담기관에 문의하시면 오히려 절차가 꼬이니 저와만 진행해주세요"
+        }
+      }
     },
     {
       "id": "fraud_09",
@@ -314,7 +565,38 @@
           "speaker": "발신자",
           "text": "우리 같은 VIP 회원한테만 초대 링크로 배포되는 비공개 버전이라 그래. 검색하지 말고 나한테만 물어봐줘, 등록 끝나면 바로 첫 입금 100만 원 넣으면 돼."
         }
-      ]
+      ],
+      "expected_scores": {
+        "urgency": {
+          "band": "none"
+        },
+        "authority": {
+          "band": "none"
+        },
+        "money_transfer": {
+          "band": "definitive",
+          "evidence": "등록 끝나면 바로 첫 입금 100만 원 넣으면 돼"
+        },
+        "credentials": {
+          "band": "definitive",
+          "evidence": "인증번호랑 계좌 비밀번호 앞자리만 알려주면"
+        },
+        "secrecy": {
+          "band": "none"
+        },
+        "emotional": {
+          "band": "weak",
+          "evidence": "어제 회사 스트레스 받았다고 했잖아, 오늘은 좀 풀렸어?"
+        },
+        "trust_building": {
+          "band": "definitive",
+          "evidence": "어제 회사 스트레스 받았다고 했잖아... 내가 소개한 투자 플랫폼"
+        },
+        "isolation": {
+          "band": "definitive",
+          "evidence": "검색하지 말고 나한테만 물어봐줘"
+        }
+      }
     },
     {
       "id": "normal_01",
@@ -335,7 +617,33 @@
           "speaker": "발신자",
           "text": "네, 배송 완료되면 문자로 안내드리겠습니다."
         }
-      ]
+      ],
+      "expected_scores": {
+        "urgency": {
+          "band": "none"
+        },
+        "authority": {
+          "band": "none"
+        },
+        "money_transfer": {
+          "band": "none"
+        },
+        "credentials": {
+          "band": "none"
+        },
+        "secrecy": {
+          "band": "none"
+        },
+        "emotional": {
+          "band": "none"
+        },
+        "trust_building": {
+          "band": "none"
+        },
+        "isolation": {
+          "band": "none"
+        }
+      }
     },
     {
       "id": "normal_02",
@@ -360,7 +668,33 @@
           "speaker": "수신자",
           "text": "콜, 그때 봐!"
         }
-      ]
+      ],
+      "expected_scores": {
+        "urgency": {
+          "band": "none"
+        },
+        "authority": {
+          "band": "none"
+        },
+        "money_transfer": {
+          "band": "none"
+        },
+        "credentials": {
+          "band": "none"
+        },
+        "secrecy": {
+          "band": "none"
+        },
+        "emotional": {
+          "band": "none"
+        },
+        "trust_building": {
+          "band": "none"
+        },
+        "isolation": {
+          "band": "none"
+        }
+      }
     },
     {
       "id": "normal_03",
@@ -381,7 +715,33 @@
           "speaker": "팀장",
           "text": "좋습니다, 다음 회의 때 리뷰하죠."
         }
-      ]
+      ],
+      "expected_scores": {
+        "urgency": {
+          "band": "none"
+        },
+        "authority": {
+          "band": "none"
+        },
+        "money_transfer": {
+          "band": "none"
+        },
+        "credentials": {
+          "band": "none"
+        },
+        "secrecy": {
+          "band": "none"
+        },
+        "emotional": {
+          "band": "none"
+        },
+        "trust_building": {
+          "band": "none"
+        },
+        "isolation": {
+          "band": "none"
+        }
+      }
     },
     {
       "id": "normal_04",
@@ -406,7 +766,34 @@
           "speaker": "수신자",
           "text": "좋아, 토요일 오후 어때?"
         }
-      ]
+      ],
+      "expected_scores": {
+        "urgency": {
+          "band": "none"
+        },
+        "authority": {
+          "band": "none"
+        },
+        "money_transfer": {
+          "band": "none"
+        },
+        "credentials": {
+          "band": "none"
+        },
+        "secrecy": {
+          "band": "none"
+        },
+        "emotional": {
+          "band": "none"
+        },
+        "trust_building": {
+          "band": "none",
+          "evidence": "저번에 말한 발표 잘 끝났어? — 진짜 안부, 조작 의도 없음"
+        },
+        "isolation": {
+          "band": "none"
+        }
+      }
     },
     {
       "id": "normal_05",
@@ -431,7 +818,35 @@
           "speaker": "고객",
           "text": "알겠습니다, 앱으로 신청할게요."
         }
-      ]
+      ],
+      "expected_scores": {
+        "urgency": {
+          "band": "none"
+        },
+        "authority": {
+          "band": "none",
+          "evidence": "정상 은행 상담원 — 사칭이 아니라 실제 고객센터"
+        },
+        "money_transfer": {
+          "band": "none"
+        },
+        "credentials": {
+          "band": "none",
+          "evidence": "'계좌번호나 비밀번호를 절대 요구하지 않으니'는 요구가 아니라 요구하지 않는다는 경고문이다. 단어만 보면 credentials로 오판하기 쉽다"
+        },
+        "secrecy": {
+          "band": "none"
+        },
+        "emotional": {
+          "band": "none"
+        },
+        "trust_building": {
+          "band": "none"
+        },
+        "isolation": {
+          "band": "none"
+        }
+      }
     }
   ]
 }
