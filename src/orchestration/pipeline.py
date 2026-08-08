@@ -441,7 +441,7 @@ def analyze(
         media_risk=max((r.media_risk for r in results), default=0.0),
         engines={
             "stt": f"faster-whisper ({stt_model})",
-            # 어느 백엔드(Claude/Gemini)가 실제로 돌았는지 그대로 보여준다.
+            # 어느 백엔드(Claude/Gemini/Ollama)가 실제로 돌았는지 그대로 보여준다.
             "content": active_provider_label() if llm_on else "키워드 규칙 (LLM 키 없음)",
             "rag": "ChromaDB + ko-sroberta" if rag_on else "미사용",
             "audio": "AASIST" if audio_ok else "미사용",

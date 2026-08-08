@@ -22,15 +22,16 @@
 | **웹 대시보드** (업로드 → 진행률 → 결과) | ✅ | `scripts/run_server.py` |
 | **CLI 분석** | ✅ | `scripts/analyze_call.py` |
 | STT (한국어) | ✅ | faster-whisper. 8문장 통화를 정확히 8구간으로 분리 |
-| 8대 사회공학 기법 분류 | ✅ | LLM(**Claude / Gemini 선택**) + 키워드 규칙 폴백 |
+| 8대 사회공학 기법 분류 | ✅ | LLM(**Claude / Gemini / Ollama**) + 키워드 규칙 폴백 |
 | RAG 사기사례 대조 | ✅ | 사기/정상 13문장 판별 **13/13** |
 | 음성 스푸핑 (AASIST) | ✅ | 정탐률 96.7%, 오탐률 0%, 정확도 98% |
 | 딥페이크 (FF++ Xception) | ✅ | 정탐률 66.7%, 오탐률 0%, 정확도 80% |
-| **콘텐츠 분류 성능 실측** | ⚠️ | 키워드 기준선만 측정 (정탐 55.6% / 오탐 20%). **LLM 수치는 키가 있어야 나옴** |
+| STT 모델 크기 비교 | ✅ | tiny/base/small CER·처리시간 실측, 화이트노이즈 강건성 포함 (`scripts/compare_stt_models.py`) |
+| **콘텐츠 분류 성능 실측** | ⚠️ | 키워드 기준선만 측정. 시나리오 21건(경계 케이스 7건 포함) 기준 정탐 63.6% / 오탐 30.0%. **LLM 수치는 키가 있어야 나옴** |
+| **콘텐츠 카테고리별 정밀 채점** | ✅ | 기대 점수대(밴드) vs 실제 비교, 168개 항목 밴드 일치율 62.5% (`scripts/grade_content_rubric.py`) |
 | 통합 스코어링 | ✅ | 기획서 두 버전 공식 모두 구현 |
 | 크롬 확장 (MV3) | ⚠️ | 코드 작성 완료, **브라우저 실제 로드 테스트 미실시** |
-| LLM 실제 호출 | ⚠️ | `ANTHROPIC_API_KEY` 또는 `GEMINI_API_KEY` 필요. 없으면 키워드 규칙으로 동작. `DUALGUARD_LLM_PROVIDER=ollama`로 로컬 LLM도 가능(프롬프트 사전 검증용) |
-| STT 모델 크기 비교 | ✅ | tiny/base/small CER·처리시간 실측, 화이트노이즈 강건성 포함 (`scripts/compare_stt_models.py`) |
+| LLM 실제 호출 | ⚠️ | `ANTHROPIC_API_KEY` 또는 `GEMINI_API_KEY` 필요. 없으면 키워드 규칙으로 동작. `DUALGUARD_LLM_PROVIDER=ollama`로 로컬 LLM도 가능(프롬프트 사전 검증용, **이 환경엔 Ollama가 없어 연동 코드만 있고 실제 호출은 미검증**) |
 
 성능 수치의 측정 조건은 **[docs/validation_report.md](docs/validation_report.md)** 에 있다.
 발표에 인용하기 전에 그 문서의 전제(학습 도메인 내 측정)를 반드시 확인할 것.
@@ -86,7 +87,7 @@ src/
   content_analysis/
     stt.py                     faster-whisper STT (구간별 타임스탬프)
     content_risk.py            8대 카테고리 + 집계 공식
-    llm_classifier.py          Claude/Gemini 구조화 출력 분류 (키 없으면 폴백)
+    llm_classifier.py          Claude/Gemini/Ollama 구조화 출력 분류 (키 없으면 폴백)
     rag.py                     ChromaDB 사례 검색 (한국어 임베딩)
   media_detection/
     media_risk.py              영상+음성을 media_risk 하나로
