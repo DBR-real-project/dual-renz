@@ -24,7 +24,7 @@ LLM 연동 전까지는 `classify_by_keywords()`가 대역으로 동작한다. �
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple, Union
 
 
 class SocialEngineeringCategory(str, Enum):
@@ -50,6 +50,51 @@ CATEGORY_LABELS_KO: Dict[SocialEngineeringCategory, str] = {
     SocialEngineeringCategory.ISOLATION: "제3자 확인 회피 유도",
 }
 
+
+class ScoreBand(str, Enum):
+    """
+    카테고리 점수를 4단계로 뭉뚱그린 것. 시나리오별 "기대 점수대"를 사람이
+    미리 매길 때 정확한 숫자(예: 63점)를 고르라고 하면 사람마다 기준이 다르고
+    무의미한 정밀도가 생긴다. 대신 이 4단계 중 하나만 고르면 된다.
+
+    llm_classifier.SYSTEM_PROMPT의 채점 기준과 **정확히 같은 척도**를 쓴다.
+      0    NONE        해당 기법의 징후가 전혀 없음
+      1~30 WEAK        약한 암시가 있으나 정상 대화로도 설명 가능
+      31~70 CLEAR      해당 기법으로 볼 만한 표현이 분명히 있음
+      71~100 DEFINITIVE 해당 기법의 전형적인 수법이 명확히 드러남
+
+    두 곳의 척도가 어긋나면 "기대 점수대"와 "LLM이 실제로 채점하는 기준"이
+    달라져서 채점표 자체가 무의미해진다. 한쪽을 바꾸면 반드시 다른 쪽도
+    맞출 것 (llm_classifier.py의 채점 기준 문단).
+    """
+    NONE = "none"
+    WEAK = "weak"
+    CLEAR = "clear"
+    DEFINITIVE = "definitive"
+
+
+SCORE_BAND_RANGES: Dict[ScoreBand, Tuple[int, int]] = {
+    ScoreBand.NONE: (0, 0),
+    ScoreBand.WEAK: (1, 30),
+    ScoreBand.CLEAR: (31, 70),
+    ScoreBand.DEFINITIVE: (71, 100),
+}
+
+
+def score_in_band(score: float, band: Union[ScoreBand, str]) -> bool:
+    """점수가 기대 밴드 범위 안에 있는지. band는 ScoreBand든 문자열("weak" 등)이든 받는다."""
+    b = band if isinstance(band, ScoreBand) else ScoreBand(band)
+    lo, hi = SCORE_BAND_RANGES[b]
+    return lo <= score <= hi
+
+
+def band_range_label(band: Union[ScoreBand, str]) -> str:
+    """리포트에 찍을 표시용 문자열. 예: 'clear(31~70)'."""
+    b = band if isinstance(band, ScoreBand) else ScoreBand(band)
+    lo, hi = SCORE_BAND_RANGES[b]
+    return f"{b.value}({lo}~{hi})"
+
+
 # 규칙 기반 대역용 키워드.
 # 주의: 이건 LLM 연동 전까지의 임시 대역이다. 실제 사기 화법은 이 단어들을 안 쓰고도
 #       성립하므로, 이 키워드 목록의 재현율을 성능 근거로 제시하면 안 된다.
@@ -72,8 +117,13 @@ _KEYWORDS: Dict[SocialEngineeringCategory, List[str]] = {
         "카드번호", "cvc", "공인인증", "계좌번호 알려", "신분증",
     ],
     SocialEngineeringCategory.SECRECY: [
-        "알리지 마", "말하지 마", "비밀", "혼자", "아무에게도", "기밀",
+        "알리지 마", "말하지 마", "혼자", "아무에게도", "기밀",
         "발설", "누설", "얘기하면 안",
+        # "비밀" 단독은 넣지 않는다. "비밀번호"의 부분 문자열로 걸려서
+        # credentials가 아니라 secrecy를 잘못 띄운다 (실측: grade_content_rubric.py의
+        # normal_05 — "비밀번호를 절대 요구하지 않으니" 경고문에서 오탐).
+        # 대신 실제 "비밀 유지" 의미로만 쓰이는 구체적인 표현을 넣는다.
+        "비밀로 해", "비밀 지켜", "우리만의 비밀", "비밀 프로젝트", "이건 비밀",
     ],
     SocialEngineeringCategory.EMOTIONAL_PRESSURE: [
         "가족", "아들", "딸", "자녀", "다칩니다", "위험", "체포", "구속", "처벌",
