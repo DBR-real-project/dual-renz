@@ -1,13 +1,27 @@
-# DualGuard - 미디어 분석 파트
+# DualGuard
 
-보이스피싱/딥페이크 탐지 해커톤 프로젝트. 이 저장소는 **이상원(BE/미디어 분석)** 담당 파트.
+보이스피싱·화상통화 딥페이크 탐지 해커톤 프로젝트.
+처음에는 미디어 분석 파트만이었으나 **전체 파이프라인(STT · 화법분석 · RAG ·
+음성/영상 위조 판별 · 통합 스코어링 · 웹 대시보드 · 크롬 확장)** 이 이 저장소에 있다.
+
+## 작업 전 반드시 알아야 할 것
+
+1. **`python`이 아니라 `.venv\Scripts\python.exe`** — 시스템 PATH의 python은 스토어 스텁이라 먹통이다.
+2. **메모리가 빠듯하다.** Whisper + AASIST + Xception + 임베딩 모델을 순차로 쓴다.
+   여유 6GB 아래면 `mkl_malloc` 실패나 **네이티브 크래시(0xC0000005)** 가 난다.
+   후자는 try/except로 못 잡으므로 애초에 피해야 한다:
+   - 파이프라인은 단계마다 모델을 해제한다 (`analyze(free_models=True)`)
+   - AASIST 배치는 4를 넘기지 말 것
+   - 서버와 CLI를 동시에 돌리지 말 것
+3. **모델을 바꿀 때는 실측하고 바꿔라.** RAG 임베딩 모델을 다국어 모델로 두면
+   무관한 한국어 문장을 동일 문장보다 가깝게 판정한다 (`rag.py` 상단 실측표 참고).
 
 ## 아키텍처
 
 두 개의 위험도 신호를 하나의 Fraud Risk Score(0~100)로 합친다.
 
-- **content_risk** — 강동연 담당. STT → LLM으로 8대 사회공학 기법 분류. 아직 없어서
-  `src/content_analysis/content_risk_stub.py`의 해시 기반 더미로 대역.
+- **content_risk** — `src/content_analysis/`. STT(faster-whisper) → 8대 사회공학 기법 분류
+  (LLM, 키 없으면 키워드 규칙) + RAG 사례 대조. `content_risk_stub.py`는 구버전이니 쓰지 말 것.
 - **media_risk** — 이상원 담당. `src/media_detection/media_risk.py`가 정식 진입점.
   영상 딥페이크는 실제 모델 추론, 음성 스푸핑(AASIST)은 아직 더미.
 - **통합** — `src/scoring/fraud_risk_score.py`. 이 부분은 완성 상태.
@@ -63,16 +77,25 @@ scoring 모듈은 이 계약만 알고 있으면 되도록 설계돼 있음.
 ## 실행
 
 ```
-.venv\Scripts\python.exe scripts\demo_full_pipeline.py          # 영상 -> 두 엔진 -> 통합 점수
+.venv\Scripts\python.exe scripts\run_server.py                  # 웹 대시보드 (권장)
+.venv\Scripts\python.exe scripts\analyze_call.py --input <파일>  # CLI 전체 분석
 .venv\Scripts\python.exe scripts\demo_cross_validation.py       # 교차검증 4조합 (발표용)
 .venv\Scripts\python.exe scripts\demo_fraud_risk_score.py       # 스코어링만 (모델 불필요)
 .venv\Scripts\python.exe scripts\validate_detector.py           # 영상 성능 실측
 .venv\Scripts\python.exe scripts\validate_audio_spoof.py        # 음성 성능 실측
-.venv\Scripts\python.exe scripts\detect_deepfake.py --input <영상>
-.venv\Scripts\python.exe scripts\download_ff_weights.py         # FF++ 가중치 (444MB, 이어받기)
+.venv\Scripts\python.exe scripts\make_korean_call_samples.py    # 한국어 통화 샘플 (TTS)
 ```
 
 전체 목록과 각 스크립트 설명은 `README.md` 참고.
+
+## 코드 컨벤션
+
+- 주석·docstring은 한국어. **왜 그렇게 했는지**를 적는다. 특히 실측으로 정한 값
+  (배치 크기, 임계값, 모델 선택)은 근거 수치를 함께 남긴다.
+- 외부 의존성을 늘리기 전에 대안을 먼저 본다. dlib 대신 OpenCV Haar cascade,
+  차트 라이브러리 대신 SVG 직접 생성 — 둘 다 시연 환경의 리스크를 줄이려는 선택이다.
+- 실패는 조용히 넘기지 말고 `warnings`에 남겨 사용자에게 보여준다.
+  (어떤 엔진이 실제로 쓰였는지 리포트에 항상 표시된다)
 
 ## 데이터셋을 부분만 받는 패턴
 

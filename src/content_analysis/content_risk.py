@@ -163,6 +163,17 @@ def compute_content_risk(
     )
 
 
+def _normalize(text: str) -> str:
+    """
+    공백을 제거한 소문자 문자열.
+
+    STT 출력은 한국어 띄어쓰기가 원문과 다르게 나오는 경우가 많다
+    (실측: "대포통장" -> "대포 통장", "안전계좌" -> "안전 계좌", "지금 즉시" -> "지금즉시").
+    공백을 무시하고 비교하면 이 흔들림에 걸리지 않는다.
+    """
+    return "".join((text or "").split()).lower()
+
+
 def classify_by_keywords(transcript: str) -> ContentRiskBreakdown:
     """
     [LLM 연동 전 대역] 키워드 규칙으로 8대 카테고리 점수를 매긴다.
@@ -170,12 +181,14 @@ def classify_by_keywords(transcript: str) -> ContentRiskBreakdown:
     점수화: 한 카테고리에서 걸린 키워드 1개당 40점, 최대 100점.
     (1개 걸리면 40, 2개면 80, 3개 이상이면 100 — 여러 표현이 겹칠수록 확신을 높인다)
     """
-    text = (transcript or "").lower()
+    raw = (transcript or "").lower()
+    normalized = _normalize(transcript)
     scores: Dict[str, float] = {}
     matched: Dict[str, List[str]] = {}
 
     for cat, words in _KEYWORDS.items():
-        hits = [w for w in words if w.lower() in text]
+        hits = [w for w in words
+                if w.lower() in raw or _normalize(w) in normalized]
         if hits:
             matched[cat.value] = hits
         scores[cat.value] = min(100.0, 40.0 * len(hits))
@@ -183,20 +196,23 @@ def classify_by_keywords(transcript: str) -> ContentRiskBreakdown:
     return compute_content_risk(scores, matched_terms=matched, is_llm=False)
 
 
-def classify_with_llm(transcript: str) -> ContentRiskBreakdown:
+def classify_with_llm(
+    transcript: str,
+    context_before: str = "",
+    context_after: str = "",
+    fallback: bool = True,
+) -> ContentRiskBreakdown:
     """
-    [강동연 담당 - 미구현] LLM으로 8대 카테고리를 분류한다.
+    LLM으로 8대 카테고리를 분류한다. 구현은 llm_classifier.py에 있다.
 
-    구현 시 계약:
-      입력  transcript: STT 결과 텍스트
-      출력  ContentRiskBreakdown (compute_content_risk()에 카테고리별 0~100 점수를 넘겨 생성)
+    API 키가 없거나 호출이 실패하면 fallback=True일 때 키워드 규칙으로 넘어간다.
+    반환값의 is_llm으로 어느 쪽이 쓰였는지 구분할 수 있다.
 
-    이 함수만 채우면 통합 스코어링 쪽은 수정할 필요가 없다.
+    (지연 import: llm_classifier가 이 모듈을 import하므로 순환 참조를 피한다)
     """
-    raise NotImplementedError(
-        "LLM 기반 분류는 강동연 파트에서 구현 예정입니다. "
-        "그 전까지는 classify_by_keywords()를 쓰세요."
-    )
+    from .llm_classifier import classify_segment
+
+    return classify_segment(transcript, context_before, context_after, fallback=fallback)
 
 
 def get_content_risk(transcript: str, use_llm: bool = False) -> float:

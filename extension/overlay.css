@@ -1,0 +1,67 @@
+/* 경고 오버레이 스타일
+   담당: 이상원
+
+   호스트 페이지(구글 미트 등)의 CSS와 섞이면 안 되므로 모든 값을 명시하고
+   z-index를 최대로 둔다. all:initial까지 쓰면 폰트가 깨져 가독성이 떨어져서
+   필요한 속성만 강제한다. */
+
+#dualguard-overlay.dg {
+  position: fixed !important;
+  top: 16px !important;
+  right: 16px !important;
+  z-index: 2147483647 !important;
+  width: 320px !important;
+  max-width: calc(100vw - 32px) !important;
+  padding: 14px 16px !important;
+  border-radius: 12px !important;
+  background: #12161bF2 !important;
+  color: #e8edf3 !important;
+  font-family: "Malgun Gothic", system-ui, sans-serif !important;
+  font-size: 13px !important;
+  line-height: 1.55 !important;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, .5) !important;
+  border-left: 4px solid #6b7887 !important;
+  backdrop-filter: blur(6px);
+}
+#dualguard-overlay.lv-높음 { border-left-color: #ff5c5c !important; }
+#dualguard-overlay.lv-중간 { border-left-color: #f5b942 !important; }
+#dualguard-overlay.lv-대기 { border-left-color: #5aa9ff !important; }
+
+#dualguard-overlay .dg-head {
+  display: flex !important; align-items: center !important; gap: 8px !important;
+}
+#dualguard-overlay .dg-icon {
+  font-weight: 800 !important; font-size: 14px !important;
+  min-width: 20px !important; text-align: center !important;
+}
+#dualguard-overlay.lv-높음 .dg-icon { color: #ff5c5c !important; }
+#dualguard-overlay.lv-중간 .dg-icon { color: #f5b942 !important; }
+#dualguard-overlay.lv-대기 .dg-icon { color: #5aa9ff !important; }
+
+#dualguard-overlay .dg-title {
+  font-weight: 700 !important; font-size: 14px !important; flex: 1 !important;
+}
+#dualguard-overlay .dg-x {
+  background: none !important; border: 0 !important; color: #93a1b0 !important;
+  font-size: 18px !important; line-height: 1 !important; cursor: pointer !important;
+  padding: 0 2px !important;
+}
+#dualguard-overlay .dg-score {
+  color: #93a1b0 !important; font-size: 12px !important; margin-top: 3px !important;
+}
+#dualguard-overlay .dg-tags { margin-top: 8px !important; }
+#dualguard-overlay .dg-tag {
+  display: inline-block !important; font-size: 11px !important;
+  padding: 2px 8px !important; margin: 0 4px 4px 0 !important;
+  border-radius: 999px !important;
+  background: rgba(255, 138, 76, .16) !important; color: #ffb489 !important;
+}
+#dualguard-overlay .dg-actions {
+  margin: 9px 0 0 !important; padding-left: 18px !important; font-size: 12.5px !important;
+}
+#dualguard-overlay .dg-actions li { margin-bottom: 3px !important; }
+#dualguard-overlay .dg-foot {
+  margin-top: 9px !important; padding-top: 8px !important;
+  border-top: 1px solid #2a323c !important;
+  color: #6b7887 !important; font-size: 11px !important;
+}

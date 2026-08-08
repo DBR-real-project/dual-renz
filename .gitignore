@@ -15,8 +15,11 @@ models/**
 *.onnx
 *.h5
 
-# 외부 레포 클론 (FaceForensics 등)
+# 외부 레포 클론 (FaceForensics, AASIST)
 external/
+
+# 벡터 DB (data_seed/scam_cases.json 에서 재생성 가능)
+data/chroma/
 
 # 데이터 전체 제외. 모두 scripts/ 로 재생성/재다운로드 가능하고,
 # 외부 저작물(FF++ 영상, ASVspoof 음성, 샘플 이미지)이라 재배포하면 안 된다.

@@ -184,8 +184,14 @@ class AudioSpoofDetector:
         audio_path: str,
         aggregation: FrameAggregation = FrameAggregation.TOPK_MEAN,
         max_windows: int = 16,
-        batch_size: int = 8,
+        batch_size: int = 4,
     ) -> AudioSpoofResult:
+        # batch_size 기본값이 4인 이유:
+        #   다른 모델(Whisper, FF++ Xception 등)이 메모리를 잡고 있는 상태에서 배치가
+        #   6 이상이면 torch conv에서 접근 위반(0xC0000005)이 나 프로세스가 통째로 죽는다.
+        #   파이썬 예외가 아니라 네이티브 크래시라 try/except로 못 잡는다.
+        #   단독 실행(scripts/validate_audio_spoof.py)에서는 8도 문제없지만,
+        #   파이프라인에서는 항상 다른 모델과 함께 돌기 때문에 안전값을 기본으로 둔다.
         path = Path(audio_path)
         if not path.exists():
             raise FileNotFoundError(f"오디오/영상을 찾을 수 없습니다: {audio_path}")
@@ -227,6 +233,16 @@ def get_shared_detector() -> AudioSpoofDetector:
     if _shared is None:
         _shared = AudioSpoofDetector()
     return _shared
+
+
+def release_model() -> None:
+    """AASIST 모델을 메모리에서 내린다. 파이프라인이 단계 사이에서 호출한다."""
+    global _shared
+    if _shared is not None:
+        _shared._model = None
+        _shared = None
+    import gc
+    gc.collect()
 
 
 def is_available() -> bool:

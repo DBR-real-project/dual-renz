@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<style>
+  body{width:280px;margin:0;padding:16px;background:#12161b;color:#e8edf3;
+       font-family:"Malgun Gothic",system-ui,sans-serif;font-size:13px}
+  h1{font-size:15px;margin:0 0 2px}
+  .sub{color:#93a1b0;font-size:11.5px;margin:0 0 14px}
+  .state{display:flex;align-items:center;gap:9px;padding:11px;border-radius:10px;
+         background:#1b2129;margin-bottom:12px}
+  .dot{width:11px;height:11px;border-radius:50%;background:#6b7887;flex:none}
+  .dot.on{background:#2ecc71}
+  .score{margin-left:auto;font-weight:700;font-size:16px}
+  button{width:100%;padding:11px;border:0;border-radius:9px;font-size:14px;
+         font-weight:700;cursor:pointer;font-family:inherit}
+  #toggle{background:#5aa9ff;color:#07121f}
+  #toggle.on{background:#ff5c5c;color:#fff}
+  .err{color:#ff5c5c;font-size:11.5px;margin-top:9px}
+  .foot{margin-top:14px;padding-top:11px;border-top:1px solid #2a323c;
+        color:#6b7887;font-size:11px;line-height:1.5}
+  a{color:#5aa9ff}
+  .lv-높음{color:#ff5c5c}.lv-중간{color:#f5b942}.lv-낮음{color:#2ecc71}
+</style>
+</head>
+<body>
+  <h1>듀얼가드</h1>
+  <p class="sub">통화 중 사기 위험을 실시간으로 확인합니다</p>
+
+  <div class="state">
+    <span class="dot" id="dot"></span>
+    <span id="stateText">분석 중지됨</span>
+    <span class="score" id="score"></span>
+  </div>
+
+  <button id="toggle">분석 시작</button>
+  <p class="err" id="err" hidden></p>
+
+  <div class="foot">
+    백엔드가 <code>127.0.0.1:8000</code> 에서 실행 중이어야 합니다.<br>
+    <a href="http://127.0.0.1:8000" target="_blank">대시보드 열기</a><br><br>
+    본인이 참여한 통화만 분석하세요.
+  </div>
+
+<script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>듀얼가드 — 통화 사기 위험도 분석</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">◎</span>
+    <div>
+      <h1>듀얼가드 <span class="brand-en">DualGuard</span></h1>
+      <p class="tagline">대화 내용과 영상·음성 진위를 <strong>교차 검증</strong>하는 통화 사기 판별</p>
+    </div>
+  </div>
+  <div class="engine-status" id="engineStatus" title="엔진 준비 상태"></div>
+</header>
+
+<main>
+
+<!-- ① 업로드 화면 -->
+<section id="screenUpload" class="screen active">
+  <div class="dropzone" id="dropzone" tabindex="0" role="button"
+       aria-label="통화 파일 업로드">
+    <div class="dz-icon">↑</div>
+    <p class="dz-title">통화 녹음 또는 화상통화 파일을 여기에 놓으세요</p>
+    <p class="dz-sub">클릭해서 선택할 수도 있습니다 · wav mp3 m4a flac mp4 mov webm · 최대 200MB</p>
+    <input type="file" id="fileInput" hidden
+           accept=".wav,.mp3,.m4a,.flac,.ogg,.aac,.mp4,.avi,.mov,.mkv,.webm">
+  </div>
+
+  <label class="consent">
+    <input type="checkbox" id="consent">
+    <span>
+      본인이 참여한 통화만 분석에 사용하며, 업로드한 파일은 <strong>분석 완료 즉시 서버에서 삭제</strong>됩니다.
+      분석 결과는 참고 정보이며 법적 판단이 아닙니다.
+    </span>
+  </label>
+
+  <button id="startBtn" class="primary" disabled>분석 시작</button>
+  <p class="err" id="uploadErr" hidden></p>
+
+  <div class="notice">
+    <h3>이 서비스가 보는 두 가지 신호</h3>
+    <div class="two-col">
+      <div>
+        <h4>콘텐츠 위험도</h4>
+        <p>대화를 텍스트로 바꾼 뒤 8대 사회공학 기법(긴급성·권위사칭·금전요구·개인정보요구·비밀유지·감정압박·신뢰구축·확인회피)으로 분류합니다.</p>
+      </div>
+      <div>
+        <h4>미디어 위험도</h4>
+        <p>음성이 합성된 것인지(AASIST), 영상 속 얼굴이 위조된 것인지(FaceForensics++) 판별합니다.</p>
+      </div>
+    </div>
+    <p class="notice-foot">둘 중 하나만 걸려도 잡아내고, 둘 다 걸리면 교차 가산점이 붙습니다.</p>
+  </div>
+</section>
+
+<!-- ② 분석 진행 화면 -->
+<section id="screenProgress" class="screen">
+  <h2 class="progress-file" id="progressFile"></h2>
+  <div class="progress-outer"><div class="progress-inner" id="progressBar"></div></div>
+  <p class="progress-msg" id="progressMsg">준비 중…</p>
+  <ul class="stages" id="stages">
+    <li data-stage="stt"><b>STT</b><span>음성 → 텍스트</span></li>
+    <li data-stage="audio"><b>음성 스푸핑</b><span>AASIST</span></li>
+    <li data-stage="video"><b>딥페이크</b><span>얼굴 위조 탐지</span></li>
+    <li data-stage="content"><b>화법 분석</b><span>8대 사회공학 기법</span></li>
+    <li data-stage="scoring"><b>통합</b><span>Fraud Risk Score</span></li>
+  </ul>
+  <p class="hint">첫 실행은 모델을 내려받느라 오래 걸립니다. 이후에는 통화 길이의 절반 정도가 걸립니다.</p>
+</section>
+
+<!-- ③ 결과 대시보드 -->
+<section id="screenResult" class="screen">
+  <div class="verdict" id="verdict">
+    <div class="signal" id="signal"><span id="signalDot"></span></div>
+    <div class="verdict-text">
+      <p class="verdict-label">Fraud Risk Score</p>
+      <p class="verdict-score"><span id="scoreValue">0</span><small>/100</small></p>
+      <p class="verdict-headline" id="verdictHeadline"></p>
+      <p class="verdict-prob" id="verdictProb"></p>
+    </div>
+    <div class="verdict-meta">
+      <dl>
+        <dt>파일</dt><dd id="metaFile"></dd>
+        <dt>길이</dt><dd id="metaDuration"></dd>
+        <dt>분석 소요</dt><dd id="metaElapsed"></dd>
+        <dt>통합 공식</dt><dd id="metaStrategy"></dd>
+      </dl>
+    </div>
+  </div>
+
+  <div id="warnings" class="warnings" hidden></div>
+
+  <section class="card">
+    <h3>구간별 위험도 추이</h3>
+    <p class="card-sub">막대를 클릭하면 그 구간의 발화와 판단 근거를 볼 수 있습니다.</p>
+    <div id="chart" class="chart"></div>
+    <div class="legend">
+      <span><i class="sw content"></i>콘텐츠 위험도</span>
+      <span><i class="sw media"></i>미디어 위험도</span>
+      <span><i class="sw frs"></i>통합 점수</span>
+    </div>
+  </section>
+
+  <div class="grid2">
+    <section class="card">
+      <h3>탐지된 사회공학 기법</h3>
+      <div id="categories" class="categories"></div>
+    </section>
+    <section class="card">
+      <h3>권장 조치</h3>
+      <ol id="actions" class="actions"></ol>
+      <div id="actionLinks" class="action-links"></div>
+    </section>
+  </div>
+
+  <section class="card">
+    <h3>대화 타임라인</h3>
+    <p class="card-sub">위험 구간은 색으로 표시됩니다. 근거가 된 표현과 유사 사기 사례를 함께 보여줍니다.</p>
+    <div id="timeline" class="timeline"></div>
+  </section>
+
+  <section class="card engines-card">
+    <h3>사용된 엔진</h3>
+    <div id="engines" class="engines"></div>
+  </section>
+
+  <button id="againBtn" class="ghost">다른 파일 분석하기</button>
+</section>
+
+</main>
+
+<footer>
+  <p>듀얼렌즈(DualLens) · 듀얼가드 프로토타입 — 분석 결과는 <strong>확률적 참고 정보</strong>이며 법적 판단이 아닙니다.</p>
+</footer>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

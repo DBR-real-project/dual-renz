@@ -1,0 +1,600 @@
+{
+  "file_name": "scam_call.wav",
+  "duration": 78.39,
+  "overall_score": 100.0,
+  "overall_level": "높음",
+  "action_plan": {
+    "level": "높음",
+    "color": "red",
+    "headline": "즉시 통화를 종료하세요",
+    "actions": [
+      "지금 통화를 끊으세요. 상대가 끊지 말라고 요구하는 것 자체가 위험 신호입니다.",
+      "어떤 금액도 이체하지 말고, OTP·보안카드·비밀번호를 알려주지 마세요.",
+      "112(경찰) 또는 1332(금융감독원)로 직접 전화해 확인하세요.",
+      "이미 이체했다면 즉시 은행 콜센터에 지급정지를 요청하세요."
+    ],
+    "links": [
+      {
+        "label": "경찰청 신고 112",
+        "url": "tel:112"
+      },
+      {
+        "label": "금융감독원 1332",
+        "url": "tel:1332"
+      },
+      {
+        "label": "사이버범죄 신고",
+        "url": "https://ecrm.police.go.kr"
+      }
+    ]
+  },
+  "content_risk": 80.0,
+  "media_risk": 100.0,
+  "engines": {
+    "stt": "faster-whisper (small)",
+    "content": "키워드 규칙 (LLM 키 없음)",
+    "rag": "ChromaDB + ko-sroberta",
+    "audio": "AASIST",
+    "video": "미사용"
+  },
+  "strategy": "multiplicative_bonus",
+  "elapsed_sec": 30.6,
+  "top_categories": [
+    {
+      "category": "authority",
+      "label": "권위 사칭",
+      "score": 100.0
+    },
+    {
+      "category": "urgency",
+      "label": "긴급성 조성",
+      "score": 100.0
+    },
+    {
+      "category": "money_transfer",
+      "label": "금전 이체 요구",
+      "score": 100.0
+    },
+    {
+      "category": "credentials",
+      "label": "개인정보·OTP 요구",
+      "score": 100.0
+    },
+    {
+      "category": "secrecy",
+      "label": "비밀 유지 강요",
+      "score": 100.0
+    }
+  ],
+  "warnings": [
+    "LLM API 키가 없어 키워드 규칙으로 분류했습니다."
+  ],
+  "segments": [
+    {
+      "index": 0,
+      "start": 0.0,
+      "end": 12.44,
+      "transcript": "안녕하세요. 서울중앙지방검찰청 첨단범죄수사부 김민수 수사관입니다. 고객님 성함과 생년월일 조회 결과 확인했습니다.",
+      "content_risk": 73.33,
+      "content_detail": {
+        "content_risk": 73.33,
+        "top_category": "authority",
+        "top_category_label": "권위 사칭",
+        "top_score": 80.0,
+        "top3_mean": 66.67,
+        "category_scores": {
+          "authority": 80.0,
+          "trust_building": 80.0,
+          "emotional": 40.0,
+          "urgency": 0.0,
+          "money_transfer": 0.0,
+          "credentials": 0.0,
+          "secrecy": 0.0,
+          "isolation": 0.0
+        },
+        "matched_terms": {
+          "authority": [
+            "검찰",
+            "수사관"
+          ],
+          "emotional": [
+            "범죄"
+          ],
+          "trust_building": [
+            "고객님 성함",
+            "조회 결과"
+          ]
+        },
+        "is_llm": false
+      },
+      "rag_matches": [
+        {
+          "case_id": "case-011",
+          "title": "사전 정보 언급을 통한 신뢰 구축",
+          "type": "신뢰 구축",
+          "techniques": [
+            "trust_building",
+            "authority"
+          ],
+          "summary": "유출된 개인정보를 미리 확보해 이름, 생년월일, 주소, 직장 등을 먼저 언급함으로써 '이미 알고 있는 정식 기관'이라는 인상을 준다. 정보를 알고 있다는 것 자체는 신원 증명이 되지 않는다.",
+          "matched_text": "고객님 성함과 생년월일 조회 결과 확인했습니다",
+          "similarity": 0.685,
+          "source": "수법 패턴(팀 작성)"
+        },
+        {
+          "case_id": "case-004",
+          "title": "검찰 사칭 — 명의도용 계좌 연루 통보",
+          "type": "기관사칭형",
+          "techniques": [
+            "authority",
+            "emotional",
+            "urgency",
+            "isolation"
+          ],
+          "summary": "검사나 수사관을 사칭해 피해자 명의 계좌가 대포통장으로 범죄에 연루됐다고 통보하고, 사건번호를 불러주며 신뢰를 얻는다. 이후 수사 협조를 명목으로 자산을 '안전계좌'로 옮기게 한다. 실제 수사기관은 전화로 계좌 이체를 요구하지 않는다.",
+          "matched_text": "서울중앙지검 첨단범죄수사부 OOO 수사관입니다",
+          "similarity": 0.649,
+          "source": "수법 패턴(팀 작성)"
+        }
+      ],
+      "deepfake_score": null,
+      "audio_spoof_score": 100.0,
+      "media_risk": 100.0,
+      "faces_detected": 0,
+      "frames_analyzed": 0,
+      "fraud_risk_score": 97.66,
+      "level": "높음"
+    },
+    {
+      "index": 1,
+      "start": 12.44,
+      "end": 23.34,
+      "transcript": "고객님 명예 계좌가 대포 통장으로 범죄에 연루되어 조사가 필요합니다. 사건 번호는 2026 형제 3405번입니다.",
+      "content_risk": 80.0,
+      "content_detail": {
+        "content_risk": 80.0,
+        "top_category": "authority",
+        "top_category_label": "권위 사칭",
+        "top_score": 100.0,
+        "top3_mean": 60.0,
+        "category_scores": {
+          "authority": 100.0,
+          "emotional": 80.0,
+          "urgency": 0.0,
+          "money_transfer": 0.0,
+          "credentials": 0.0,
+          "secrecy": 0.0,
+          "trust_building": 0.0,
+          "isolation": 0.0
+        },
+        "matched_terms": {
+          "authority": [
+            "사건번호",
+            "범죄에 연루",
+            "대포통장",
+            "조사가 필요"
+          ],
+          "emotional": [
+            "연루",
+            "범죄"
+          ]
+        },
+        "is_llm": false
+      },
+      "rag_matches": [
+        {
+          "case_id": "case-004",
+          "title": "검찰 사칭 — 명의도용 계좌 연루 통보",
+          "type": "기관사칭형",
+          "techniques": [
+            "authority",
+            "emotional",
+            "urgency",
+            "isolation"
+          ],
+          "summary": "검사나 수사관을 사칭해 피해자 명의 계좌가 대포통장으로 범죄에 연루됐다고 통보하고, 사건번호를 불러주며 신뢰를 얻는다. 이후 수사 협조를 명목으로 자산을 '안전계좌'로 옮기게 한다. 실제 수사기관은 전화로 계좌 이체를 요구하지 않는다.",
+          "matched_text": "고객님 명의 계좌가 대포통장으로 범죄에 연루되어 조사가 필요합니다",
+          "similarity": 0.847,
+          "source": "수법 패턴(팀 작성)"
+        },
+        {
+          "case_id": "case-008",
+          "title": "제3자 확인 회피 — 전화 끊지 말 것 요구",
+          "type": "고립 유도",
+          "techniques": [
+            "isolation",
+            "urgency"
+          ],
+          "summary": "통화를 끊으면 확인이 이뤄져 사기가 드러나므로, 계속 통화를 유지하도록 요구한다. 은행 방문이나 112 신고를 시도하면 공범으로 간주된다고 위협한다. 정상 기관은 언제든 끊고 대표번호로 확인할 것을 오히려 권한다.",
+          "matched_text": "통화를 끊으면 확인이 이뤄져 사기가 드러나므로, 계속 통화를 유지하도록 요구한다. 은행 방문이나 112 신고를 시도하면 공범으로 간주된다고 위협한다. 정상 기관은 언제든 끊고 대표번호로 확인할 것을 오히려 권한다.",
+          "similarity": 0.595,
+          "source": "수법 패턴(팀 작성)"
+        }
+      ],
+      "deepfake_score": null,
+      "audio_spoof_score": 100.0,
+      "media_risk": 100.0,
+      "faces_detected": 0,
+      "frames_analyzed": 0,
+      "fraud_risk_score": 100.0,
+      "level": "높음"
+    },
+    {
+      "index": 2,
+      "start": 23.34,
+      "end": 31.28,
+      "transcript": "지금 즉시 조치하지 않으면 오늘 안에 모든 계좌가 동결됩니다. 시간이 없습니다.",
+      "content_risk": 66.67,
+      "content_detail": {
+        "content_risk": 66.67,
+        "top_category": "urgency",
+        "top_category_label": "긴급성 조성",
+        "top_score": 100.0,
+        "top3_mean": 33.33,
+        "category_scores": {
+          "urgency": 100.0,
+          "authority": 0.0,
+          "money_transfer": 0.0,
+          "credentials": 0.0,
+          "secrecy": 0.0,
+          "emotional": 0.0,
+          "trust_building": 0.0,
+          "isolation": 0.0
+        },
+        "matched_terms": {
+          "urgency": [
+            "지금 즉시",
+            "즉시",
+            "오늘 안에",
+            "동결",
+            "시간이 없"
+          ]
+        },
+        "is_llm": false
+      },
+      "rag_matches": [
+        {
+          "case_id": "case-009",
+          "title": "긴급성 조성 — 계좌 동결 임박 통보",
+          "type": "심리 압박",
+          "techniques": [
+            "urgency",
+            "emotional"
+          ],
+          "summary": "오늘 안에 조치하지 않으면 계좌가 동결되거나 불이익이 발생한다고 시한을 설정해 판단할 시간을 빼앗는다. 시간 압박은 피해자가 주변에 상의하거나 사실을 확인할 여유를 없애는 데 목적이 있다.",
+          "matched_text": "지금 즉시 조치하지 않으면 오늘 안에 모든 계좌가 동결됩니다",
+          "similarity": 0.9,
+          "source": "수법 패턴(팀 작성)"
+        }
+      ],
+      "deepfake_score": null,
+      "audio_spoof_score": 100.0,
+      "media_risk": 100.0,
+      "faces_detected": 0,
+      "frames_analyzed": 0,
+      "fraud_risk_score": 93.34,
+      "level": "높음"
+    },
+    {
+      "index": 3,
+      "start": 31.28,
+      "end": 41.38,
+      "transcript": "수사 기밀 사항이라 가족을 포함해 아무에게도 알리지 마세요. 발설하시면 수사 방해로 처벌받으실 수 있습니다.",
+      "content_risk": 80.0,
+      "content_detail": {
+        "content_risk": 80.0,
+        "top_category": "secrecy",
+        "top_category_label": "비밀 유지 강요",
+        "top_score": 100.0,
+        "top3_mean": 60.0,
+        "category_scores": {
+          "secrecy": 100.0,
+          "emotional": 80.0,
+          "urgency": 0.0,
+          "authority": 0.0,
+          "money_transfer": 0.0,
+          "credentials": 0.0,
+          "trust_building": 0.0,
+          "isolation": 0.0
+        },
+        "matched_terms": {
+          "secrecy": [
+            "알리지 마",
+            "아무에게도",
+            "기밀",
+            "발설"
+          ],
+          "emotional": [
+            "가족",
+            "처벌"
+          ]
+        },
+        "is_llm": false
+      },
+      "rag_matches": [
+        {
+          "case_id": "case-007",
+          "title": "비밀 유지 강요 — 수사 기밀 명목",
+          "type": "고립 유도",
+          "techniques": [
+            "secrecy",
+            "isolation",
+            "emotional"
+          ],
+          "summary": "수사 기밀이라며 가족을 포함한 누구에게도 알리지 말 것을 요구한다. 피해자를 주변의 조언으로부터 차단해 판단력을 흐리게 하는 전형적인 고립 전략이다. 발설 시 수사 방해로 처벌받는다는 협박이 뒤따른다.",
+          "matched_text": "수사 기밀 사항이라 가족을 포함해 아무에게도 알리지 마세요",
+          "similarity": 0.939,
+          "source": "수법 패턴(팀 작성)"
+        }
+      ],
+      "deepfake_score": null,
+      "audio_spoof_score": 100.0,
+      "media_risk": 100.0,
+      "faces_detected": 0,
+      "frames_analyzed": 0,
+      "fraud_risk_score": 100.0,
+      "level": "높음"
+    },
+    {
+      "index": 4,
+      "start": 41.38,
+      "end": 51.62,
+      "transcript": "지금 전화 끊지 마시고 계속 통화 유지해주세요. 은행에 직접 가시거나 112에 신고하시면 공범으로 간주됩니다.",
+      "content_risk": 53.33,
+      "content_detail": {
+        "content_risk": 53.33,
+        "top_category": "isolation",
+        "top_category_label": "제3자 확인 회피 유도",
+        "top_score": 80.0,
+        "top3_mean": 26.67,
+        "category_scores": {
+          "isolation": 80.0,
+          "urgency": 0.0,
+          "authority": 0.0,
+          "money_transfer": 0.0,
+          "credentials": 0.0,
+          "secrecy": 0.0,
+          "emotional": 0.0,
+          "trust_building": 0.0
+        },
+        "matched_terms": {
+          "isolation": [
+            "전화 끊지",
+            "끊지 마"
+          ]
+        },
+        "is_llm": false
+      },
+      "rag_matches": [
+        {
+          "case_id": "case-008",
+          "title": "제3자 확인 회피 — 전화 끊지 말 것 요구",
+          "type": "고립 유도",
+          "techniques": [
+            "isolation",
+            "urgency"
+          ],
+          "summary": "통화를 끊으면 확인이 이뤄져 사기가 드러나므로, 계속 통화를 유지하도록 요구한다. 은행 방문이나 112 신고를 시도하면 공범으로 간주된다고 위협한다. 정상 기관은 언제든 끊고 대표번호로 확인할 것을 오히려 권한다.",
+          "matched_text": "통화를 끊으면 확인이 이뤄져 사기가 드러나므로, 계속 통화를 유지하도록 요구한다. 은행 방문이나 112 신고를 시도하면 공범으로 간주된다고 위협한다. 정상 기관은 언제든 끊고 대표번호로 확인할 것을 오히려 권한다.",
+          "similarity": 0.788,
+          "source": "수법 패턴(팀 작성)"
+        },
+        {
+          "case_id": "case-004",
+          "title": "검찰 사칭 — 명의도용 계좌 연루 통보",
+          "type": "기관사칭형",
+          "techniques": [
+            "authority",
+            "emotional",
+            "urgency",
+            "isolation"
+          ],
+          "summary": "검사나 수사관을 사칭해 피해자 명의 계좌가 대포통장으로 범죄에 연루됐다고 통보하고, 사건번호를 불러주며 신뢰를 얻는다. 이후 수사 협조를 명목으로 자산을 '안전계좌'로 옮기게 한다. 실제 수사기관은 전화로 계좌 이체를 요구하지 않는다.",
+          "matched_text": "검사나 수사관을 사칭해 피해자 명의 계좌가 대포통장으로 범죄에 연루됐다고 통보하고, 사건번호를 불러주며 신뢰를 얻는다. 이후 수사 협조를 명목으로 자산을 '안전계좌'로 옮기게 한다. 실제 수사기관은 전화로 계좌 이체를 요구하지 않는다.",
+          "similarity": 0.628,
+          "source": "수법 패턴(팀 작성)"
+        }
+      ],
+      "deepfake_score": null,
+      "audio_spoof_score": 100.0,
+      "media_risk": 100.0,
+      "faces_detected": 0,
+      "frames_analyzed": 0,
+      "fraud_risk_score": 84.66,
+      "level": "높음"
+    },
+    {
+      "index": 5,
+      "start": 51.62,
+      "end": 61.3,
+      "transcript": "고객님 자산 보호를 위해 안전 계좌로 예지금을 이체해주셔야 합니다. 무혐의 확인 후 즉시 반환해드립니다.",
+      "content_risk": 73.33,
+      "content_detail": {
+        "content_risk": 73.33,
+        "top_category": "money_transfer",
+        "top_category_label": "금전 이체 요구",
+        "top_score": 100.0,
+        "top3_mean": 46.67,
+        "category_scores": {
+          "money_transfer": 100.0,
+          "urgency": 40.0,
+          "authority": 0.0,
+          "credentials": 0.0,
+          "secrecy": 0.0,
+          "emotional": 0.0,
+          "trust_building": 0.0,
+          "isolation": 0.0
+        },
+        "matched_terms": {
+          "urgency": [
+            "즉시"
+          ],
+          "money_transfer": [
+            "이체",
+            "계좌로",
+            "안전계좌"
+          ]
+        },
+        "is_llm": false
+      },
+      "rag_matches": [
+        {
+          "case_id": "case-005",
+          "title": "안전계좌 이체 유도",
+          "type": "기관사칭형",
+          "techniques": [
+            "money_transfer",
+            "authority",
+            "urgency"
+          ],
+          "summary": "수사 협조·자산 보호를 명목으로 국가가 관리하는 '안전계좌'가 있다며 예치를 요구한다. 안전계좌라는 제도는 존재하지 않으며, 어떤 기관도 개인에게 계좌 이체를 요구하지 않는다.",
+          "matched_text": "고객님 자산 보호를 위해 안전계좌로 예치금을 이체해 주셔야 합니다",
+          "similarity": 0.8,
+          "source": "수법 패턴(팀 작성)"
+        },
+        {
+          "case_id": "case-006",
+          "title": "OTP·보안카드 번호 요구",
+          "type": "인증정보 탈취",
+          "techniques": [
+            "credentials",
+            "authority"
+          ],
+          "summary": "본인 확인이나 계좌 보호를 명목으로 OTP 번호, 보안카드 번호, 계좌 비밀번호를 요구한다. 정상적인 금융기관과 수사기관은 어떤 상황에서도 이 정보를 묻지 않는다. 이 요구가 나오는 순간 사기로 확정해도 무방하다.",
+          "matched_text": "계좌번호도 함께 알려주시기 바랍니다",
+          "similarity": 0.556,
+          "source": "수법 패턴(팀 작성)"
+        }
+      ],
+      "deepfake_score": null,
+      "audio_spoof_score": 100.0,
+      "media_risk": 100.0,
+      "faces_detected": 0,
+      "frames_analyzed": 0,
+      "fraud_risk_score": 97.66,
+      "level": "높음"
+    },
+    {
+      "index": 6,
+      "start": 61.3,
+      "end": 70.98,
+      "transcript": "본인 확인을 위해 보안 카드 번호와 OTP 번호를 불러주세요. 계좌번호도 함께 알려주시기 바랍니다.",
+      "content_risk": 66.67,
+      "content_detail": {
+        "content_risk": 66.67,
+        "top_category": "credentials",
+        "top_category_label": "개인정보·OTP 요구",
+        "top_score": 100.0,
+        "top3_mean": 33.33,
+        "category_scores": {
+          "credentials": 100.0,
+          "urgency": 0.0,
+          "authority": 0.0,
+          "money_transfer": 0.0,
+          "secrecy": 0.0,
+          "emotional": 0.0,
+          "trust_building": 0.0,
+          "isolation": 0.0
+        },
+        "matched_terms": {
+          "credentials": [
+            "otp",
+            "보안카드",
+            "카드번호"
+          ]
+        },
+        "is_llm": false
+      },
+      "rag_matches": [
+        {
+          "case_id": "case-006",
+          "title": "OTP·보안카드 번호 요구",
+          "type": "인증정보 탈취",
+          "techniques": [
+            "credentials",
+            "authority"
+          ],
+          "summary": "본인 확인이나 계좌 보호를 명목으로 OTP 번호, 보안카드 번호, 계좌 비밀번호를 요구한다. 정상적인 금융기관과 수사기관은 어떤 상황에서도 이 정보를 묻지 않는다. 이 요구가 나오는 순간 사기로 확정해도 무방하다.",
+          "matched_text": "본인 확인을 위해 보안카드 번호와 OTP 번호를 불러주세요",
+          "similarity": 0.939,
+          "source": "수법 패턴(팀 작성)"
+        },
+        {
+          "case_id": "case-011",
+          "title": "사전 정보 언급을 통한 신뢰 구축",
+          "type": "신뢰 구축",
+          "techniques": [
+            "trust_building",
+            "authority"
+          ],
+          "summary": "유출된 개인정보를 미리 확보해 이름, 생년월일, 주소, 직장 등을 먼저 언급함으로써 '이미 알고 있는 정식 기관'이라는 인상을 준다. 정보를 알고 있다는 것 자체는 신원 증명이 되지 않는다.",
+          "matched_text": "고객님 성함과 생년월일 조회 결과 확인했습니다",
+          "similarity": 0.621,
+          "source": "수법 패턴(팀 작성)"
+        }
+      ],
+      "deepfake_score": null,
+      "audio_spoof_score": 100.0,
+      "media_risk": 100.0,
+      "faces_detected": 0,
+      "frames_analyzed": 0,
+      "fraud_risk_score": 93.33,
+      "level": "높음"
+    },
+    {
+      "index": 7,
+      "start": 70.98,
+      "end": 79.5,
+      "transcript": "협조하지 않으시면 구속 수사로 전환될 수 있습니다. 가족분들께도 불이 이기갑니다.",
+      "content_risk": 53.33,
+      "content_detail": {
+        "content_risk": 53.33,
+        "top_category": "emotional",
+        "top_category_label": "감정적 압박",
+        "top_score": 80.0,
+        "top3_mean": 26.67,
+        "category_scores": {
+          "emotional": 80.0,
+          "urgency": 0.0,
+          "authority": 0.0,
+          "money_transfer": 0.0,
+          "credentials": 0.0,
+          "secrecy": 0.0,
+          "trust_building": 0.0,
+          "isolation": 0.0
+        },
+        "matched_terms": {
+          "emotional": [
+            "가족",
+            "구속"
+          ]
+        },
+        "is_llm": false
+      },
+      "rag_matches": [
+        {
+          "case_id": "case-004",
+          "title": "검찰 사칭 — 명의도용 계좌 연루 통보",
+          "type": "기관사칭형",
+          "techniques": [
+            "authority",
+            "emotional",
+            "urgency",
+            "isolation"
+          ],
+          "summary": "검사나 수사관을 사칭해 피해자 명의 계좌가 대포통장으로 범죄에 연루됐다고 통보하고, 사건번호를 불러주며 신뢰를 얻는다. 이후 수사 협조를 명목으로 자산을 '안전계좌'로 옮기게 한다. 실제 수사기관은 전화로 계좌 이체를 요구하지 않는다.",
+          "matched_text": "협조하지 않으시면 구속 수사로 전환될 수 있습니다",
+          "similarity": 0.774,
+          "source": "수법 패턴(팀 작성)"
+        }
+      ],
+      "deepfake_score": null,
+      "audio_spoof_score": 100.0,
+      "media_risk": 100.0,
+      "faces_detected": 0,
+      "frames_analyzed": 0,
+      "fraud_risk_score": 84.66,
+      "level": "높음"
+    }
+  ]
+}

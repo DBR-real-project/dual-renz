@@ -41,3 +41,24 @@ soundfile==0.13.1
 pyarrow==21.0.0
 # Kaggle 데이터(DFDC 등) 다운로드용. 자격증명이 없으면 스크립트가 안내만 하고 종료한다.
 kaggle==1.7.4.5
+
+# --- 콘텐츠 분석: STT ---
+# openai-whisper가 아니라 faster-whisper. CTranslate2 백엔드라 같은 정확도에서
+# CPU 추론이 4배 이상 빠르다. 데모는 GPU 없는 노트북에서 돌 가능성이 크다.
+faster-whisper==1.2.1
+
+# --- 콘텐츠 분석: LLM 화법 분류 ---
+# ANTHROPIC_API_KEY가 없으면 키워드 규칙으로 폴백하므로, 키 없이도 파이프라인은 돈다.
+anthropic==0.121.0
+
+# --- 콘텐츠 분석: RAG 사례 검색 ---
+# 임베딩 모델은 반드시 한국어 모델(jhgan/ko-sroberta-multitask)을 쓸 것.
+# 다국어 모델은 무관한 한국어 문장을 동일 문장보다 가깝게 판정한다
+# (근거: src/content_analysis/rag.py 상단 실측표).
+chromadb==1.5.9
+sentence-transformers==5.1.2
+
+# --- 백엔드 API + 대시보드 ---
+fastapi==0.128.8
+uvicorn==0.39.0
+python-multipart==0.0.20

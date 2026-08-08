@@ -1,0 +1,75 @@
+{
+  "file_name": "both_fake.mp4",
+  "duration": 3.46,
+  "overall_score": 50.0,
+  "overall_level": "중간",
+  "action_plan": {
+    "level": "중간",
+    "color": "yellow",
+    "headline": "확인이 필요합니다",
+    "actions": [
+      "통화를 끊고, 기관 공식 대표번호로 직접 다시 걸어 확인하세요.",
+      "상대가 알려준 번호가 아니라 홈페이지에 공개된 번호를 쓰세요.",
+      "가족이나 지인에게 상황을 이야기해 보세요. 혼자 판단하지 마세요.",
+      "화상통화라면 상대에게 손을 얼굴 앞에서 흔들어 달라고 요청해 보세요."
+    ],
+    "links": [
+      {
+        "label": "금융감독원 1332",
+        "url": "tel:1332"
+      }
+    ]
+  },
+  "content_risk": 0.0,
+  "media_risk": 100.0,
+  "engines": {
+    "stt": "faster-whisper (small)",
+    "content": "키워드 규칙 (LLM 키 없음)",
+    "rag": "ChromaDB + ko-sroberta",
+    "audio": "AASIST",
+    "video": "FF++ Xception"
+  },
+  "strategy": "multiplicative_bonus",
+  "elapsed_sec": 15.1,
+  "top_categories": [],
+  "warnings": [
+    "LLM API 키가 없어 키워드 규칙으로 분류했습니다.",
+    "음성은 합성으로 판정됐지만 대화 내용에는 사기 신호가 없습니다. TTS 안내방송이나 자동응답, 또는 합성음으로 만든 테스트 파일일 수 있습니다."
+  ],
+  "segments": [
+    {
+      "index": 0,
+      "start": 0.98,
+      "end": 3.46,
+      "transcript": "He has been a success for sure.",
+      "content_risk": 0.0,
+      "content_detail": {
+        "content_risk": 0.0,
+        "top_category": null,
+        "top_category_label": null,
+        "top_score": 0.0,
+        "top3_mean": 0.0,
+        "category_scores": {
+          "urgency": 0.0,
+          "authority": 0.0,
+          "money_transfer": 0.0,
+          "credentials": 0.0,
+          "secrecy": 0.0,
+          "emotional": 0.0,
+          "trust_building": 0.0,
+          "isolation": 0.0
+        },
+        "matched_terms": {},
+        "is_llm": false
+      },
+      "rag_matches": [],
+      "deepfake_score": 100.0,
+      "audio_spoof_score": 99.99,
+      "media_risk": 100.0,
+      "faces_detected": 5,
+      "frames_analyzed": 5,
+      "fraud_risk_score": 50.0,
+      "level": "중간"
+    }
+  ]
+}

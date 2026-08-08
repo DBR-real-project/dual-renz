@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "듀얼가드 (DualGuard)",
+  "version": "0.1.0",
+  "description": "화상통화 중 대화 화법과 얼굴·음성 진위를 교차 검증해 사기 위험을 실시간으로 경고합니다.",
+  "permissions": ["tabCapture", "offscreen", "storage", "activeTab", "scripting"],
+  "host_permissions": ["http://127.0.0.1:8000/*", "http://localhost:8000/*"],
+  "background": { "service_worker": "background.js" },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "듀얼가드 — 통화 분석"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://meet.google.com/*",
+        "https://*.zoom.us/*",
+        "https://*.whereby.com/*",
+        "https://teams.microsoft.com/*"
+      ],
+      "js": ["content.js"],
+      "css": ["overlay.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    { "resources": ["overlay.css"], "matches": ["<all_urls>"] }
+  ]
+}

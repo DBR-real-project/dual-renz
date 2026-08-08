@@ -274,6 +274,16 @@ def get_shared_detector(weights_path: Optional[Path] = None) -> FaceForensicsDet
     return _shared
 
 
+def release_model() -> None:
+    """FF++ 모델을 메모리에서 내린다. Xception은 무거워서 다 쓰면 내리는 편이 안전하다."""
+    global _shared
+    if _shared is not None:
+        _shared._model = None
+        _shared = None
+    import gc
+    gc.collect()
+
+
 def is_available() -> bool:
     """FF++ 경로를 쓸 수 있는 상태인지 (레포 + 가중치 둘 다 있는지)."""
     return FF_CLASSIFICATION_DIR.exists() and default_weights() is not None

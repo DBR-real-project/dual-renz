@@ -1,0 +1,176 @@
+{
+  "file_name": "normal_call.wav",
+  "duration": 26.78,
+  "overall_score": 50.0,
+  "overall_level": "중간",
+  "action_plan": {
+    "level": "중간",
+    "color": "yellow",
+    "headline": "확인이 필요합니다",
+    "actions": [
+      "통화를 끊고, 기관 공식 대표번호로 직접 다시 걸어 확인하세요.",
+      "상대가 알려준 번호가 아니라 홈페이지에 공개된 번호를 쓰세요.",
+      "가족이나 지인에게 상황을 이야기해 보세요. 혼자 판단하지 마세요.",
+      "화상통화라면 상대에게 손을 얼굴 앞에서 흔들어 달라고 요청해 보세요."
+    ],
+    "links": [
+      {
+        "label": "금융감독원 1332",
+        "url": "tel:1332"
+      }
+    ]
+  },
+  "content_risk": 0.0,
+  "media_risk": 100.0,
+  "engines": {
+    "stt": "faster-whisper (small)",
+    "content": "키워드 규칙 (LLM 키 없음)",
+    "rag": "ChromaDB + ko-sroberta",
+    "audio": "AASIST",
+    "video": "미사용"
+  },
+  "strategy": "multiplicative_bonus",
+  "elapsed_sec": 15.7,
+  "top_categories": [],
+  "warnings": [
+    "LLM API 키가 없어 키워드 규칙으로 분류했습니다."
+  ],
+  "segments": [
+    {
+      "index": 0,
+      "start": 0.0,
+      "end": 6.88,
+      "transcript": "여보세요. 어제 보내주신 자료 잘 받았습니다. 감사합니다.",
+      "content_risk": 0.0,
+      "content_detail": {
+        "content_risk": 0.0,
+        "top_category": null,
+        "top_category_label": null,
+        "top_score": 0.0,
+        "top3_mean": 0.0,
+        "category_scores": {
+          "urgency": 0.0,
+          "authority": 0.0,
+          "money_transfer": 0.0,
+          "credentials": 0.0,
+          "secrecy": 0.0,
+          "emotional": 0.0,
+          "trust_building": 0.0,
+          "isolation": 0.0
+        },
+        "matched_terms": {},
+        "is_llm": false
+      },
+      "rag_matches": [],
+      "deepfake_score": null,
+      "audio_spoof_score": 99.99,
+      "media_risk": 99.99,
+      "faces_detected": 0,
+      "frames_analyzed": 0,
+      "fraud_risk_score": 50.0,
+      "level": "중간"
+    },
+    {
+      "index": 1,
+      "start": 6.88,
+      "end": 14.4,
+      "transcript": "다음 주 화요일 회의는 오후 3시로 하면 어떨까요? 저는 그때가 편합니다.",
+      "content_risk": 0.0,
+      "content_detail": {
+        "content_risk": 0.0,
+        "top_category": null,
+        "top_category_label": null,
+        "top_score": 0.0,
+        "top3_mean": 0.0,
+        "category_scores": {
+          "urgency": 0.0,
+          "authority": 0.0,
+          "money_transfer": 0.0,
+          "credentials": 0.0,
+          "secrecy": 0.0,
+          "emotional": 0.0,
+          "trust_building": 0.0,
+          "isolation": 0.0
+        },
+        "matched_terms": {},
+        "is_llm": false
+      },
+      "rag_matches": [],
+      "deepfake_score": null,
+      "audio_spoof_score": 100.0,
+      "media_risk": 100.0,
+      "faces_detected": 0,
+      "frames_analyzed": 0,
+      "fraud_risk_score": 50.0,
+      "level": "중간"
+    },
+    {
+      "index": 2,
+      "start": 14.4,
+      "end": 21.92,
+      "transcript": "아 그리고 점심은 회사 근처 김치찌개 집 어땠세요? 거기 괜찮더라고요.",
+      "content_risk": 0.0,
+      "content_detail": {
+        "content_risk": 0.0,
+        "top_category": null,
+        "top_category_label": null,
+        "top_score": 0.0,
+        "top3_mean": 0.0,
+        "category_scores": {
+          "urgency": 0.0,
+          "authority": 0.0,
+          "money_transfer": 0.0,
+          "credentials": 0.0,
+          "secrecy": 0.0,
+          "emotional": 0.0,
+          "trust_building": 0.0,
+          "isolation": 0.0
+        },
+        "matched_terms": {},
+        "is_llm": false
+      },
+      "rag_matches": [],
+      "deepfake_score": null,
+      "audio_spoof_score": 100.0,
+      "media_risk": 100.0,
+      "faces_detected": 0,
+      "frames_analyzed": 0,
+      "fraud_risk_score": 50.0,
+      "level": "중간"
+    },
+    {
+      "index": 3,
+      "start": 21.92,
+      "end": 27.92,
+      "transcript": "네 그럼 그때 뵙겠습니다. 좋은 하루 보내세요.",
+      "content_risk": 0.0,
+      "content_detail": {
+        "content_risk": 0.0,
+        "top_category": null,
+        "top_category_label": null,
+        "top_score": 0.0,
+        "top3_mean": 0.0,
+        "category_scores": {
+          "urgency": 0.0,
+          "authority": 0.0,
+          "money_transfer": 0.0,
+          "credentials": 0.0,
+          "secrecy": 0.0,
+          "emotional": 0.0,
+          "trust_building": 0.0,
+          "isolation": 0.0
+        },
+        "matched_terms": {},
+        "is_llm": false
+      },
+      "rag_matches": [],
+      "deepfake_score": null,
+      "audio_spoof_score": 100.0,
+      "media_risk": 100.0,
+      "faces_detected": 0,
+      "frames_analyzed": 0,
+      "fraud_risk_score": 50.0,
+      "level": "중간"
+    }
+  ]
+}
