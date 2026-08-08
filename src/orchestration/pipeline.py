@@ -35,7 +35,11 @@ if str(SRC_ROOT) not in sys.path:
 
 from content_analysis import rag as rag_mod  # noqa: E402
 from content_analysis.content_risk import ContentRiskBreakdown, classify_by_keywords  # noqa: E402
-from content_analysis.llm_classifier import classify_segment, is_available as llm_available  # noqa: E402
+from content_analysis.llm_classifier import (  # noqa: E402
+    active_provider_label,
+    classify_segment,
+    is_available as llm_available,
+)
 from content_analysis.stt import Transcript, release_model, transcribe  # noqa: E402
 from media_detection import audio_spoof_detector as aasist  # noqa: E402
 from media_detection.deepfake_detector import FrameAggregation, aggregate_scores  # noqa: E402
@@ -437,7 +441,8 @@ def analyze(
         media_risk=max((r.media_risk for r in results), default=0.0),
         engines={
             "stt": f"faster-whisper ({stt_model})",
-            "content": "LLM (claude-opus-5)" if llm_on else "키워드 규칙 (LLM 키 없음)",
+            # 어느 백엔드(Claude/Gemini)가 실제로 돌았는지 그대로 보여준다.
+            "content": active_provider_label() if llm_on else "키워드 규칙 (LLM 키 없음)",
             "rag": "ChromaDB + ko-sroberta" if rag_on else "미사용",
             "audio": "AASIST" if audio_ok else "미사용",
             "video": {"ff": "FF++ Xception", "vit": "HuggingFace ViT (미검증)"}.get(

@@ -127,7 +127,7 @@ def _run_job(job: Job, loop: asyncio.AbstractEventLoop) -> None:
 def health() -> dict:
     """각 엔진이 실제로 준비됐는지 확인한다. 데모 전 점검용."""
     from content_analysis import rag as rag_mod
-    from content_analysis.llm_classifier import is_available as llm_ok
+    from content_analysis.llm_classifier import active_provider_label, is_available as llm_ok
     from media_detection import audio_spoof_detector as aasist
     from media_detection import faceforensics_detector as ff
 
@@ -135,8 +135,12 @@ def health() -> dict:
         "status": "ok",
         "engines": {
             "stt": {"ready": True, "detail": "faster-whisper (첫 실행 시 모델 다운로드)"},
+            # 어느 백엔드가 실제로 잡혔는지 그대로 보여준다 (Claude / Gemini / 폴백)
             "content_llm": {"ready": llm_ok(),
-                            "detail": "ANTHROPIC_API_KEY 필요. 없으면 키워드 규칙으로 폴백"},
+                            "detail": active_provider_label()
+                            if llm_ok()
+                            else "ANTHROPIC_API_KEY 또는 GEMINI_API_KEY 필요. "
+                                 "없으면 키워드 규칙으로 폴백"},
             "rag": {"ready": rag_mod.is_available(), "detail": "ChromaDB + ko-sroberta"},
             "audio_spoof": {"ready": aasist.is_available(), "detail": "AASIST"},
             "deepfake": {"ready": ff.is_available(),

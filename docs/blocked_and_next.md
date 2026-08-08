@@ -9,23 +9,52 @@
 
 ## 1. 사람이 직접 해야 하는 것 (내가 못 함)
 
-### 1-1. ⭐ ANTHROPIC_API_KEY — LLM 화법 분석
+### 1-1. ⭐ LLM API 키 — 화법 분석 (Claude 또는 Gemini)
 
 **지금 가장 임팩트가 큰 항목.** 코드는 완성돼 있고 키만 넣으면 즉시 켜진다.
+**둘 중 아무 키나 하나 있으면 된다** — 기획서가 "Claude API 또는 Gemini API"를
+허용하고, 두 백엔드가 모두 구현돼 있다.
 
-**왜 필요한가:** 현재는 키워드 규칙이 대역하고 있다. 규칙 기반은 사전에 적어둔
-표현만 잡으므로, 같은 의도를 다른 말로 표현하면 놓친다. 실제 사기범은 매번 다른
-표현을 쓰기 때문에 LLM 분류가 있어야 제품이 성립한다.
+**왜 필요한가 (이제 수치가 있다):** 키워드 규칙 기준선을 14건 검증셋으로 실측했다.
 
-**할 일:**
+| 백엔드 | 정탐률 | 오탐률 | 정확도 |
+|---|---|---|---|
+| 키워드 규칙 (현재 대역) | **55.6%** (5/9) | **20.0%** (1/5) | 64.3% |
+| LLM | 미측정 — 키 필요 | | |
+
+규칙 기반은 사기 9건 중 4건을 놓쳤고, **정상 통화를 사기로 오판했다.**
+하필 오판한 게 `normal_05` — "전화로는 계좌번호나 비밀번호를 절대 요구하지 않습니다"라고
+**경고하는 정상 은행 상담**이다. 규칙은 "비밀번호"라는 단어만 보고 60점을 줬다.
+의미를 못 읽으면 이런 건 원리적으로 못 고친다. LLM 분류가 있어야 제품이 성립한다.
+
+**할 일 (둘 중 하나):**
 ```powershell
-$env:ANTHROPIC_API_KEY = "sk-ant-..."     # 또는 시스템 환경변수에 영구 등록
+# A. Claude
+$env:ANTHROPIC_API_KEY = "sk-ant-..."
+# B. Gemini
+$env:GEMINI_API_KEY = "AIza..."
+# 둘 다 있는데 특정 백엔드로 고정하고 싶으면:
+$env:DUALGUARD_LLM_PROVIDER = "gemini"   # auto(기본) | anthropic | gemini
+
+# 성능 실측 (LLM이 규칙보다 얼마나 나은지가 발표 자료의 핵심)
+.venv\Scripts\python.exe scripts\validate_content_risk.py --backend both
+
+# 파이프라인 확인
 .venv\Scripts\python.exe scripts\analyze_call.py --input data\korean_calls\scam_call.wav
-# → "engines.content"가 "LLM (claude-opus-5)"로 바뀌면 성공
+# → "engines.content"가 "Claude (claude-opus-5)" 또는 "Gemini (gemini-flash-latest)"로 바뀌면 성공
 ```
 
 키가 없어도 파이프라인은 죽지 않고 키워드로 폴백한다. 리포트의 `warnings`와
 대시보드 상단 칩에 어느 쪽이 쓰였는지 항상 표시된다.
+
+> **⚠ Gemini 키 형식 주의.** `AQ.Ab8RN6...`로 시작하는 문자열은 API 키가 아니라
+> 수명이 짧은 OAuth 액세스 토큰이다. 넣으면 `401 ACCESS_TOKEN_TYPE_UNSUPPORTED`가 난다.
+> [aistudio.google.com](https://aistudio.google.com/apikey)에서 `AIza...`로 시작하는
+> API 키를 발급받을 것. 무료 티어는 분당 요청 제한이 빡빡해서 통화 하나에
+> 세그먼트가 많으면 429가 난다 — `$env:GEMINI_MIN_INTERVAL_SEC = "12"` 로 간격을 강제할 수 있다.
+
+> **⚠ 키를 소스에 넣지 말 것.** 초기 프로토타입(`dual-lens/batch_test.py`,
+> `stt_test.py`)에 키가 하드코딩돼 있었다. 그 키들은 폐기하고 환경변수로만 쓴다.
 
 **우선순위: 상.**
 
@@ -167,6 +196,7 @@ cd C:\Users\migle\DualGuard-MediaAnalysis
 # 성능 수치 재현
 .venv\Scripts\python.exe scripts\validate_detector.py --backend ff
 .venv\Scripts\python.exe scripts\validate_audio_spoof.py
+.venv\Scripts\python.exe scripts\validate_content_risk.py   # 데이터 다운로드 불필요
 ```
 
 데이터가 없다면 (git에 포함 안 됨):
