@@ -25,7 +25,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from content_analysis.content_risk import classify_by_keywords  # noqa: E402
+from content_analysis.content_risk import classify_offline  # noqa: E402
 from media_detection.deepfake_detector import FrameAggregation  # noqa: E402
 from media_detection.media_risk import get_media_risk  # noqa: E402
 from scoring.fraud_risk_score import ScoringStrategy, compute_fraud_risk_score  # noqa: E402
@@ -96,7 +96,7 @@ def main():
     print("=" * 78)
 
     for talk_label, talk in (("정상 대화", NORMAL_TALK), ("사기 화법", SCAM_TALK)):
-        cb = classify_by_keywords(talk)
+        cb = classify_offline(talk)
         content = cb.content_risk
         top = cb.as_dict()["top_category_label"] or "-"
         print(f"\n  [{talk_label}] content_risk={content}  (최고 카테고리: {top})")

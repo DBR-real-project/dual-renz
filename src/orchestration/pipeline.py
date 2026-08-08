@@ -34,7 +34,7 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from content_analysis import rag as rag_mod  # noqa: E402
-from content_analysis.content_risk import ContentRiskBreakdown, classify_by_keywords  # noqa: E402
+from content_analysis.content_risk import ContentRiskBreakdown, classify_offline  # noqa: E402
 from content_analysis.llm_classifier import (  # noqa: E402
     active_provider_label,
     classify_segment,
@@ -53,6 +53,10 @@ VIDEO_SUFFIXES = {".mp4", ".avi", ".mov", ".mkv", ".webm"}
 # torch conv에서 접근 위반(0xC0000005)으로 프로세스가 죽는다.
 # 파이썬 예외가 아니라 네이티브 크래시라 잡을 수 없으므로 애초에 피해야 한다.
 AASIST_BATCH = 4
+
+# 구간별 음성 분석에 확보할 최소 길이(초). AASIST 학습 길이(약 4.04초)에 가깝게 둔다.
+# 이보다 짧은 구간은 좌우 음성을 끌어와 채운다. 근거는 아래 슬라이싱 코드 주석 참고.
+AASIST_MIN_AUDIO_SEC = 3.0
 
 # 신호등 임계값. 기획서 [Phase 2-2] 신호등 UI + [3단계 액션 플랜] 대응.
 # 값 근거는 docs/validation_report.md 4-1 참고 (팀 확정 필요 사항).
@@ -296,10 +300,25 @@ def analyze(
             detector = aasist.get_shared_detector()
             sr = aasist.SAMPLE_RATE
             windows, owners = [], []
+            need = int(AASIST_MIN_AUDIO_SEC * sr)
             for r in results:
                 a, b = int(r.start * sr), int(r.end * sr)
+                # 구간이 짧으면 좌우 음성을 끌어와 창을 채운다.
+                #
+                #   AASIST는 약 4초 발화로 학습됐다. 1~2초짜리 짧은 발화를 그대로
+                #   넣으면 분포 밖 입력이 되어 점수가 튄다. 실측: 진짜 사람 목소리를
+                #   1초로 자르니 99.79(=합성으로 오판), 전체 파일(2.2초)로는 2.22였다.
+                #   반복 패딩이든 무음 패딩이든 마찬가지라 패딩 방식의 문제가 아니라
+                #   '실제 음성이 부족한 것'이 원인이다.
+                #
+                #   좌우로 넓히면 시간축 정렬은 약간 느슨해지지만(구간 경계를 조금 넘음)
+                #   짧은 발화마다 헛경보가 나는 것보다 낫다.
+                if b - a < need:
+                    center = (a + b) // 2
+                    b = min(wave.size, max(center + need // 2, need))
+                    a = max(0, b - need)
                 chunk = wave[a:b]
-                if chunk.size < sr // 2:          # 0.5초 미만 구간은 건너뛴다
+                if chunk.size < int(1.0 * sr):    # 파일 자체가 1초 미만이면 판정 불가
                     continue
                 windows.append(aasist._pad(chunk))
                 owners.append(r.index)
@@ -358,7 +377,11 @@ def analyze(
     # --- 4. 콘텐츠 엔진: 8대 사회공학 기법 분류 (+RAG) ---
     llm_on = use_llm and llm_available()
     if not llm_on and use_llm:
-        warnings.append("LLM API 키가 없어 키워드 규칙으로 분류했습니다.")
+        warnings.append(
+            "LLM API 키가 없어 오프라인 분류기(키워드 + 한국어 임베딩 의미 유사도)로 "
+            "분석했습니다. 자체 검증셋 21건 기준 정확도 90.5%이며, LLM을 붙이면 더 "
+            "정확해질 수 있습니다."
+        )
     rag_on = use_rag and rag_mod.is_available()
 
     texts = [r.transcript for r in results]
@@ -370,11 +393,11 @@ def analyze(
         try:
             b: ContentRiskBreakdown = (
                 classify_segment(r.transcript, before, after) if llm_on
-                else classify_by_keywords(r.transcript)
+                else classify_offline(r.transcript)
             )
         except Exception as exc:
             warnings.append(f"구간 {i} 분류 실패, 키워드 폴백: {type(exc).__name__}")
-            b = classify_by_keywords(r.transcript)
+            b = classify_offline(r.transcript)
         r.content_risk = b.content_risk
         r.content_detail = b.as_dict()
 
@@ -442,7 +465,8 @@ def analyze(
         engines={
             "stt": f"faster-whisper ({stt_model})",
             # 어느 백엔드(Claude/Gemini/Ollama)가 실제로 돌았는지 그대로 보여준다.
-            "content": active_provider_label() if llm_on else "키워드 규칙 (LLM 키 없음)",
+            "content": (active_provider_label() if llm_on
+                        else "오프라인 (키워드 + 의미 유사도)"),
             "rag": "ChromaDB + ko-sroberta" if rag_on else "미사용",
             "audio": "AASIST" if audio_ok else "미사용",
             "video": {"ff": "FF++ Xception", "vit": "HuggingFace ViT (미검증)"}.get(

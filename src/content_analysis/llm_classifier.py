@@ -61,7 +61,7 @@ from .content_risk import (
     CATEGORY_LABELS_KO,
     ContentRiskBreakdown,
     SocialEngineeringCategory,
-    classify_by_keywords,
+    classify_offline,
     compute_content_risk,
 )
 
@@ -523,8 +523,13 @@ def classify_segment(
     fallback: bool = True,
 ) -> ContentRiskBreakdown:
     """
-    LLM으로 분류하되, 쓸 수 없거나 실패하면 키워드 규칙으로 폴백한다.
+    LLM으로 분류하되, 쓸 수 없거나 실패하면 오프라인 분류기로 폴백한다.
     반환값의 is_llm으로 어느 쪽이 쓰였는지 알 수 있다.
+
+    폴백이 순수 키워드 규칙이 아니라 classify_offline(키워드 + 임베딩 의미 유사도)인
+    이유: 검증셋 21건 실측에서 키워드만 쓰면 정확도 66.7%(오탐 30%)인데,
+    결합하면 90.5%(오탐 10%)다. 키가 없는 상태가 데모의 기본값이므로
+    폴백 품질이 곧 제품 품질이다.
     """
     clf = get_shared_classifier()
     if clf.available:
@@ -542,7 +547,7 @@ def classify_segment(
             f"{PROVIDER_ENV}=ollama (auto 모드에는 자동 포함 안 됨)\n"
             f"백엔드를 고정하려면 {PROVIDER_ENV}=anthropic|gemini|ollama"
         )
-    return classify_by_keywords(text)
+    return classify_offline(text)
 
 
 def classify_transcript(segments: List, use_context: bool = True) -> List[ContentRiskBreakdown]:

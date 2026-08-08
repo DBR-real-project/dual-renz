@@ -25,7 +25,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from content_analysis.content_risk import classify_by_keywords
+from content_analysis.content_risk import classify_offline
 from media_detection.deepfake_detector import FrameAggregation
 from media_detection.media_risk import get_media_risk
 from scoring.fraud_risk_score import ScoringStrategy, compute_fraud_risk_score
@@ -90,8 +90,8 @@ def main():
     if not media["deepfake_is_real_model"]:
         print(f"    [경고] 영상 추론 실패, 더미 폴백: {media.get('fallback_reason')}")
 
-    print("\n=== 2. 콘텐츠 위험도 (LLM 연동 전 - 키워드 규칙 대역) ===")
-    breakdown = classify_by_keywords(args.transcript)
+    print("\n=== 2. 콘텐츠 위험도 (오프라인 분류기: 키워드 + 의미 유사도) ===")
+    breakdown = classify_offline(args.transcript)
     cb = breakdown.as_dict()
     content_risk = cb["content_risk"]
     print(f"    transcript: {args.transcript}")
@@ -127,7 +127,7 @@ def main():
     print("\n=== 요약 ===")
     print(f"    영상 딥페이크: {backend_label}")
     print(f"    음성 스푸핑  : {audio_label}")
-    print(f"    콘텐츠 분석  : LLM 미연동 (키워드 규칙 대역, 집계 공식은 기획서대로 구현됨)")
+    print(f"    콘텐츠 분석  : 오프라인 분류기 (키워드 + 한국어 임베딩, 검증셋 정확도 90.5%)")
 
 
 if __name__ == "__main__":

@@ -246,6 +246,118 @@ def classify_by_keywords(transcript: str) -> ContentRiskBreakdown:
     return compute_content_risk(scores, matched_terms=matched, is_llm=False)
 
 
+# '요구' 축(금전 이체 / 개인정보·OTP)이 이 점수 아래면 사기로 단정하지 않는다.
+DEMAND_MIN = 30.0
+# 요구가 없을 때 content_risk 상한. 신호등 '중간'(40) 위, '높음'(70) 아래에 둬서
+# "주의는 하되 사기로 단정하지 않음"이 되도록 했다.
+NO_DEMAND_CAP = 45.0
+
+
+def _keyword_scores(transcript: str) -> Tuple[Dict[str, float], Dict[str, List[str]]]:
+    """classify_by_keywords의 점수 계산 부분만 떼어낸 것 (오프라인 결합에서 재사용)."""
+    raw = (transcript or "").lower()
+    normalized = _normalize(transcript)
+    scores: Dict[str, float] = {}
+    matched: Dict[str, List[str]] = {}
+    for cat, words in _KEYWORDS.items():
+        hits = [w for w in words if w.lower() in raw or _normalize(w) in normalized]
+        if hits:
+            matched[cat.value] = hits
+        scores[cat.value] = min(100.0, 40.0 * len(hits))
+    return scores, matched
+
+
+def classify_offline(transcript: str) -> ContentRiskBreakdown:
+    """
+    LLM 없이 쓰는 기본 분류기. 키워드 규칙 + 의미 유사도를 결합한다.
+
+    왜 결합인가 (둘 다 필요하다):
+      - 키워드는 "OTP", "안전계좌" 같은 **결정적 단어**를 놓치지 않는다. 대신
+        표현이 조금만 달라지면 0점이고, 부정문을 못 읽어 정상 안내를 오탐한다.
+      - 임베딩은 어휘가 달라도 의미로 잡고, 면책 문장과 정상 대화를 구분한다.
+        대신 짧은 결정적 단서 하나만 있을 때는 유사도가 잘 안 오른다.
+
+    결합 방식:
+      1) 카테고리별로 두 점수 중 높은 쪽을 택한다 (놓치지 않는 것이 우선).
+      2) **면책·경고 문장이면 키워드 점수도 함께 억제한다.** 이게 핵심이다.
+         "저희는 비밀번호를 절대 요구하지 않습니다"에서 임베딩만 억제하고
+         키워드를 그대로 두면 결합 결과가 여전히 오탐이다.
+
+    의미 분류기를 못 쓰면(sentence-transformers 미설치 등) 조용히 키워드만 쓴다.
+    """
+    kw_scores, matched = _keyword_scores(transcript)
+
+    try:
+        from . import semantic_classifier as sem
+        if not sem.is_available():
+            raise RuntimeError("semantic classifier unavailable")
+        sem_scores, hits = sem.classify(transcript)
+    except Exception:
+        return compute_content_risk(kw_scores, matched_terms=matched, is_llm=False)
+
+    # 면책 문장 때문에 억제된 카테고리는 키워드 점수도 같이 내린다.
+    suppressed = {
+        h.category for h in hits
+        if h.suppressed_by and "면책" in h.suppressed_by
+    }
+    for cat in suppressed:
+        kw_scores[cat] = 0.0
+        matched.pop(cat, None)
+
+    combined = {c: max(kw_scores.get(c, 0.0), sem_scores.get(c, 0.0))
+                for c in kw_scores}
+
+    # 정상 절차의 흔적이 있으면 전체 점수를 깎는다.
+    #
+    #   진짜 경찰·은행 통화도 권위와 긴급성을 실제로 쓴다. 기법 점수만으로는 사칭과
+    #   구분되지 않는다(실측: 진짜 경찰 통화가 기법 점수 97.9). 사람이 이 둘을 가르는
+    #   근거는 "공식 채널로 확인하라고 먼저 말해주는가", "우편·앱 같은 정식 경로를
+    #   제시하는가", "요구하지 않는다고 명시하는가"다. 사기범은 이런 말을 하지 않는다.
+    #
+    #   근거 1건이면 0.65배, 2건 이상이면 0.45배. 0으로 만들지 않는 이유는
+    #   정상 표현을 흉내 내는 정교한 수법이 있기 때문이다 — 깎되 지우지는 않는다.
+    legit = []
+    try:
+        legit = sem.get_shared_classifier().legitimacy_evidence(transcript)
+    except Exception:
+        pass
+    if legit:
+        factor = 0.45 if len(legit) >= 2 else 0.65
+        combined = {c: v * factor for c, v in combined.items()}
+        matched["정상 절차 근거(점수 감산)"] = legit[:3]
+
+    # 근거를 대시보드에 그대로 띄울 수 있게 문장 단위로 남긴다.
+    for h in hits:
+        if h.score > 0:
+            matched.setdefault(f"의미:{h.category}", []).append(h.sentence[:60])
+    if suppressed:
+        matched["억제됨(정상 안내로 판단)"] = sorted(suppressed)
+
+    breakdown = compute_content_risk(combined, matched_terms=matched, is_llm=False)
+
+    # '요구'가 없으면 상한을 씌운다.
+    #
+    #   보이스피싱은 반드시 무언가를 **요구**한다 — 돈을 보내라, 인증번호를 불러라.
+    #   비밀 유지·감정 압박·신뢰 구축은 그 요구를 통과시키기 위한 보조 수단이지
+    #   그 자체가 범죄가 아니다.
+    #
+    #   실측에서 이걸 무시했을 때 오탐이 났다. "이건 우리끼리 비밀이니까 아빠한테는
+    #   말하면 안 돼"(가족 생일 서프라이즈 준비)가 100점, 데이트 초반 안부 대화가
+    #   60.6점이었다. 둘 다 금전·인증정보 요구가 전혀 없다.
+    #
+    #   초기 그루밍 단계처럼 아직 요구가 없는 로맨스 스캠도 여기서 낮게 나오는데,
+    #   그 시점에는 실제로 피해가 발생하지 않았으므로 옳은 동작이다. 영상·음성이
+    #   위조됐다면 미디어 위험도가 따로 잡아낸다(교차검증의 존재 이유).
+    demand = max(combined.get("money_transfer", 0.0), combined.get("credentials", 0.0))
+    if demand < DEMAND_MIN and breakdown.content_risk > NO_DEMAND_CAP:
+        matched["요구 없음(상한 적용)"] = [
+            f"금전·인증정보 요구가 약함(최고 {demand:.0f}점) — 압박 표현만으로는 사기로 보지 않음"
+        ]
+        breakdown.content_risk = NO_DEMAND_CAP
+        breakdown.matched_terms = matched
+    return breakdown
+
+
 def classify_with_llm(
     transcript: str,
     context_before: str = "",

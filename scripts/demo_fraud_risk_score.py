@@ -17,7 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 from scoring.fraud_risk_score import ScoringStrategy, compute_fraud_risk_score, compute_timeline
 from media_detection.media_risk_dummy import get_media_risk
-from content_analysis.content_risk import classify_by_keywords
+from content_analysis.content_risk import classify_offline
 
 
 def demo_single_score():
@@ -54,7 +54,7 @@ def demo_timeline():
     segments = []
     t = 0.0
     for text in fake_transcripts:
-        breakdown = classify_by_keywords(text)
+        breakdown = classify_offline(text)
         media = get_media_risk(video_path=f"data/frames_output/seg_{int(t)}.mp4")
         segments.append({
             "start": t, "end": t + 5.0,

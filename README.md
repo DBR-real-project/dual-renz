@@ -22,21 +22,24 @@
 | **웹 대시보드** (업로드 → 진행률 → 결과) | ✅ | `scripts/run_server.py` |
 | **CLI 분석** | ✅ | `scripts/analyze_call.py` |
 | STT (한국어) | ✅ | faster-whisper. 8문장 통화를 정확히 8구간으로 분리 |
-| 8대 사회공학 기법 분류 | ✅ | LLM(**Claude / Gemini / Ollama**) + 키워드 규칙 폴백 |
+| 8대 사회공학 기법 분류 | ✅ | LLM(**Claude / Gemini / Ollama**) + **오프라인 분류기** 폴백 |
 | RAG 사기사례 대조 | ✅ | 사기/정상 13문장 판별 **13/13** |
 | 음성 스푸핑 (AASIST) | ✅ | 정탐률 96.7%, 오탐률 0%, 정확도 98% |
 | 딥페이크 (FF++ Xception) | ✅ | 정탐률 66.7%, 오탐률 0%, 정확도 80% |
 | STT 모델 크기 비교 | ✅ | tiny/base/small CER·처리시간 실측, 화이트노이즈 강건성 포함 (`scripts/compare_stt_models.py`) |
-| **콘텐츠 분류 성능 실측** | ⚠️ | 키워드 기준선만 측정. 시나리오 21건(경계 케이스 7건 포함) 기준 정탐 63.6% / 오탐 30.0%. **LLM 수치는 키가 있어야 나옴** |
+| **콘텐츠 분류 성능 실측** | ✅ | 시나리오 21건 기준 **정탐 90.9% / 오탐 10.0% / 정확도 90.5%** (키 없이). 키워드만 쓰던 기존 66.7%에서 개선 |
 | **콘텐츠 카테고리별 정밀 채점** | ✅ | 기대 점수대(밴드) vs 실제 비교, 168개 항목 밴드 일치율 62.5% (`scripts/grade_content_rubric.py`) |
 | 통합 스코어링 | ✅ | 기획서 두 버전 공식 모두 구현 |
 | 크롬 확장 (MV3) | ⚠️ | 코드 작성 완료, **브라우저 실제 로드 테스트 미실시** |
-| LLM 실제 호출 | ⚠️ | `ANTHROPIC_API_KEY` 또는 `GEMINI_API_KEY` 필요. 없으면 키워드 규칙으로 동작. `DUALGUARD_LLM_PROVIDER=ollama`로 로컬 LLM도 가능(프롬프트 사전 검증용, **이 환경엔 Ollama가 없어 연동 코드만 있고 실제 호출은 미검증**) |
+| LLM 실제 호출 | ⚠️ | `ANTHROPIC_API_KEY` 또는 `GEMINI_API_KEY` 필요. **없어도 오프라인 분류기(정확도 90.5%)로 정상 동작한다.** `DUALGUARD_LLM_PROVIDER=ollama`로 로컬 LLM도 가능(**이 환경엔 Ollama가 없어 연동 코드만 있고 실제 호출은 미검증**) |
 
 성능 수치의 측정 조건은 **[docs/validation_report.md](docs/validation_report.md)** 에 있다.
 발표에 인용하기 전에 그 문서의 전제(학습 도메인 내 측정)를 반드시 확인할 것.
 
-> **처음 보는 사람은 [docs/blocked_and_next.md](docs/blocked_and_next.md) 부터.**
+> **시연 담당자는 [docs/demo_guide.md](docs/demo_guide.md) 부터.**
+> 심사장 시연 순서, 예상 질문 답변, 하지 말아야 할 것이 정리돼 있다.
+>
+> **개발자는 [docs/blocked_and_next.md](docs/blocked_and_next.md) 부터.**
 > 막힌 것, 팀이 정해야 할 것, 다음 작업이 한 문서에 정리돼 있다.
 
 ---
@@ -110,7 +113,9 @@ scripts/
   demo_cross_validation.py     교차검증 4조합 시연 (발표용)
   validate_detector.py         영상 성능 실측
   validate_audio_spoof.py      음성 성능 실측
-  validate_content_risk.py     콘텐츠(8대 기법) 성능 실측 — 키워드 vs LLM 비교
+  validate_content_risk.py     콘텐츠(8대 기법) 성능 실측 — 키워드 / 오프라인 / LLM 비교
+  calibrate_semantic.py        의미 분류기 유사도 분포 진단 (임계값 근거)
+  record_call_sample.py        마이크로 통화 샘플 녹음 — 한국어 '초록(안전)' 데모용
   grade_content_rubric.py      콘텐츠 카테고리별 정밀 채점 — 기대 점수대(밴드) vs 실제
   compare_stt_models.py        faster-whisper tiny/base/small 비교 (CER·처리시간·노이즈 강건성)
   _metrics.py                  세 validate_* 스크립트 공용 지표 (정탐/오탐/분리도)

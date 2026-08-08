@@ -6,7 +6,7 @@
   "max_windows": 8,
   "aggregation": "topk_mean",
   "model": "AASIST (clovaai)",
-  "elapsed_sec": 14.7,
+  "elapsed_sec": 14.2,
   "separation": {
     "real_max": 2.22,
     "real_mean": 0.13,

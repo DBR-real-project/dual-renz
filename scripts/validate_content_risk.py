@@ -47,6 +47,7 @@ from content_analysis.content_risk import (  # noqa: E402
     CATEGORY_LABELS_KO,
     SocialEngineeringCategory,
     classify_by_keywords,
+    classify_offline,
 )
 
 PROJECT_ROOT = SCRIPT_DIR.parent
@@ -92,6 +93,8 @@ def run_backend(backend: str, scenarios: list) -> dict:
         try:
             if backend == "keyword":
                 br = classify_by_keywords(s["text"])
+            elif backend == "offline":
+                br = classify_offline(s["text"])
             else:
                 # fallback=False: 키가 죽어서 키워드로 떨어지면 LLM 성능이 아니라
                 # 키워드 성능을 재게 된다. 실패는 실패로 남긴다.
@@ -177,8 +180,8 @@ def run_backend(backend: str, scenarios: list) -> dict:
 def main():
     parser = argparse.ArgumentParser(description="콘텐츠 분석(8대 기법) 성능 실측")
     parser.add_argument("--dataset", default=str(DATASET_PATH))
-    parser.add_argument("--backend", default="keyword",
-                        choices=["keyword", "llm", "both"])
+    parser.add_argument("--backend", default="offline",
+                        choices=["keyword", "offline", "llm", "both", "all"])
     parser.add_argument("--out", default=str(REPORT_PATH))
     args = parser.parse_args()
 
@@ -192,7 +195,10 @@ def main():
     print(f"검증셋 {len(scenarios)}건 (사기 {n_fake}, 정상 {len(scenarios) - n_fake})")
     print(f"출처: {dataset}")
 
-    backends = ["keyword", "llm"] if args.backend == "both" else [args.backend]
+    backends = {
+        "both": ["offline", "llm"],
+        "all": ["keyword", "offline", "llm"],
+    }.get(args.backend, [args.backend])
     report = {
         "dataset": str(dataset),
         "n_scenarios": len(scenarios),
