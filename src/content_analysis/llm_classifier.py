@@ -12,6 +12,12 @@ LLM 기반 8대 사회공학 기법 분류
 |-------------|---------------------------------------|------------------------------|
 | `anthropic` | `ANTHROPIC_API_KEY` / `ant auth login`| Messages API structured outputs |
 | `gemini`    | `GEMINI_API_KEY` / `GOOGLE_API_KEY`   | `response_schema` (JSON 강제) |
+| `ollama`    | 없음 (로컬 서버 `localhost:11434`)     | `format`에 JSON 스키마 (Ollama 0.5+) |
+
+  ollama는 실제 서비스용이 아니라 **프롬프트 구조를 로컬에서 공짜로 미리 검증**하는
+  용도다. Gemini 무료 티어 쿼터가 막혔을 때 특히 쓸모 있다. 그래서 auto 폴백
+  체인에는 넣지 않았다 — 개발자 PC에 우연히 Ollama가 떠 있다고 데모 중 조용히
+  그쪽으로 넘어가면 안 되므로, `DUALGUARD_LLM_PROVIDER=ollama`로 명시했을 때만 쓴다.
 
   둘 다 JSON 스키마를 주면 응답 형태가 보장되므로, 프롬프트에 "JSON만 출력하세요"라고
   빌고 파싱 실패를 재시도로 때우는 코드가 필요 없다. (초기 강동연 프로토타입은
@@ -69,7 +75,13 @@ GEMINI_DEFAULT_MODEL = "gemini-flash-latest"
 # 실측(강동연, 2026-08-06): 무료 키로 연속 호출 시 5 RPM에서 429가 났다.
 GEMINI_MIN_INTERVAL_SEC = float(os.environ.get("GEMINI_MIN_INTERVAL_SEC", "0"))
 
-# auto | anthropic | gemini
+# Ollama 로컬 서버 설정. 설치 시 기본으로 이 주소에 뜬다.
+OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434").rstrip("/")
+OLLAMA_DEFAULT_MODEL = os.environ.get("OLLAMA_MODEL", "llama3.1")
+# 로컬 CPU 추론은 클라우드보다 훨씬 느릴 수 있어 넉넉하게 잡는다.
+OLLAMA_TIMEOUT_SEC = float(os.environ.get("OLLAMA_TIMEOUT_SEC", "120"))
+
+# auto | anthropic | gemini | ollama
 PROVIDER_ENV = "DUALGUARD_LLM_PROVIDER"
 
 _CATEGORY_DESCRIPTIONS = {
@@ -358,13 +370,97 @@ class GeminiClassifier:
         return _finalize(json.loads(raw))
 
 
+class OllamaClassifier:
+    """
+    로컬 LLM(Ollama) 백엔드. Claude/Gemini와 인터페이스(available / classify / label)를
+    맞췄지만 목적이 다르다 — 클래스 docstring이 아니라 모듈 docstring 표 아래 설명 참고.
+
+    준비:
+        ollama pull llama3.1        # 원하는 모델로 교체 가능 (OLLAMA_MODEL 환경변수)
+        ollama serve                # 보통 설치 시 자동으로 백그라운드에 뜬다
+
+    구조화 출력은 Ollama 0.5+ 부터 `format`에 JSON 스키마를 직접 넣는 방식을
+    지원한다. 그 이하 버전이면 스키마를 무시하고 자유 텍스트를 낼 수 있어
+    파싱이 실패할 수 있다 — 이상하면 `ollama --version`부터 확인할 것.
+    """
+
+    provider = "ollama"
+
+    def __init__(self, model: str = OLLAMA_DEFAULT_MODEL, host: str = OLLAMA_HOST):
+        self.model = model
+        self.host = host
+        self._system = _build_system()
+
+    @property
+    def label(self) -> str:
+        return f"Ollama ({self.model} @ {self.host})"
+
+    @property
+    def available(self) -> bool:
+        """로컬 서버가 떠 있고 지정한 모델이 pull돼 있는지 확인한다."""
+        import json
+        import urllib.request
+
+        try:
+            req = urllib.request.Request(f"{self.host}/api/tags")
+            with urllib.request.urlopen(req, timeout=2.0) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+        except Exception:
+            # 서버가 안 떠 있거나(가장 흔함), 방화벽, 잘못된 OLLAMA_HOST 등.
+            # 여기서 이유를 구분해봐야 호출부는 어차피 폴백하므로 조용히 False.
+            return False
+
+        # "llama3.1:8b"처럼 태그가 붙어 있어도 매칭되도록 베이스 이름만 비교한다.
+        pulled = {m.get("name", "").split(":")[0] for m in data.get("models", [])}
+        return self.model.split(":")[0] in pulled
+
+    def classify(
+        self,
+        text: str,
+        context_before: str = "",
+        context_after: str = "",
+    ) -> ContentRiskBreakdown:
+        import json
+        import urllib.request
+
+        # additionalProperties는 Claude 전용 확장이라 Ollama가 얹은 모델이
+        # 헷갈릴 수 있어 Gemini와 같은 이유로 뺀다.
+        schema = {k: v for k, v in _SCHEMA.items() if k != "additionalProperties"}
+
+        body = json.dumps({
+            "model": self.model,
+            "messages": [
+                {"role": "system", "content": self._system},
+                {"role": "user",
+                "content": _build_user_prompt(text, context_before, context_after)},
+            ],
+            "format": schema,
+            "stream": False,
+            # 분류 작업이라 창의성이 필요 없다. Claude(effort=low)/Gemini(temperature=0)와
+            # 같은 이유로 결정적으로 고정한다.
+            "options": {"temperature": 0},
+        }).encode("utf-8")
+
+        req = urllib.request.Request(
+            f"{self.host}/api/chat", data=body,
+            headers={"Content-Type": "application/json"}, method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=OLLAMA_TIMEOUT_SEC) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+
+        raw = data.get("message", {}).get("content", "")
+        if not raw:
+            raise RuntimeError(f"Ollama가 빈 응답을 돌려줬습니다: {data}")
+        return _finalize(json.loads(raw))
+
+
 _shared = None
 
 
 def _resolve_provider() -> str:
     """DUALGUARD_LLM_PROVIDER 해석. 잘못된 값이면 auto로 떨어진다."""
     want = (os.environ.get(PROVIDER_ENV) or "auto").strip().lower()
-    return want if want in ("auto", "anthropic", "gemini") else "auto"
+    return want if want in ("auto", "anthropic", "gemini", "ollama") else "auto"
 
 
 def get_shared_classifier(model: Optional[str] = None):
@@ -374,6 +470,9 @@ def get_shared_classifier(model: Optional[str] = None):
     auto일 때는 Claude를 먼저 본다 — 구조화 출력 + 프롬프트 캐시로 세그먼트 단위
     반복 호출에 유리하고, 무료 티어 RPM 제한이 없어서 통화 하나를 한 번에 돌릴 수 있다.
     Claude 키가 없으면 Gemini로 내려간다.
+
+    ollama는 auto 체인에 없다 — 개발자 PC에 우연히 떠 있다고 데모 중 조용히
+    그쪽으로 넘어가면 안 되므로, DUALGUARD_LLM_PROVIDER=ollama로 명시했을 때만 쓴다.
     """
     global _shared
     want = _resolve_provider()
@@ -382,6 +481,8 @@ def get_shared_classifier(model: Optional[str] = None):
         candidates = [GeminiClassifier]
     elif want == "anthropic":
         candidates = [LLMClassifier]
+    elif want == "ollama":
+        candidates = [OllamaClassifier]
     else:
         candidates = [LLMClassifier, GeminiClassifier]
 
@@ -429,10 +530,12 @@ def classify_segment(
                 raise
     elif not fallback:
         raise RuntimeError(
-            "LLM API 키가 없습니다. 둘 중 하나를 설정하세요:\n"
+            "LLM API 키가 없습니다. 다음 중 하나를 설정하세요:\n"
             "  Claude → ANTHROPIC_API_KEY 환경변수 또는 `ant auth login`\n"
             "  Gemini → GEMINI_API_KEY 환경변수 (+ pip install google-genai)\n"
-            f"백엔드를 고정하려면 {PROVIDER_ENV}=anthropic|gemini"
+            "  Ollama → 로컬 서버 실행 + `ollama pull llama3.1` 후 "
+            f"{PROVIDER_ENV}=ollama (auto 모드에는 자동 포함 안 됨)\n"
+            f"백엔드를 고정하려면 {PROVIDER_ENV}=anthropic|gemini|ollama"
         )
     return classify_by_keywords(text)
 

@@ -199,7 +199,29 @@ definitive(71~100). 추가 후:
 (`api/main.py`의 워커 1개). 서버 메모리가 넉넉해지면 `free_models=False`로
 되돌리고 워커를 늘릴 수 있다.
 
-### 3-4. 미해결 기술 과제
+### 3-4. 로컬 LLM(Ollama)으로 프롬프트 사전 검증
+
+`llm_classifier.py`에 `OllamaClassifier`를 세 번째 백엔드로 추가했다. 실제
+서비스용이 아니라 **클라우드 API를 부르기 전에 프롬프트 구조(시스템 프롬프트·
+JSON 스키마)가 말이 되는지 로컬에서 공짜로 확인**하는 용도다. Gemini 무료
+티어 쿼터가 막혔을 때 특히 쓸모 있다. 그래서 `auto` 폴백 체인에는 안 들어가고
+`DUALGUARD_LLM_PROVIDER=ollama`로 명시했을 때만 쓰인다.
+
+```powershell
+# 1. Ollama 설치 후 모델 하나 받기 (한 번만)
+ollama pull llama3.1
+
+# 2. 이 프로젝트 프롬프트로 채점 (validate_content_risk.py가 그대로 씀)
+$env:DUALGUARD_LLM_PROVIDER = "ollama"
+.venv\Scripts\python.exe scripts\validate_content_risk.py --backend llm
+.venv\Scripts\python.exe scripts\grade_content_rubric.py --backend llm
+```
+
+다른 모델을 쓰려면 `$env:OLLAMA_MODEL = "qwen2.5:7b"` 식으로. Ollama 0.5 미만
+버전은 `format`에 JSON 스키마를 못 받아 파싱이 실패할 수 있다 — `ollama --version`
+확인할 것.
+
+### 3-5. 미해결 기술 과제
 
 - **얼굴 미검출 대응** — FF++는 얼굴 크롭 전용이라 얼굴이 안 잡히면 판정 불가.
   실제 통화는 각도가 틀어지는 구간이 많다. Haar cascade보다 나은 검출기(YuNet 등)

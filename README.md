@@ -29,7 +29,8 @@
 | **콘텐츠 분류 성능 실측** | ⚠️ | 키워드 기준선만 측정 (정탐 55.6% / 오탐 20%). **LLM 수치는 키가 있어야 나옴** |
 | 통합 스코어링 | ✅ | 기획서 두 버전 공식 모두 구현 |
 | 크롬 확장 (MV3) | ⚠️ | 코드 작성 완료, **브라우저 실제 로드 테스트 미실시** |
-| LLM 실제 호출 | ⚠️ | `ANTHROPIC_API_KEY` 또는 `GEMINI_API_KEY` 필요. 없으면 키워드 규칙으로 동작 |
+| LLM 실제 호출 | ⚠️ | `ANTHROPIC_API_KEY` 또는 `GEMINI_API_KEY` 필요. 없으면 키워드 규칙으로 동작. `DUALGUARD_LLM_PROVIDER=ollama`로 로컬 LLM도 가능(프롬프트 사전 검증용) |
+| STT 모델 크기 비교 | ✅ | tiny/base/small CER·처리시간 실측, 화이트노이즈 강건성 포함 (`scripts/compare_stt_models.py`) |
 
 성능 수치의 측정 조건은 **[docs/validation_report.md](docs/validation_report.md)** 에 있다.
 발표에 인용하기 전에 그 문서의 전제(학습 도메인 내 측정)를 반드시 확인할 것.
@@ -99,7 +100,8 @@ web/                           대시보드 (외부 라이브러리 0 — CDN �
 extension/                     크롬 확장 (Manifest V3)
 data_seed/
   scam_cases.json              RAG 사례 데이터 (출처 표기 필수)
-  content_test_scenarios.json  콘텐츠 분류 채점용 라벨링 대화 14건 (사기 9 / 정상 5)
+  content_test_scenarios.json  콘텐츠 분류 채점용 라벨링 대화 21건 (사기 11 / 정상 10,
+                                경계 케이스 7건 포함) + 카테고리별 기대 점수대(밴드)
 
 scripts/
   run_server.py                서버 + 대시보드
@@ -109,6 +111,7 @@ scripts/
   validate_audio_spoof.py      음성 성능 실측
   validate_content_risk.py     콘텐츠(8대 기법) 성능 실측 — 키워드 vs LLM 비교
   grade_content_rubric.py      콘텐츠 카테고리별 정밀 채점 — 기대 점수대(밴드) vs 실제
+  compare_stt_models.py        faster-whisper tiny/base/small 비교 (CER·처리시간·노이즈 강건성)
   _metrics.py                  세 validate_* 스크립트 공용 지표 (정탐/오탐/분리도)
   fetch_ff_samples.py          FF++ 검증 샘플 (16GB zip에서 필요분만)
   fetch_asvspoof_samples.py    ASVspoof 검증 샘플 (parquet 부분 읽기)
@@ -119,7 +122,8 @@ scripts/
 
 docs/
   blocked_and_next.md          ★ 막힌 것 / 팀 결정 사항 / 다음 작업
-  validation_report.md         성능 실측 보고 ★ 발표 자료의 근거
+  validation_report.md         성능 실측 보고 ★ 발표 자료의 근거 (영상·음성·콘텐츠)
+  stt_benchmark.md             STT 모델 크기(tiny/base/small) 실측 — CER·처리시간·노이즈 강건성
   spec_reconciliation.md       기획서 2종 대조
   model_research.md            모델 후보 리서치 + 세팅 실측
 ```
@@ -155,6 +159,8 @@ report.as_dict()["overall_score"]
 2. **오디오·영상 결합** — `max` vs `weighted_average`
 3. **딥페이크 임계값** — 50(오탐 0%) vs 7.5(정탐 80%)
 4. **신호등 경계** — 현재 높음 70 / 중간 40
+5. **STT 모델 크기** — 현재 `small`(강건성 우선) vs `base`(3배 빠름, clean 정확도
+   거의 동일) — 근거: **[docs/stt_benchmark.md](docs/stt_benchmark.md)**
 
 ---
 

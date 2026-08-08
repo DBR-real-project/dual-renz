@@ -206,7 +206,7 @@ def main():
     out.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"\n상세 결과 저장: {out}")
 
-    print("\n주의: 자체 구성 시나리오 14건이라 표본이 작다. 발표에 인용할 때는")
+    print(f"\n주의: 자체 구성 시나리오 {len(scenarios)}건이라 표본이 작다. 발표에 인용할 때는")
     print("      건수와 '팀이 직접 작성한 데이터셋'임을 반드시 함께 밝힐 것.")
 
 

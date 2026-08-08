@@ -3,12 +3,13 @@
     "용도": "8대 사회공학 기법 분류(content_risk)의 정탐률/오탐률 실측용 라벨링 대화. 미디어 쪽 data/ff_samples · data/asvspoof_samples 에 대응하는 콘텐츠 쪽 검증셋이다.",
     "작성": "강동연 / 2026-08-04 (원본 dual-lens/dual_lens_test_scenarios.json)",
     "재현": ".venv\\Scripts\\python.exe scripts\\validate_content_risk.py",
-    "구성": "사기 9건 / 정상 5건",
+    "구성": "사기 11건 / 정상 10건 (경계 케이스 7건 포함)",
     "주의": [
       "techniques는 사람이 붙인 참고 라벨이다. 채점은 label(fraud/normal)로만 하고, techniques는 '어떤 기법을 놓쳤는지' 분석에만 쓴다.",
       "RAG용 data_seed/scam_cases.json 과 목적이 다르다. 저쪽은 검색 대상 사례집, 이쪽은 분류기 채점용 정답지다. 서로 섞지 말 것.",
       "팀이 직접 작성한 시나리오라 실제 통화 녹취가 아니다. 발표에 수치를 인용할 때 '자체 구성 데이터셋'임을 반드시 밝힐 것.",
-      "expected_scores: 8개 카테고리 전부에 대한 기대 점수대(none/weak/clear/definitive, content_risk.ScoreBand와 동일 척도)를 사람이 대사를 읽고 직접 매겼다. techniques(이진 참고 라벨)와 값이 다를 수 있다 — techniques에 없어도 expected_scores에는 있을 수 있다(예: fraud_01의 secrecy). 재현: scripts/grade_content_rubric.py"
+      "expected_scores: 8개 카테고리 전부에 대한 기대 점수대(none/weak/clear/definitive, content_risk.ScoreBand와 동일 척도)를 사람이 대사를 읽고 직접 매겼다. techniques(이진 참고 라벨)와 값이 다를 수 있다 — techniques에 없어도 expected_scores에는 있을 수 있다(예: fraud_01의 secrecy). 재현: scripts/grade_content_rubric.py",
+      "boundary_* 시나리오 7건은 일부러 애매하게 썼다. 정상인데 표면적으로 의심스럽거나(boundary_normal_*), 사기인데 신호가 약~중간뿐인 경우(boundary_fraud_*)다. 특히 boundary_normal_05는 '정상/사기를 텍스트만으로 구분할 수 없는 사례'를 정직하게 보여주려고 넣은 것이니 note 필드를 꼭 읽을 것."
     ]
   },
   "scenarios": [
@@ -847,6 +848,424 @@
           "band": "none"
         }
       }
+    },
+    {
+      "id": "boundary_normal_01",
+      "label": "normal",
+      "title": "은행 실제 부정거래 방지 안내 (진짜 은행, 진짜 긴급)",
+      "channel": "call",
+      "techniques": [],
+      "note": "urgency/authority가 표면적으로 있지만 진짜 은행이고, 스스로 '끊고 다시 걸어서 확인해도 된다'며 제3자 확인을 권한다 — 사기의 isolation 패턴과 정반대다.",
+      "expected_scores": {
+        "urgency": {
+          "band": "weak",
+          "evidence": "즉시 해당 거래를 차단하겠습니다"
+        },
+        "authority": {
+          "band": "weak",
+          "evidence": "OO은행 부정거래 방지팀입니다"
+        },
+        "money_transfer": {
+          "band": "none"
+        },
+        "credentials": {
+          "band": "none",
+          "evidence": "'그 번호는 저희에게 절대 말씀하실 필요 없고'는 OTP를 묻지 않겠다는 안내다"
+        },
+        "secrecy": {
+          "band": "none"
+        },
+        "emotional": {
+          "band": "weak",
+          "evidence": "고객님 카드로 방금 해외에서 큰 금액 결제 시도가"
+        },
+        "trust_building": {
+          "band": "none"
+        },
+        "isolation": {
+          "band": "none",
+          "evidence": "'통화 끊으시고 카드 뒷면 번호로 다시 걸어서 확인하셔도 됩니다' — 제3자 확인을 오히려 권장. isolation의 정반대 패턴"
+        }
+      },
+      "turns": [
+        {
+          "speaker": "발신자",
+          "text": "안녕하세요, OO은행 부정거래 방지팀입니다. 고객님 카드로 방금 해외에서 큰 금액 결제 시도가 있었습니다."
+        },
+        {
+          "speaker": "고객",
+          "text": "네? 저는 해외 결제한 적 없는데요."
+        },
+        {
+          "speaker": "발신자",
+          "text": "그럼 저희가 즉시 해당 거래를 차단하겠습니다. 본인 확인차 등록하신 휴대폰으로 인증 문자를 보내드릴 텐데, 그 번호는 저희에게 절대 말씀하실 필요 없고 그냥 화면에 뜨는 승인·거부 버튼만 눌러주시면 됩니다."
+        },
+        {
+          "speaker": "고객",
+          "text": "네 알겠습니다."
+        },
+        {
+          "speaker": "발신자",
+          "text": "확인 감사합니다. 혹시 불안하시면 지금 통화 끊으시고 카드 뒷면 번호로 저희에게 다시 걸어서 상담원 확인하셔도 됩니다."
+        }
+      ]
+    },
+    {
+      "id": "boundary_normal_02",
+      "label": "normal",
+      "title": "가족 서프라이즈 생일파티 준비 (정상적 비밀)",
+      "channel": "call",
+      "techniques": [],
+      "note": "'절대 말하면 안 돼'는 secrecy 카테고리의 전형적 표현 그 자체다. 그런데 맥락이 서프라이즈 파티라 완전히 무해하다. weak 밴드의 정의('암시는 있으나 정상 대화로도 설명 가능')를 정확히 시험하는 사례.",
+      "expected_scores": {
+        "urgency": {
+          "band": "none"
+        },
+        "authority": {
+          "band": "none"
+        },
+        "money_transfer": {
+          "band": "none"
+        },
+        "credentials": {
+          "band": "none"
+        },
+        "secrecy": {
+          "band": "weak",
+          "evidence": "이건 진짜 우리끼리 비밀이니까 아빠한테는 절대 말하면 안 돼"
+        },
+        "emotional": {
+          "band": "none"
+        },
+        "trust_building": {
+          "band": "none"
+        },
+        "isolation": {
+          "band": "none"
+        }
+      },
+      "turns": [
+        {
+          "speaker": "발신자",
+          "text": "이번 주 토요일 아빠 생일이잖아, 형이랑 같이 깜짝 파티 준비하려고 하는데 좀 도와줄래?"
+        },
+        {
+          "speaker": "딸",
+          "text": "좋아! 뭐 하면 돼?"
+        },
+        {
+          "speaker": "발신자",
+          "text": "케이크랑 선물은 내가 준비할 테니까 너는 아빠 데리고 저녁 8시까지 밖에서 시간 좀 끌어줘. 그리고 이건 진짜 우리끼리 비밀이니까 아빠한테는 절대 말하면 안 돼, 알았지?"
+        },
+        {
+          "speaker": "딸",
+          "text": "당연하지, 완전 기대된다!"
+        },
+        {
+          "speaker": "발신자",
+          "text": "고마워, 그럼 8시에 집 앞에서 보자."
+        }
+      ]
+    },
+    {
+      "id": "boundary_normal_03",
+      "label": "normal",
+      "title": "회사 법인카드 정산 이체 요청 (정상 업무)",
+      "channel": "call",
+      "techniques": [],
+      "note": "money_transfer가 명시적으로 있지만 정상적인 사내 정산 절차다. 개인 계좌가 아니라 회사 정산 계좌를 지정하고, 증빙(영수증) 절차가 같이 언급되는 게 정상 업무의 특징이다.",
+      "expected_scores": {
+        "urgency": {
+          "band": "weak",
+          "evidence": "이번 주 안으로 정산 마감이라"
+        },
+        "authority": {
+          "band": "none"
+        },
+        "money_transfer": {
+          "band": "weak",
+          "evidence": "정산 계좌로 영수증 첨부해서 청구서 올려주시면 회계팀에서 처리해드릴게요"
+        },
+        "credentials": {
+          "band": "none"
+        },
+        "secrecy": {
+          "band": "none"
+        },
+        "emotional": {
+          "band": "none"
+        },
+        "trust_building": {
+          "band": "none"
+        },
+        "isolation": {
+          "band": "none"
+        }
+      },
+      "turns": [
+        {
+          "speaker": "팀장",
+          "text": "지난주 출장 법인카드 영수증 아직 정산 안 올라온 거 같은데, 이번 주 안으로 정산 마감이라 빨리 처리해야 해요."
+        },
+        {
+          "speaker": "팀원",
+          "text": "아 맞다, 깜빡했네요. 지금 바로 올릴게요."
+        },
+        {
+          "speaker": "팀장",
+          "text": "네, 정산 계좌로 영수증 첨부해서 청구서 올려주시면 회계팀에서 처리해드릴게요. 사내 정산 시스템에서 신청하시면 됩니다."
+        },
+        {
+          "speaker": "팀원",
+          "text": "네 알겠습니다, 지금 바로 올리겠습니다."
+        }
+      ]
+    },
+    {
+      "id": "boundary_normal_04",
+      "label": "normal",
+      "title": "경찰 정식 참고인 출석 안내 (진짜 경찰, 강요 없음)",
+      "channel": "call",
+      "techniques": [],
+      "note": "authority(경찰)가 있지만 우편으로 정식 서류를 보내고, 관할서 대표번호로 직접 확인하라고 권한다. isolation과 반대되는 패턴이고, money_transfer·credentials 요구가 전혀 없다는 게 진짜 수사기관의 특징이다.",
+      "expected_scores": {
+        "urgency": {
+          "band": "none"
+        },
+        "authority": {
+          "band": "weak",
+          "evidence": "OO경찰서 사이버수사팀입니다"
+        },
+        "money_transfer": {
+          "band": "none"
+        },
+        "credentials": {
+          "band": "none",
+          "evidence": "'계좌 비밀번호나 이체는 저희가 절대 요구하지 않습니다'는 부정문 안내"
+        },
+        "secrecy": {
+          "band": "none"
+        },
+        "emotional": {
+          "band": "weak",
+          "evidence": "제가 무슨 신고를 당했다는 건가요?"
+        },
+        "trust_building": {
+          "band": "none"
+        },
+        "isolation": {
+          "band": "none",
+          "evidence": "'관할 경찰서 대표번호로 직접 전화하셔서... 사실 확인하실 수 있습니다' — 제3자 확인을 오히려 권장"
+        }
+      },
+      "turns": [
+        {
+          "speaker": "발신자",
+          "text": "안녕하세요, OO경찰서 사이버수사팀입니다. 고객님 명의로 접수된 사기 피해 신고 건 관련해서 참고인 조사가 필요합니다."
+        },
+        {
+          "speaker": "시민",
+          "text": "네? 제가 무슨 신고를 당했다는 건가요?"
+        },
+        {
+          "speaker": "발신자",
+          "text": "고객님이 신고한 사건이 아니라, 고객님 계좌가 사기 피해금 이체 경로로 이용된 정황이 있어서 확인이 필요합니다. 정식 출석 요청서를 우편으로 발송해드릴 텐데, 원하시면 관할 경찰서 대표번호로 직접 전화하셔서 사건번호로 사실 확인하실 수 있습니다."
+        },
+        {
+          "speaker": "시민",
+          "text": "네, 확인해볼게요."
+        },
+        {
+          "speaker": "발신자",
+          "text": "네, 출석 일정은 우편으로 안내되는 서류에 적힌 절차대로 진행해주시면 됩니다. 계좌 비밀번호나 이체는 저희가 절대 요구하지 않습니다."
+        }
+      ]
+    },
+    {
+      "id": "boundary_normal_05",
+      "label": "normal",
+      "title": "온라인 데이트 초반 안부 대화 (구분 불가 사례)",
+      "channel": "call",
+      "techniques": [],
+      "note": "⚠ 이 시나리오는 다른 것들과 성격이 다르다 — '정답이 명확해서'가 아니라 '이 시점 텍스트만으로는 정상 연애와 돼지도살형 사기 1단계를 구분할 수 없다'는 걸 정직하게 보여주려고 넣었다. 실제 로맨스스캠은 처음 며칠은 정확히 이런 대화를 한다(fraud_03 참고). 구분은 이후 단계(투자 권유·영상통화 회피 등)에서 가능하다. label을 normal로 둔 건 '이 스니펫 하나만 보고 fraud로 매기라'는 요구가 분류기에게 불공정한 시험이기 때문이다 — 대신 이 케이스는 '정상적인 안부 대화에 과민반응해서 오탐하지 않는가'를 시험한다.",
+      "expected_scores": {
+        "urgency": {
+          "band": "none"
+        },
+        "authority": {
+          "band": "none"
+        },
+        "money_transfer": {
+          "band": "none"
+        },
+        "credentials": {
+          "band": "none"
+        },
+        "secrecy": {
+          "band": "none"
+        },
+        "emotional": {
+          "band": "none"
+        },
+        "trust_building": {
+          "band": "weak",
+          "evidence": "다음에 기회 되면 영상통화도 한번 해요... 그때까지는 매일 이렇게 안부 물어봐도 될까요? — 관계를 빠르게 다지려는 시도이지만 정상적인 데이팅 초반 대화로도 완전히 설명 가능"
+        },
+        "isolation": {
+          "band": "none"
+        }
+      },
+      "turns": [
+        {
+          "speaker": "발신자",
+          "text": "오늘 하루도 고생 많았어. 얘기 나누다 보니까 진짜 잘 통하는 사람 만난 것 같아서 기분이 좋아."
+        },
+        {
+          "speaker": "수신자",
+          "text": "저도 그래요, 대화하는 게 편하네요."
+        },
+        {
+          "speaker": "발신자",
+          "text": "다음에 기회 되면 영상통화도 한번 해요, 목소리도 궁금하고. 그때까지는 매일 이렇게 안부 물어봐도 될까요?"
+        },
+        {
+          "speaker": "수신자",
+          "text": "좋아요, 저도 기다려질 것 같아요."
+        },
+        {
+          "speaker": "발신자",
+          "text": "고마워요, 오늘도 좋은 꿈 꿔요."
+        }
+      ]
+    },
+    {
+      "id": "boundary_fraud_01",
+      "label": "fraud",
+      "title": "지인 사칭 소액 송금 스미싱 (액정 깨짐 수법)",
+      "channel": "call",
+      "techniques": [
+        "urgency",
+        "money_transfer",
+        "isolation"
+      ],
+      "note": "실제로 가장 흔한 문자 사기 유형 중 하나. 개별 카테고리 신호가 전부 weak~clear 수준이라(definitive가 하나도 없음) 임계값 기반 판정에서 놓치기 쉽다 — 8개 중 1~2개만 강하게 걸리는 게 아니라 여러 개가 고르게 중간 강도로 걸리는 패턴.",
+      "expected_scores": {
+        "urgency": {
+          "band": "clear",
+          "evidence": "오늘 저녁까지 급하게 필요해서 그래"
+        },
+        "authority": {
+          "band": "none"
+        },
+        "money_transfer": {
+          "band": "clear",
+          "evidence": "5만원만 잠깐 보내줄 수 있어?"
+        },
+        "credentials": {
+          "band": "none"
+        },
+        "secrecy": {
+          "band": "none"
+        },
+        "emotional": {
+          "band": "weak",
+          "evidence": "지금 자세히 설명할 시간이 없어"
+        },
+        "trust_building": {
+          "band": "weak",
+          "evidence": "어 나야 — 구체적 근거 없이 지인 사칭"
+        },
+        "isolation": {
+          "band": "clear",
+          "evidence": "원래 번호는 지금 액정이 깨져서 확인이 안 돼 — 원래 채널로 확인 못 하게 하는 그럴듯한 핑계"
+        }
+      },
+      "turns": [
+        {
+          "speaker": "발신자",
+          "text": "어 나야, 핸드폰이 갑자기 액정 깨져서 지금 급하게 딴 폰으로 연락하는 거야. 미안한데 나 지금 계좌이체가 안 돼서 그러는데 5만원만 잠깐 보내줄 수 있어? 오늘 저녁까지 급하게 필요해서 그래."
+        },
+        {
+          "speaker": "지인",
+          "text": "어? 무슨 일이야, 많이 다급해 보이네."
+        },
+        {
+          "speaker": "발신자",
+          "text": "지금 자세히 설명할 시간이 없어, 나중에 통화되면 다 얘기해줄게. 이 번호로 보내주면 되고, 원래 번호는 지금 액정이 깨져서 확인이 안 돼."
+        },
+        {
+          "speaker": "지인",
+          "text": "알겠어, 계좌번호 불러줘."
+        },
+        {
+          "speaker": "발신자",
+          "text": "지금 문자로 보낼게, 확인하고 바로 보내줘."
+        }
+      ]
+    },
+    {
+      "id": "boundary_fraud_02",
+      "label": "fraud",
+      "title": "정부 지원금 사칭 - 정중한 어조 (압박 없는 OTP 요구)",
+      "channel": "call",
+      "techniques": [
+        "urgency",
+        "authority",
+        "credentials"
+      ],
+      "note": "노골적인 협박·긴박함 없이 시종일관 정중한 상담원 어조를 쓰는 유형. money_transfer는 없고(오히려 '지급'을 미끼로 삼음) credentials만 확실히 걸리는 게 특징 — 카테고리 하나만 강하게 걸리는 사기도 있다는 걸 보여준다.",
+      "expected_scores": {
+        "urgency": {
+          "band": "clear",
+          "evidence": "오늘 심사 마감이라 지금 처리 안 하시면 다음 분기까지"
+        },
+        "authority": {
+          "band": "clear",
+          "evidence": "국민행복지원센터입니다"
+        },
+        "money_transfer": {
+          "band": "none"
+        },
+        "credentials": {
+          "band": "definitive",
+          "evidence": "문자로 발송해드리는 인증번호만 알려주시면"
+        },
+        "secrecy": {
+          "band": "none"
+        },
+        "emotional": {
+          "band": "weak",
+          "evidence": "저소득층 대상으로... 지급 처리"
+        },
+        "trust_building": {
+          "band": "none"
+        },
+        "isolation": {
+          "band": "none"
+        }
+      },
+      "turns": [
+        {
+          "speaker": "발신자",
+          "text": "안녕하세요, 국민행복지원센터입니다. 고객님께서 신청하신 긴급생활지원금 심사가 완료되어 안내차 연락드렸습니다."
+        },
+        {
+          "speaker": "고객",
+          "text": "제가 신청한 적은 없는데... 어떤 지원금인가요?"
+        },
+        {
+          "speaker": "발신자",
+          "text": "네, 이번에 정부에서 저소득층 대상으로 자동 심사한 지원금입니다. 지급을 위해 본인 명의 계좌 확인이 필요한데, 문자로 발송해드리는 인증번호만 알려주시면 바로 지급 처리해드리겠습니다."
+        },
+        {
+          "speaker": "고객",
+          "text": "그냥 계좌번호만 알려드리면 안 되나요?"
+        },
+        {
+          "speaker": "발신자",
+          "text": "저희 시스템 특성상 본인 인증 절차가 필요해서요, 인증번호만 확인되면 정말 금방 끝납니다. 오늘 심사 마감이라 지금 처리 안 하시면 다음 분기까지 기다리셔야 해요."
+        }
+      ]
     }
   ]
 }

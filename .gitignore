@@ -28,11 +28,20 @@ data/chroma/
 #   data/demo_clips/       make_demo_clips.py
 #   data/test_clips/       make_synthetic_test_clip.py
 #   data/sanity/           docs/model_research.md "재현 방법" 참고
+#   data/stt_bench/        compare_stt_models.py (TTS로 자동 생성)
 data/*
 !data/.gitkeep
 
 # 로컬 설정
 .claude/settings.local.json
+
+# API 키 등 비밀값. dual-lens/ 프로토타입에서 키를 소스에 하드코딩했던 전례가
+# 있어서(폐기 완료) 예방선을 그어둔다. 이 프로젝트는 키를 전부 환경변수로만
+# 받으므로(ANTHROPIC_API_KEY/GEMINI_API_KEY) .env 자체가 필요 없지만, 실수로
+# 만들어도 커밋되지 않게.
+.env
+.env.*
+*.key
 
 # OS
 Thumbs.db
