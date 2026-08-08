@@ -48,8 +48,13 @@ kaggle==1.7.4.5
 faster-whisper==1.2.1
 
 # --- 콘텐츠 분석: LLM 화법 분류 ---
-# ANTHROPIC_API_KEY가 없으면 키워드 규칙으로 폴백하므로, 키 없이도 파이프라인은 돈다.
+# 기획서가 "Claude API 또는 Gemini API"를 허용하므로 두 백엔드를 모두 넣는다.
+# 어느 키도 없으면 키워드 규칙으로 폴백하므로, 키 없이도 파이프라인은 돈다.
+# 백엔드 선택은 DUALGUARD_LLM_PROVIDER=auto|anthropic|gemini (기본 auto).
 anthropic==0.121.0
+# Gemini 백엔드. 구버전 google-generativeai가 아니라 신규 공식 SDK(google-genai)다.
+# 둘은 API 모양이 완전히 다르니 섞어 쓰지 말 것.
+google-genai==2.17.0
 
 # --- 콘텐츠 분석: RAG 사례 검색 ---
 # 임베딩 모델은 반드시 한국어 모델(jhgan/ko-sroberta-multitask)을 쓸 것.

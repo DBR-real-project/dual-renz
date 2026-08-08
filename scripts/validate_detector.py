@@ -27,6 +27,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
+from _metrics import (  # noqa: E402,F401  (하위 스크립트가 여기서 import 한다)
+    best_threshold,
+    confusion,
+    fmt_pct,
+    separation,
+)
 from media_detection.deepfake_detector import FrameAggregation  # noqa: E402
 from media_detection.media_risk import analyze_video  # noqa: E402
 
@@ -48,51 +54,9 @@ def load_samples(sample_dir: Path) -> list:
     return samples
 
 
-def confusion(results: list, threshold: float) -> dict:
-    """
-    threshold 이상이면 '가짜로 판정'했다고 보고 혼동행렬을 만든다.
-
-      Recall(정탐률)  = 가짜를 가짜라고 맞힌 비율   -> 놓치면 피해 발생
-      FPR(오탐률)     = 진짜를 가짜라고 오해한 비율 -> 높으면 사용자 신뢰 붕괴
-    """
-    tp = sum(1 for r in results if r["label"] == "fake" and r["score"] >= threshold)
-    fn = sum(1 for r in results if r["label"] == "fake" and r["score"] < threshold)
-    fp = sum(1 for r in results if r["label"] == "real" and r["score"] >= threshold)
-    tn = sum(1 for r in results if r["label"] == "real" and r["score"] < threshold)
-
-    n_fake, n_real = tp + fn, fp + tn
-    return {
-        "threshold": threshold,
-        "tp": tp, "fn": fn, "fp": fp, "tn": tn,
-        "recall": tp / n_fake if n_fake else None,
-        "fpr": fp / n_real if n_real else None,
-        "precision": tp / (tp + fp) if (tp + fp) else None,
-        "accuracy": (tp + tn) / len(results) if results else None,
-    }
-
-
-def separation(results: list) -> dict:
-    """진짜/가짜 점수 분포가 실제로 갈라지는지 본다. 겹치면 threshold를 어디 둬도 소용없다."""
-    real = [r["score"] for r in results if r["label"] == "real"]
-    fake = [r["score"] for r in results if r["label"] == "fake"]
-    if not real or not fake:
-        return {}
-    return {
-        "real_max": max(real), "real_mean": sum(real) / len(real), "real_min": min(real),
-        "fake_max": max(fake), "fake_mean": sum(fake) / len(fake), "fake_min": min(fake),
-        "gap": min(fake) - max(real),  # 양수면 완전 분리
-    }
-
-
-def best_threshold(results: list) -> dict:
-    """샘플 점수들 사이 지점을 모두 훑어 정확도가 가장 높은 threshold를 찾는다."""
-    scores = sorted({r["score"] for r in results})
-    if len(scores) < 2:
-        return confusion(results, 50.0)
-    candidates = [(scores[i] + scores[i + 1]) / 2 for i in range(len(scores) - 1)]
-    candidates += [0.0, 100.0]
-    return max((confusion(results, t) for t in candidates),
-               key=lambda c: (c["accuracy"] or 0, -(c["fpr"] or 1)))
+# 지표 함수는 scripts/_metrics.py 로 옮겼다 (콘텐츠 검증이 cv2 없이 쓰려면 필요).
+# 기존 import 경로(`from validate_detector import confusion, ...`)를 유지하려고
+# 여기서 그대로 재노출한다.
 
 
 def run_backend(backend: str, samples: list, max_frames: int, aggregation: str) -> dict:
@@ -185,8 +149,6 @@ def run_backend(backend: str, samples: list, max_frames: int, aggregation: str) 
     }
 
 
-def fmt_pct(v) -> str:
-    return "   n/a" if v is None else f"{v:6.1%}"
 
 
 def main():

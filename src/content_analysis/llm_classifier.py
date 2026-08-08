@@ -1,15 +1,29 @@
 """
 LLM 기반 8대 사회공학 기법 분류
-담당: 이상원 (원래 강동연 파트지만 전체 통합을 위해 구현)
+담당: 강동연(프롬프트·Gemini 백엔드) / 이상원(Claude 백엔드·통합)
 
 기획서: *"LLM이 8대 사회공학 기법을 분류합니다"*, *"Claude API 또는 Gemini API"*
 
-Claude Messages API의 **구조화 출력(structured outputs)** 을 쓴다. JSON 스키마를 주면
-응답이 그 형태로 보장되므로, 프롬프트에 "JSON만 출력하세요"라고 빌고 파싱 실패를
-재시도로 때우는 코드가 필요 없다.
+기획서가 두 API를 모두 허용하므로 **두 백엔드를 다 구현하고 런타임에 고른다.**
+어느 쪽이든 같은 시스템 프롬프트·같은 JSON 스키마를 쓰고 ContentRiskBreakdown을
+돌려주므로, 파이프라인 입장에서는 구분이 없다.
 
-  주의: 구조화 출력 스키마는 minimum/maximum 같은 수치 제약을 지원하지 않는다.
+| 백엔드      | 환경변수                              | 구조화 출력 방식             |
+|-------------|---------------------------------------|------------------------------|
+| `anthropic` | `ANTHROPIC_API_KEY` / `ant auth login`| Messages API structured outputs |
+| `gemini`    | `GEMINI_API_KEY` / `GOOGLE_API_KEY`   | `response_schema` (JSON 강제) |
+
+  둘 다 JSON 스키마를 주면 응답 형태가 보장되므로, 프롬프트에 "JSON만 출력하세요"라고
+  빌고 파싱 실패를 재시도로 때우는 코드가 필요 없다. (초기 강동연 프로토타입은
+  ```json 펜스를 문자열로 벗겨내고 3회 재시도했는데, 스키마를 쓰면 그 코드가 사라진다)
+
+  주의: 두 API 모두 스키마에서 minimum/maximum 같은 수치 제약을 지원하지 않는다.
         0~100 범위 검증은 여기(파이썬)에서 한다.
+
+백엔드 선택 (`DUALGUARD_LLM_PROVIDER`):
+  `auto`(기본) → Claude 키가 있으면 Claude, 없으면 Gemini, 둘 다 없으면 키워드 폴백.
+  `anthropic` / `gemini` → 해당 백엔드로 고정. 팀원마다 가진 키가 달라서
+  "내 환경에서는 되는데"를 없애려면 이 변수를 명시하는 편이 낫다.
 
 호출 단위:
   통화 전체가 아니라 **STT 세그먼트 단위**로 부른다. 기획서 결과 대시보드가 구간별
@@ -17,8 +31,11 @@ Claude Messages API의 **구조화 출력(structured outputs)** 을 쓴다. JSON
   ("네 알겠습니다"만 보면 판단 불가) 앞뒤 세그먼트를 함께 넘긴다.
 
 비용/지연:
-  세그먼트마다 API를 부르므로 통화 하나에 수십 번 호출된다. effort를 low로 두고
-  시스템 프롬프트에 캐시 breakpoint를 걸어 반복 비용을 줄인다.
+  세그먼트마다 API를 부르므로 통화 하나에 수십 번 호출된다.
+  - Claude: effort를 low로 두고 시스템 프롬프트에 캐시 breakpoint를 걸어 반복 비용을 줄인다.
+  - Gemini: 무료 티어는 분당 요청 수 제한이 빡빡하다(실측 시 5 RPM). 통화 하나에
+    세그먼트가 수십 개면 429가 난다. `GEMINI_MIN_INTERVAL_SEC`으로 호출 간격을
+    강제할 수 있고, 실패해도 예외를 던지지 않고 키워드로 폴백한다.
 
 API 키가 없으면:
   예외를 던지지 않고 content_risk.classify_by_keywords()로 폴백한다.
@@ -26,6 +43,8 @@ API 키가 없으면:
 """
 
 import os
+import threading
+import time
 from typing import Dict, List, Optional
 
 from .content_risk import (
@@ -41,6 +60,17 @@ DEFAULT_MODEL = "claude-opus-5"
 # 분류는 짧은 발화 하나를 8개 축으로 점수 매기는 단순 작업이라 low로 충분하다.
 # 판정이 뭉툭하다고 느껴지면 medium으로 올릴 것 (비용/지연은 올라간다).
 DEFAULT_EFFORT = "low"
+
+# Gemini 쪽 기본값. flash 계열을 쓰는 이유는 세그먼트마다 부르는 호출이라
+# 지연과 무료 티어 쿼터가 정확도보다 먼저 걸리기 때문이다.
+GEMINI_DEFAULT_MODEL = "gemini-flash-latest"
+
+# 무료 티어 분당 요청 제한 대응. 0이면 대기 없음.
+# 실측(강동연, 2026-08-06): 무료 키로 연속 호출 시 5 RPM에서 429가 났다.
+GEMINI_MIN_INTERVAL_SEC = float(os.environ.get("GEMINI_MIN_INTERVAL_SEC", "0"))
+
+# auto | anthropic | gemini
+PROVIDER_ENV = "DUALGUARD_LLM_PROVIDER"
 
 _CATEGORY_DESCRIPTIONS = {
     SocialEngineeringCategory.URGENCY:
@@ -116,14 +146,62 @@ def _build_system() -> str:
     return SYSTEM_PROMPT.format(categories="\n".join(lines))
 
 
+def _build_user_prompt(text: str, context_before: str, context_after: str) -> str:
+    """
+    앞뒤 맥락을 붙이되 채점 대상이 어디인지 명시한다.
+    두 백엔드가 같은 문자열을 쓰게 해서, 백엔드를 바꿔도 판정이 흔들리지 않게 한다.
+    """
+    parts = []
+    if context_before:
+        parts.append(f"[앞 구간]\n{context_before}")
+    parts.append(f"[target — 이 구간을 채점하십시오]\n{text}")
+    if context_after:
+        parts.append(f"[뒤 구간]\n{context_after}")
+    return "\n\n".join(parts)
+
+
+def _finalize(data: dict) -> ContentRiskBreakdown:
+    """
+    모델이 돌려준 dict를 ContentRiskBreakdown으로 만든다.
+
+    스키마가 수치 범위를 강제하지 못하므로 0~100 자르기는 여기서 한다.
+    누락된 카테고리는 compute_content_risk()가 0으로 채운다.
+    """
+    scores: Dict[str, float] = {}
+    for cat in SocialEngineeringCategory:
+        try:
+            v = float(data.get(cat.value, 0) or 0)
+        except (TypeError, ValueError):
+            v = 0.0
+        scores[cat.value] = max(0.0, min(100.0, v))
+
+    evidence = [str(e) for e in (data.get("evidence") or [])][:5]
+    breakdown = compute_content_risk(
+        scores,
+        matched_terms={"llm_evidence": evidence} if evidence else {},
+        is_llm=True,
+    )
+    # 대시보드에 그대로 띄울 한 줄 설명
+    breakdown.matched_terms.setdefault("llm_summary", [])
+    if data.get("summary"):
+        breakdown.matched_terms["llm_summary"] = [str(data["summary"])]
+    return breakdown
+
+
 class LLMClassifier:
     """Anthropic 클라이언트를 한 번만 만들어 재사용한다."""
+
+    provider = "anthropic"
 
     def __init__(self, model: str = DEFAULT_MODEL, effort: str = DEFAULT_EFFORT):
         self.model = model
         self.effort = effort
         self._client = None
         self._system = _build_system()
+
+    @property
+    def label(self) -> str:
+        return f"Claude ({self.model})"
 
     @property
     def available(self) -> bool:
@@ -156,13 +234,6 @@ class LLMClassifier:
         """
         client = self._ensure_client()
 
-        parts = []
-        if context_before:
-            parts.append(f"[앞 구간]\n{context_before}")
-        parts.append(f"[target — 이 구간을 채점하십시오]\n{text}")
-        if context_after:
-            parts.append(f"[뒤 구간]\n{context_after}")
-
         response = client.messages.create(
             model=self.model,
             max_tokens=2000,
@@ -176,7 +247,10 @@ class LLMClassifier:
                 "effort": self.effort,
                 "format": {"type": "json_schema", "schema": _SCHEMA},
             },
-            messages=[{"role": "user", "content": "\n\n".join(parts)}],
+            messages=[{
+                "role": "user",
+                "content": _build_user_prompt(text, context_before, context_after),
+            }],
         )
 
         if response.stop_reason == "refusal":
@@ -187,39 +261,153 @@ class LLMClassifier:
 
         import json
         raw = next(b.text for b in response.content if b.type == "text")
-        data = json.loads(raw)
+        return _finalize(json.loads(raw))
 
-        scores: Dict[str, float] = {}
-        for cat in SocialEngineeringCategory:
-            v = float(data.get(cat.value, 0))
-            # 스키마가 수치 범위를 강제하지 못하므로 여기서 자른다.
-            scores[cat.value] = max(0.0, min(100.0, v))
 
-        evidence = [str(e) for e in (data.get("evidence") or [])][:5]
-        breakdown = compute_content_risk(
-            scores,
-            matched_terms={"llm_evidence": evidence} if evidence else {},
-            is_llm=True,
+class GeminiClassifier:
+    """
+    Gemini 백엔드. Claude 백엔드와 인터페이스(available / classify / label)를 맞춘다.
+
+    google-genai SDK의 `response_schema`를 쓴다. Claude의 structured outputs와 같은
+    역할이고, 같은 _SCHEMA를 그대로 넘길 수 있다. `additionalProperties`만 빼는데,
+    Gemini 스키마에 없는 키라 현재 SDK(2.17.0)는 조용히 무시하지만 버전에 따라
+    거부될 수 있어서 애초에 안 보낸다.
+    """
+
+    provider = "gemini"
+
+    def __init__(self, model: str = GEMINI_DEFAULT_MODEL,
+                 min_interval_sec: float = GEMINI_MIN_INTERVAL_SEC):
+        self.model = model
+        self.min_interval_sec = min_interval_sec
+        self._client = None
+        self._system = _build_system()
+        self._lock = threading.Lock()
+        self._last_call = 0.0
+
+    @property
+    def label(self) -> str:
+        return f"Gemini ({self.model})"
+
+    @property
+    def available(self) -> bool:
+        try:
+            from google import genai  # noqa: F401
+        except ImportError:
+            return False
+        return bool(self._api_key())
+
+    @staticmethod
+    def _api_key() -> Optional[str]:
+        # google-genai는 GOOGLE_API_KEY를 자동으로 읽지만, 팀 문서에는
+        # GEMINI_API_KEY로 적혀 있어 둘 다 받는다.
+        return os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+
+    def _ensure_client(self):
+        if self._client is None:
+            from google import genai
+            self._client = genai.Client(api_key=self._api_key())
+        return self._client
+
+    def _throttle(self) -> None:
+        """무료 티어 RPM 제한 대응. min_interval_sec이 0이면 아무것도 안 한다."""
+        if self.min_interval_sec <= 0:
+            return
+        with self._lock:
+            wait = self.min_interval_sec - (time.monotonic() - self._last_call)
+            if wait > 0:
+                time.sleep(wait)
+            self._last_call = time.monotonic()
+
+    def classify(
+        self,
+        text: str,
+        context_before: str = "",
+        context_after: str = "",
+    ) -> ContentRiskBreakdown:
+        from google.genai import types
+
+        client = self._ensure_client()
+        self._throttle()
+
+        schema = {k: v for k, v in _SCHEMA.items() if k != "additionalProperties"}
+
+        response = client.models.generate_content(
+            model=self.model,
+            contents=_build_user_prompt(text, context_before, context_after),
+            config=types.GenerateContentConfig(
+                system_instruction=self._system,
+                response_mime_type="application/json",
+                response_schema=schema,
+                # 분류 작업이라 창의성이 필요 없다. 같은 통화를 두 번 돌렸을 때
+                # 점수가 흔들리면 오탐 원인을 추적할 수 없다.
+                temperature=0.0,
+            ),
         )
-        # 대시보드에 그대로 띄울 한 줄 설명
-        breakdown.matched_terms.setdefault("llm_summary", [])
-        if data.get("summary"):
-            breakdown.matched_terms["llm_summary"] = [str(data["summary"])]
-        return breakdown
+
+        raw = (response.text or "").strip()
+        if not raw:
+            # 안전 필터 등으로 텍스트가 비는 경우가 있다. 조용히 0점을 주면
+            # 사기 통화를 정상으로 판정해버리므로 예외로 올려 폴백시킨다.
+            raise RuntimeError(
+                "Gemini가 빈 응답을 돌려줬습니다. "
+                f"(finish_reason={getattr(response.candidates[0], 'finish_reason', None) if response.candidates else None})"
+            )
+
+        import json
+        return _finalize(json.loads(raw))
 
 
-_shared: Optional[LLMClassifier] = None
+_shared = None
 
 
-def get_shared_classifier(model: str = DEFAULT_MODEL) -> LLMClassifier:
+def _resolve_provider() -> str:
+    """DUALGUARD_LLM_PROVIDER 해석. 잘못된 값이면 auto로 떨어진다."""
+    want = (os.environ.get(PROVIDER_ENV) or "auto").strip().lower()
+    return want if want in ("auto", "anthropic", "gemini") else "auto"
+
+
+def get_shared_classifier(model: Optional[str] = None):
+    """
+    설정된 백엔드의 분류기를 반환한다(프로세스당 1개 재사용).
+
+    auto일 때는 Claude를 먼저 본다 — 구조화 출력 + 프롬프트 캐시로 세그먼트 단위
+    반복 호출에 유리하고, 무료 티어 RPM 제한이 없어서 통화 하나를 한 번에 돌릴 수 있다.
+    Claude 키가 없으면 Gemini로 내려간다.
+    """
     global _shared
-    if _shared is None or _shared.model != model:
-        _shared = LLMClassifier(model=model)
+    want = _resolve_provider()
+
+    if want == "gemini":
+        candidates = [GeminiClassifier]
+    elif want == "anthropic":
+        candidates = [LLMClassifier]
+    else:
+        candidates = [LLMClassifier, GeminiClassifier]
+
+    for cls in candidates:
+        if isinstance(_shared, cls) and (model is None or _shared.model == model):
+            if _shared.available:
+                return _shared
+        probe = cls(model=model) if model else cls()
+        if probe.available:
+            _shared = probe
+            return _shared
+
+    # 아무 키도 없다. 첫 후보를 돌려주고, available=False라 호출부가 폴백한다.
+    if _shared is None or not isinstance(_shared, candidates[0]):
+        _shared = candidates[0](model=model) if model else candidates[0]()
     return _shared
 
 
 def is_available() -> bool:
     return get_shared_classifier().available
+
+
+def active_provider_label() -> str:
+    """리포트/대시보드에 '실제로 무엇이 돌았는지' 표시할 문자열."""
+    clf = get_shared_classifier()
+    return clf.label if clf.available else "키워드 규칙 (LLM 키 없음)"
 
 
 def classify_segment(
@@ -241,7 +429,10 @@ def classify_segment(
                 raise
     elif not fallback:
         raise RuntimeError(
-            "ANTHROPIC_API_KEY가 없습니다. 환경변수로 설정하거나 `ant auth login`을 실행하세요."
+            "LLM API 키가 없습니다. 둘 중 하나를 설정하세요:\n"
+            "  Claude → ANTHROPIC_API_KEY 환경변수 또는 `ant auth login`\n"
+            "  Gemini → GEMINI_API_KEY 환경변수 (+ pip install google-genai)\n"
+            f"백엔드를 고정하려면 {PROVIDER_ENV}=anthropic|gemini"
         )
     return classify_by_keywords(text)
 

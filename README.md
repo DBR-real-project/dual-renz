@@ -22,13 +22,14 @@
 | **웹 대시보드** (업로드 → 진행률 → 결과) | ✅ | `scripts/run_server.py` |
 | **CLI 분석** | ✅ | `scripts/analyze_call.py` |
 | STT (한국어) | ✅ | faster-whisper. 8문장 통화를 정확히 8구간으로 분리 |
-| 8대 사회공학 기법 분류 | ✅ | LLM(Claude) + 키워드 규칙 폴백 |
+| 8대 사회공학 기법 분류 | ✅ | LLM(**Claude / Gemini 선택**) + 키워드 규칙 폴백 |
 | RAG 사기사례 대조 | ✅ | 사기/정상 13문장 판별 **13/13** |
 | 음성 스푸핑 (AASIST) | ✅ | 정탐률 96.7%, 오탐률 0%, 정확도 98% |
 | 딥페이크 (FF++ Xception) | ✅ | 정탐률 66.7%, 오탐률 0%, 정확도 80% |
+| **콘텐츠 분류 성능 실측** | ⚠️ | 키워드 기준선만 측정 (정탐 55.6% / 오탐 20%). **LLM 수치는 키가 있어야 나옴** |
 | 통합 스코어링 | ✅ | 기획서 두 버전 공식 모두 구현 |
 | 크롬 확장 (MV3) | ⚠️ | 코드 작성 완료, **브라우저 실제 로드 테스트 미실시** |
-| LLM 실제 호출 | ⚠️ | `ANTHROPIC_API_KEY` 필요. 없으면 키워드 규칙으로 동작 |
+| LLM 실제 호출 | ⚠️ | `ANTHROPIC_API_KEY` 또는 `GEMINI_API_KEY` 필요. 없으면 키워드 규칙으로 동작 |
 
 성능 수치의 측정 조건은 **[docs/validation_report.md](docs/validation_report.md)** 에 있다.
 발표에 인용하기 전에 그 문서의 전제(학습 도메인 내 측정)를 반드시 확인할 것.
@@ -84,7 +85,7 @@ src/
   content_analysis/
     stt.py                     faster-whisper STT (구간별 타임스탬프)
     content_risk.py            8대 카테고리 + 집계 공식
-    llm_classifier.py          Claude 구조화 출력 분류 (키 없으면 폴백)
+    llm_classifier.py          Claude/Gemini 구조화 출력 분류 (키 없으면 폴백)
     rag.py                     ChromaDB 사례 검색 (한국어 임베딩)
   media_detection/
     media_risk.py              영상+음성을 media_risk 하나로
@@ -96,7 +97,9 @@ src/
 
 web/                           대시보드 (외부 라이브러리 0 — CDN 의존 없음)
 extension/                     크롬 확장 (Manifest V3)
-data_seed/scam_cases.json      RAG 사례 데이터 (출처 표기 필수)
+data_seed/
+  scam_cases.json              RAG 사례 데이터 (출처 표기 필수)
+  content_test_scenarios.json  콘텐츠 분류 채점용 라벨링 대화 14건 (사기 9 / 정상 5)
 
 scripts/
   run_server.py                서버 + 대시보드
@@ -104,6 +107,8 @@ scripts/
   demo_cross_validation.py     교차검증 4조합 시연 (발표용)
   validate_detector.py         영상 성능 실측
   validate_audio_spoof.py      음성 성능 실측
+  validate_content_risk.py     콘텐츠(8대 기법) 성능 실측 — 키워드 vs LLM 비교
+  _metrics.py                  세 validate_* 스크립트 공용 지표 (정탐/오탐/분리도)
   fetch_ff_samples.py          FF++ 검증 샘플 (16GB zip에서 필요분만)
   fetch_asvspoof_samples.py    ASVspoof 검증 샘플 (parquet 부분 읽기)
   make_korean_call_samples.py  한국어 통화 샘플 (Windows TTS)
