@@ -1,58 +1,58 @@
 {
   "dataset": "C:\\Users\\tkddn\\OneDrive\\바탕 화면\\헤커톤\\dual-renz\\data_seed\\content_test_scenarios.json",
-  "n_scenarios": 14,
+  "n_scenarios": 21,
   "backends": {
     "keyword": {
       "backend": "keyword",
       "engine": "키워드 규칙",
-      "n_scenarios": 14,
-      "n_scored": 14,
+      "n_scenarios": 21,
+      "n_scored": 21,
       "elapsed_sec": 0.0,
       "per_category": {
         "urgency": {
-          "hit": 8,
-          "total": 14,
-          "rate": 0.5714
+          "hit": 11,
+          "total": 21,
+          "rate": 0.5238
         },
         "authority": {
-          "hit": 9,
-          "total": 14,
-          "rate": 0.6429
+          "hit": 13,
+          "total": 21,
+          "rate": 0.619
         },
         "money_transfer": {
-          "hit": 7,
-          "total": 14,
-          "rate": 0.5
+          "hit": 12,
+          "total": 21,
+          "rate": 0.5714
         },
         "credentials": {
-          "hit": 12,
-          "total": 14,
-          "rate": 0.8571
+          "hit": 17,
+          "total": 21,
+          "rate": 0.8095
         },
         "secrecy": {
-          "hit": 11,
-          "total": 14,
-          "rate": 0.7857
+          "hit": 17,
+          "total": 21,
+          "rate": 0.8095
         },
         "emotional": {
-          "hit": 7,
-          "total": 14,
-          "rate": 0.5
+          "hit": 9,
+          "total": 21,
+          "rate": 0.4286
         },
         "trust_building": {
-          "hit": 7,
-          "total": 14,
-          "rate": 0.5
+          "hit": 12,
+          "total": 21,
+          "rate": 0.5714
         },
         "isolation": {
-          "hit": 8,
-          "total": 14,
-          "rate": 0.5714
+          "hit": 14,
+          "total": 21,
+          "rate": 0.6667
         }
       },
-      "overall_rate": 0.6161,
-      "under_scored": 38,
-      "over_scored": 5,
+      "overall_rate": 0.625,
+      "under_scored": 49,
+      "over_scored": 14,
       "scenarios": [
         {
           "id": "fraud_01",
@@ -460,6 +460,202 @@
               "expected_band": "none(0~0)",
               "actual_score": 80.0,
               "evidence": "'계좌번호나 비밀번호를 절대 요구하지 않으니'는 요구가 아니라 요구하지 않는다는 경고문이다. 단어만 보면 credentials로 오판하기 쉽다"
+            }
+          ]
+        },
+        {
+          "id": "boundary_normal_01",
+          "label": "normal",
+          "band_match": 5,
+          "band_total": 8,
+          "mismatches": [
+            {
+              "category": "urgency",
+              "category_label": "긴급성 조성",
+              "expected_band": "weak(1~30)",
+              "actual_score": 40.0,
+              "evidence": "즉시 해당 거래를 차단하겠습니다"
+            },
+            {
+              "category": "authority",
+              "category_label": "권위 사칭",
+              "expected_band": "weak(1~30)",
+              "actual_score": 0.0,
+              "evidence": "OO은행 부정거래 방지팀입니다"
+            },
+            {
+              "category": "emotional",
+              "category_label": "감정적 압박",
+              "expected_band": "weak(1~30)",
+              "actual_score": 0.0,
+              "evidence": "고객님 카드로 방금 해외에서 큰 금액 결제 시도가"
+            }
+          ]
+        },
+        {
+          "id": "boundary_normal_02",
+          "label": "normal",
+          "band_match": 6,
+          "band_total": 8,
+          "mismatches": [
+            {
+              "category": "secrecy",
+              "category_label": "비밀 유지 강요",
+              "expected_band": "weak(1~30)",
+              "actual_score": 0.0,
+              "evidence": "이건 진짜 우리끼리 비밀이니까 아빠한테는 절대 말하면 안 돼"
+            },
+            {
+              "category": "emotional",
+              "category_label": "감정적 압박",
+              "expected_band": "none(0~0)",
+              "actual_score": 40.0,
+              "evidence": null
+            }
+          ]
+        },
+        {
+          "id": "boundary_normal_03",
+          "label": "normal",
+          "band_match": 6,
+          "band_total": 8,
+          "mismatches": [
+            {
+              "category": "urgency",
+              "category_label": "긴급성 조성",
+              "expected_band": "weak(1~30)",
+              "actual_score": 100.0,
+              "evidence": "이번 주 안으로 정산 마감이라"
+            },
+            {
+              "category": "money_transfer",
+              "category_label": "금전 이체 요구",
+              "expected_band": "weak(1~30)",
+              "actual_score": 40.0,
+              "evidence": "정산 계좌로 영수증 첨부해서 청구서 올려주시면 회계팀에서 처리해드릴게요"
+            }
+          ]
+        },
+        {
+          "id": "boundary_normal_04",
+          "label": "normal",
+          "band_match": 4,
+          "band_total": 8,
+          "mismatches": [
+            {
+              "category": "authority",
+              "category_label": "권위 사칭",
+              "expected_band": "weak(1~30)",
+              "actual_score": 100.0,
+              "evidence": "OO경찰서 사이버수사팀입니다"
+            },
+            {
+              "category": "money_transfer",
+              "category_label": "금전 이체 요구",
+              "expected_band": "none(0~0)",
+              "actual_score": 40.0,
+              "evidence": null
+            },
+            {
+              "category": "credentials",
+              "category_label": "개인정보·OTP 요구",
+              "expected_band": "none(0~0)",
+              "actual_score": 40.0,
+              "evidence": "'계좌 비밀번호나 이체는 저희가 절대 요구하지 않습니다'는 부정문 안내"
+            },
+            {
+              "category": "emotional",
+              "category_label": "감정적 압박",
+              "expected_band": "weak(1~30)",
+              "actual_score": 0.0,
+              "evidence": "제가 무슨 신고를 당했다는 건가요?"
+            }
+          ]
+        },
+        {
+          "id": "boundary_normal_05",
+          "label": "normal",
+          "band_match": 7,
+          "band_total": 8,
+          "mismatches": [
+            {
+              "category": "trust_building",
+              "category_label": "신뢰 구축 화법",
+              "expected_band": "weak(1~30)",
+              "actual_score": 0.0,
+              "evidence": "다음에 기회 되면 영상통화도 한번 해요... 그때까지는 매일 이렇게 안부 물어봐도 될까요? — 관계를 빠르게 다지려는 시도이지만 정상적인 데이팅 초반 대화로도 완전히 설명 가능"
+            }
+          ]
+        },
+        {
+          "id": "boundary_fraud_01",
+          "label": "fraud",
+          "band_match": 4,
+          "band_total": 8,
+          "mismatches": [
+            {
+              "category": "urgency",
+              "category_label": "긴급성 조성",
+              "expected_band": "clear(31~70)",
+              "actual_score": 100.0,
+              "evidence": "오늘 저녁까지 급하게 필요해서 그래"
+            },
+            {
+              "category": "emotional",
+              "category_label": "감정적 압박",
+              "expected_band": "weak(1~30)",
+              "actual_score": 0.0,
+              "evidence": "지금 자세히 설명할 시간이 없어"
+            },
+            {
+              "category": "trust_building",
+              "category_label": "신뢰 구축 화법",
+              "expected_band": "weak(1~30)",
+              "actual_score": 0.0,
+              "evidence": "어 나야 — 구체적 근거 없이 지인 사칭"
+            },
+            {
+              "category": "isolation",
+              "category_label": "제3자 확인 회피 유도",
+              "expected_band": "clear(31~70)",
+              "actual_score": 0.0,
+              "evidence": "원래 번호는 지금 액정이 깨져서 확인이 안 돼 — 원래 채널로 확인 못 하게 하는 그럴듯한 핑계"
+            }
+          ]
+        },
+        {
+          "id": "boundary_fraud_02",
+          "label": "fraud",
+          "band_match": 4,
+          "band_total": 8,
+          "mismatches": [
+            {
+              "category": "urgency",
+              "category_label": "긴급성 조성",
+              "expected_band": "clear(31~70)",
+              "actual_score": 80.0,
+              "evidence": "오늘 심사 마감이라 지금 처리 안 하시면 다음 분기까지"
+            },
+            {
+              "category": "authority",
+              "category_label": "권위 사칭",
+              "expected_band": "clear(31~70)",
+              "actual_score": 0.0,
+              "evidence": "국민행복지원센터입니다"
+            },
+            {
+              "category": "credentials",
+              "category_label": "개인정보·OTP 요구",
+              "expected_band": "definitive(71~100)",
+              "actual_score": 40.0,
+              "evidence": "문자로 발송해드리는 인증번호만 알려주시면"
+            },
+            {
+              "category": "emotional",
+              "category_label": "감정적 압박",
+              "expected_band": "weak(1~30)",
+              "actual_score": 0.0,
+              "evidence": "저소득층 대상으로... 지급 처리"
             }
           ]
         }

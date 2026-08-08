@@ -1,45 +1,45 @@
 {
   "dataset": "C:\\Users\\tkddn\\OneDrive\\바탕 화면\\헤커톤\\dual-renz\\data_seed\\content_test_scenarios.json",
-  "n_scenarios": 14,
-  "n_fraud": 9,
-  "n_normal": 5,
+  "n_scenarios": 21,
+  "n_fraud": 11,
+  "n_normal": 10,
   "backends": {
     "keyword": {
       "backend": "keyword",
       "engine": "키워드 규칙",
-      "n_scenarios": 14,
-      "n_scored": 14,
+      "n_scenarios": 21,
+      "n_scored": 21,
       "elapsed_sec": 0.0,
       "separation": {
-        "real_max": 53.33,
-        "real_mean": 10.666,
+        "real_max": 80.0,
+        "real_mean": 26.0,
         "real_min": 0.0,
         "fake_max": 80.0,
-        "fake_mean": 51.85333333333333,
+        "fake_mean": 54.54636363636364,
         "fake_min": 26.67,
-        "gap": -26.659999999999997
+        "gap": -53.33
       },
       "at_threshold_50": {
         "threshold": 50.0,
-        "tp": 5,
+        "tp": 7,
         "fn": 4,
-        "fp": 1,
-        "tn": 4,
-        "recall": 0.5555555555555556,
-        "fpr": 0.2,
-        "precision": 0.8333333333333334,
-        "accuracy": 0.6428571428571429
+        "fp": 3,
+        "tn": 7,
+        "recall": 0.6363636363636364,
+        "fpr": 0.3,
+        "precision": 0.7,
+        "accuracy": 0.6666666666666666
       },
       "best_threshold": {
         "threshold": 13.335,
-        "tp": 9,
+        "tp": 11,
         "fn": 0,
-        "fp": 1,
-        "tn": 4,
+        "fp": 5,
+        "tn": 5,
         "recall": 1.0,
-        "fpr": 0.2,
-        "precision": 0.9,
-        "accuracy": 0.9285714285714286
+        "fpr": 0.5,
+        "precision": 0.6875,
+        "accuracy": 0.7619047619047619
       },
       "results": [
         {
@@ -330,6 +330,140 @@
           "category_scores": {
             "credentials": 80.0,
             "urgency": 0.0,
+            "authority": 0.0,
+            "money_transfer": 0.0,
+            "secrecy": 0.0,
+            "emotional": 0.0,
+            "trust_building": 0.0,
+            "isolation": 0.0
+          }
+        },
+        {
+          "id": "boundary_normal_01",
+          "label": "real",
+          "channel": "call",
+          "score": 26.67,
+          "top_category": "urgency",
+          "expected_techniques": [],
+          "category_scores": {
+            "urgency": 40.0,
+            "authority": 0.0,
+            "money_transfer": 0.0,
+            "credentials": 0.0,
+            "secrecy": 0.0,
+            "emotional": 0.0,
+            "trust_building": 0.0,
+            "isolation": 0.0
+          }
+        },
+        {
+          "id": "boundary_normal_02",
+          "label": "real",
+          "channel": "call",
+          "score": 26.67,
+          "top_category": "emotional",
+          "expected_techniques": [],
+          "category_scores": {
+            "emotional": 40.0,
+            "urgency": 0.0,
+            "authority": 0.0,
+            "money_transfer": 0.0,
+            "credentials": 0.0,
+            "secrecy": 0.0,
+            "trust_building": 0.0,
+            "isolation": 0.0
+          }
+        },
+        {
+          "id": "boundary_normal_03",
+          "label": "real",
+          "channel": "call",
+          "score": 73.33,
+          "top_category": "urgency",
+          "expected_techniques": [],
+          "category_scores": {
+            "urgency": 100.0,
+            "money_transfer": 40.0,
+            "authority": 0.0,
+            "credentials": 0.0,
+            "secrecy": 0.0,
+            "emotional": 0.0,
+            "trust_building": 0.0,
+            "isolation": 0.0
+          }
+        },
+        {
+          "id": "boundary_normal_04",
+          "label": "real",
+          "channel": "call",
+          "score": 80.0,
+          "top_category": "authority",
+          "expected_techniques": [],
+          "category_scores": {
+            "authority": 100.0,
+            "money_transfer": 40.0,
+            "credentials": 40.0,
+            "urgency": 0.0,
+            "secrecy": 0.0,
+            "emotional": 0.0,
+            "trust_building": 0.0,
+            "isolation": 0.0
+          }
+        },
+        {
+          "id": "boundary_normal_05",
+          "label": "real",
+          "channel": "call",
+          "score": 0.0,
+          "top_category": null,
+          "expected_techniques": [],
+          "category_scores": {
+            "urgency": 0.0,
+            "authority": 0.0,
+            "money_transfer": 0.0,
+            "credentials": 0.0,
+            "secrecy": 0.0,
+            "emotional": 0.0,
+            "trust_building": 0.0,
+            "isolation": 0.0
+          }
+        },
+        {
+          "id": "boundary_fraud_01",
+          "label": "fake",
+          "channel": "call",
+          "score": 73.33,
+          "top_category": "urgency",
+          "expected_techniques": [
+            "urgency",
+            "money_transfer",
+            "isolation"
+          ],
+          "category_scores": {
+            "urgency": 100.0,
+            "money_transfer": 40.0,
+            "authority": 0.0,
+            "credentials": 0.0,
+            "secrecy": 0.0,
+            "emotional": 0.0,
+            "trust_building": 0.0,
+            "isolation": 0.0
+          }
+        },
+        {
+          "id": "boundary_fraud_02",
+          "label": "fake",
+          "channel": "call",
+          "score": 60.0,
+          "top_category": "urgency",
+          "expected_techniques": [
+            "urgency",
+            "authority",
+            "credentials"
+          ],
+          "category_scores": {
+            "urgency": 80.0,
+            "credentials": 40.0,
             "authority": 0.0,
             "money_transfer": 0.0,
             "secrecy": 0.0,
