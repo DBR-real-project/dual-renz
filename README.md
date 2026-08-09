@@ -37,7 +37,7 @@
 | **분석 히스토리** | ✅ | 결과를 디스크에 저장, 서버 재시작 후에도 열람·삭제 가능 + 위험도 추이 그래프 |
 | 크롬 확장 (MV3) | ✅ | **실제 크롬에 로드해 자동 검증 통과** (`node scripts/verify_extension_chrome.js`). 탭 오디오 캡처 → 백엔드 → 오버레이까지 실브라우저에서 확인 |
 | LLM 연동 경로 | ✅ | 스텁 서버로 클라이언트 코드 실행 검증 (`scripts/test_llm_client.py`) |
-| **키 없이 도는 로컬 LLM** | ✅ | `DUALGUARD_LLM_PROVIDER=local` — 이미 깔린 transformers로 소형 모델(Qwen2.5-1.5B)을 돌린다. **API 키도 별도 설치도 불필요** |
+| **키 없이 도는 로컬 LLM** | ✅ | `DUALGUARD_LLM_PROVIDER=local` — transformers로 Qwen2.5-1.5B. **키도 설치도 불필요.** 실측 정탐 90.9% / 오탐 10.0%로 오프라인 분류기와 동률인데 **기법별 회수율은 24/41 → 30/41로 더 낫다** |
 | 상용 LLM 실제 수치 | ⚠️ | `ANTHROPIC_API_KEY`/`GEMINI_API_KEY` 필요. 없어도 오프라인 분류기(90.5%)로 정상 동작 |
 
 성능 수치의 측정 조건은 **[docs/validation_report.md](docs/validation_report.md)** 에 있다.

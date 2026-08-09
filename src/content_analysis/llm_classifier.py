@@ -94,7 +94,8 @@ OLLAMA_TIMEOUT_SEC = float(os.environ.get("OLLAMA_TIMEOUT_SEC", "120"))
 # 로컬 트랜스포머 백엔드. API 키도, 별도 서버 설치도 필요 없다.
 # 이미 requirements에 있는 transformers/torch만 쓰고 모델 가중치만 내려받는다.
 LOCAL_MODEL = os.environ.get("DUALGUARD_LOCAL_LLM_MODEL", "Qwen/Qwen2.5-1.5B-Instruct")
-LOCAL_MAX_NEW_TOKENS = int(os.environ.get("DUALGUARD_LOCAL_LLM_MAX_TOKENS", "220"))
+# 8개 점수만 받으므로 160이면 충분하다. 늘리면 그만큼 느려진다(CPU 추론).
+LOCAL_MAX_NEW_TOKENS = int(os.environ.get("DUALGUARD_LOCAL_LLM_MAX_TOKENS", "160"))
 
 PROVIDER_ENV = "DUALGUARD_LLM_PROVIDER"
 
@@ -516,11 +517,15 @@ class LocalTransformersClassifier:
 
         self._ensure_loaded()
 
-        keys = ", ".join(f'"{c.value}"' for c in SocialEngineeringCategory)
+        # 소형 모델용으로 **8개 점수만** 요구한다. evidence/summary까지 시키면
+        # 출력이 길어져 max_new_tokens 안에서 JSON이 안 닫히고 파싱이 실패한다
+        # (실제로 그래서 검증이 중간에 깨졌다). _finalize()는 두 필드가 없어도 동작한다.
+        example = ", ".join(f'"{c.value}": 0' for c in SocialEngineeringCategory)
         instruction = (
             _build_user_prompt(text, context_before, context_after)
-            + "\n\n반드시 아래 형태의 JSON 하나만 출력하십시오. 설명을 붙이지 마십시오.\n"
-            + f'{{{keys} 각각 0~100 정수, "evidence": [인용문], "summary": "한 문장"}}'
+            + "\n\n아래 형태의 JSON 하나만 출력하십시오. 설명이나 코드펜스를 붙이지 마십시오.\n"
+            + "각 값은 0~100 정수입니다.\n"
+            + "{" + example + "}"
         )
         messages = [
             {"role": "system", "content": self._system},

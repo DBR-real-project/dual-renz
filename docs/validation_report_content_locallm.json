@@ -1,0 +1,478 @@
+{
+  "dataset": "C:\\Users\\migle\\DualGuard-MediaAnalysis\\data_seed\\content_test_scenarios.json",
+  "n_scenarios": 21,
+  "n_fraud": 11,
+  "n_normal": 10,
+  "backends": {
+    "llm": {
+      "backend": "llm",
+      "engine": "로컬 transformers (Qwen/Qwen2.5-1.5B-Instruct)",
+      "n_scenarios": 21,
+      "n_scored": 21,
+      "elapsed_sec": 717.5,
+      "separation": {
+        "real_max": 90.0,
+        "real_mean": 9.0,
+        "real_min": 0.0,
+        "fake_max": 90.0,
+        "fake_mean": 76.36363636363636,
+        "fake_min": 0.0,
+        "gap": -90.0
+      },
+      "at_threshold_50": {
+        "threshold": 50.0,
+        "tp": 10,
+        "fn": 1,
+        "fp": 1,
+        "tn": 9,
+        "recall": 0.9090909090909091,
+        "fpr": 0.1,
+        "precision": 0.9090909090909091,
+        "accuracy": 0.9047619047619048
+      },
+      "best_threshold": {
+        "threshold": 30.0,
+        "tp": 10,
+        "fn": 1,
+        "fp": 1,
+        "tn": 9,
+        "recall": 0.9090909090909091,
+        "fpr": 0.1,
+        "precision": 0.9090909090909091,
+        "accuracy": 0.9047619047619048
+      },
+      "results": [
+        {
+          "id": "fraud_01",
+          "label": "fake",
+          "channel": "call",
+          "score": 60.0,
+          "top_category": "urgency",
+          "expected_techniques": [
+            "trust_building",
+            "authority",
+            "emotional",
+            "money_transfer",
+            "isolation"
+          ],
+          "category_scores": {
+            "urgency": 90.0,
+            "authority": 0.0,
+            "money_transfer": 0.0,
+            "credentials": 0.0,
+            "secrecy": 0.0,
+            "emotional": 0.0,
+            "trust_building": 0.0,
+            "isolation": 0.0
+          }
+        },
+        {
+          "id": "fraud_02",
+          "label": "fake",
+          "channel": "call",
+          "score": 90.0,
+          "top_category": "urgency",
+          "expected_techniques": [
+            "authority",
+            "emotional",
+            "money_transfer",
+            "isolation"
+          ],
+          "category_scores": {
+            "urgency": 90.0,
+            "authority": 90.0,
+            "money_transfer": 90.0,
+            "credentials": 90.0,
+            "secrecy": 90.0,
+            "emotional": 90.0,
+            "trust_building": 90.0,
+            "isolation": 90.0
+          }
+        },
+        {
+          "id": "fraud_03",
+          "label": "fake",
+          "channel": "call",
+          "score": 90.0,
+          "top_category": "urgency",
+          "expected_techniques": [
+            "trust_building",
+            "urgency",
+            "money_transfer"
+          ],
+          "category_scores": {
+            "urgency": 90.0,
+            "authority": 90.0,
+            "money_transfer": 90.0,
+            "credentials": 90.0,
+            "secrecy": 90.0,
+            "emotional": 90.0,
+            "trust_building": 90.0,
+            "isolation": 90.0
+          }
+        },
+        {
+          "id": "fraud_04",
+          "label": "fake",
+          "channel": "video_call",
+          "score": 90.0,
+          "top_category": "urgency",
+          "expected_techniques": [
+            "authority",
+            "trust_building",
+            "money_transfer",
+            "isolation"
+          ],
+          "category_scores": {
+            "urgency": 90.0,
+            "authority": 90.0,
+            "money_transfer": 90.0,
+            "credentials": 90.0,
+            "secrecy": 90.0,
+            "emotional": 90.0,
+            "trust_building": 90.0,
+            "isolation": 90.0
+          }
+        },
+        {
+          "id": "fraud_05",
+          "label": "fake",
+          "channel": "call",
+          "score": 90.0,
+          "top_category": "urgency",
+          "expected_techniques": [
+            "authority",
+            "urgency",
+            "emotional",
+            "money_transfer"
+          ],
+          "category_scores": {
+            "urgency": 90.0,
+            "authority": 90.0,
+            "money_transfer": 90.0,
+            "credentials": 90.0,
+            "secrecy": 90.0,
+            "emotional": 90.0,
+            "trust_building": 90.0,
+            "isolation": 90.0
+          }
+        },
+        {
+          "id": "fraud_06",
+          "label": "fake",
+          "channel": "call",
+          "score": 90.0,
+          "top_category": "urgency",
+          "expected_techniques": [
+            "trust_building",
+            "urgency",
+            "money_transfer"
+          ],
+          "category_scores": {
+            "urgency": 90.0,
+            "authority": 90.0,
+            "money_transfer": 90.0,
+            "credentials": 90.0,
+            "secrecy": 90.0,
+            "emotional": 90.0,
+            "trust_building": 90.0,
+            "isolation": 90.0
+          }
+        },
+        {
+          "id": "fraud_07",
+          "label": "fake",
+          "channel": "call",
+          "score": 0.0,
+          "top_category": null,
+          "expected_techniques": [
+            "emotional",
+            "credentials",
+            "money_transfer",
+            "secrecy"
+          ],
+          "category_scores": {
+            "urgency": 0.0,
+            "authority": 0.0,
+            "money_transfer": 0.0,
+            "credentials": 0.0,
+            "secrecy": 0.0,
+            "emotional": 0.0,
+            "trust_building": 0.0,
+            "isolation": 0.0
+          }
+        },
+        {
+          "id": "fraud_08",
+          "label": "fake",
+          "channel": "call",
+          "score": 90.0,
+          "top_category": "urgency",
+          "expected_techniques": [
+            "authority",
+            "urgency",
+            "money_transfer",
+            "secrecy"
+          ],
+          "category_scores": {
+            "urgency": 90.0,
+            "authority": 90.0,
+            "money_transfer": 90.0,
+            "credentials": 90.0,
+            "secrecy": 90.0,
+            "emotional": 90.0,
+            "trust_building": 90.0,
+            "isolation": 90.0
+          }
+        },
+        {
+          "id": "fraud_09",
+          "label": "fake",
+          "channel": "video_call",
+          "score": 90.0,
+          "top_category": "urgency",
+          "expected_techniques": [
+            "trust_building",
+            "credentials",
+            "money_transfer",
+            "isolation"
+          ],
+          "category_scores": {
+            "urgency": 90.0,
+            "authority": 90.0,
+            "money_transfer": 90.0,
+            "credentials": 90.0,
+            "secrecy": 90.0,
+            "emotional": 90.0,
+            "trust_building": 90.0,
+            "isolation": 90.0
+          }
+        },
+        {
+          "id": "normal_01",
+          "label": "real",
+          "channel": "call",
+          "score": 0.0,
+          "top_category": null,
+          "expected_techniques": [],
+          "category_scores": {
+            "urgency": 0.0,
+            "authority": 0.0,
+            "money_transfer": 0.0,
+            "credentials": 0.0,
+            "secrecy": 0.0,
+            "emotional": 0.0,
+            "trust_building": 0.0,
+            "isolation": 0.0
+          }
+        },
+        {
+          "id": "normal_02",
+          "label": "real",
+          "channel": "call",
+          "score": 0.0,
+          "top_category": null,
+          "expected_techniques": [],
+          "category_scores": {
+            "urgency": 0.0,
+            "authority": 0.0,
+            "money_transfer": 0.0,
+            "credentials": 0.0,
+            "secrecy": 0.0,
+            "emotional": 0.0,
+            "trust_building": 0.0,
+            "isolation": 0.0
+          }
+        },
+        {
+          "id": "normal_03",
+          "label": "real",
+          "channel": "video_call",
+          "score": 0.0,
+          "top_category": null,
+          "expected_techniques": [],
+          "category_scores": {
+            "urgency": 0.0,
+            "authority": 0.0,
+            "money_transfer": 0.0,
+            "credentials": 0.0,
+            "secrecy": 0.0,
+            "emotional": 0.0,
+            "trust_building": 0.0,
+            "isolation": 0.0
+          }
+        },
+        {
+          "id": "normal_04",
+          "label": "real",
+          "channel": "call",
+          "score": 0.0,
+          "top_category": null,
+          "expected_techniques": [],
+          "category_scores": {
+            "urgency": 0.0,
+            "authority": 0.0,
+            "money_transfer": 0.0,
+            "credentials": 0.0,
+            "secrecy": 0.0,
+            "emotional": 0.0,
+            "trust_building": 0.0,
+            "isolation": 0.0
+          }
+        },
+        {
+          "id": "normal_05",
+          "label": "real",
+          "channel": "call",
+          "score": 0.0,
+          "top_category": null,
+          "expected_techniques": [],
+          "category_scores": {
+            "urgency": 0.0,
+            "authority": 0.0,
+            "money_transfer": 0.0,
+            "credentials": 0.0,
+            "secrecy": 0.0,
+            "emotional": 0.0,
+            "trust_building": 0.0,
+            "isolation": 0.0
+          }
+        },
+        {
+          "id": "boundary_normal_01",
+          "label": "real",
+          "channel": "call",
+          "score": 90.0,
+          "top_category": "urgency",
+          "expected_techniques": [],
+          "category_scores": {
+            "urgency": 90.0,
+            "authority": 90.0,
+            "money_transfer": 90.0,
+            "credentials": 90.0,
+            "secrecy": 90.0,
+            "emotional": 90.0,
+            "trust_building": 90.0,
+            "isolation": 90.0
+          }
+        },
+        {
+          "id": "boundary_normal_02",
+          "label": "real",
+          "channel": "call",
+          "score": 0.0,
+          "top_category": null,
+          "expected_techniques": [],
+          "category_scores": {
+            "urgency": 0.0,
+            "authority": 0.0,
+            "money_transfer": 0.0,
+            "credentials": 0.0,
+            "secrecy": 0.0,
+            "emotional": 0.0,
+            "trust_building": 0.0,
+            "isolation": 0.0
+          }
+        },
+        {
+          "id": "boundary_normal_03",
+          "label": "real",
+          "channel": "call",
+          "score": 0.0,
+          "top_category": null,
+          "expected_techniques": [],
+          "category_scores": {
+            "urgency": 0.0,
+            "authority": 0.0,
+            "money_transfer": 0.0,
+            "credentials": 0.0,
+            "secrecy": 0.0,
+            "emotional": 0.0,
+            "trust_building": 0.0,
+            "isolation": 0.0
+          }
+        },
+        {
+          "id": "boundary_normal_04",
+          "label": "real",
+          "channel": "call",
+          "score": 0.0,
+          "top_category": null,
+          "expected_techniques": [],
+          "category_scores": {
+            "urgency": 0.0,
+            "authority": 0.0,
+            "money_transfer": 0.0,
+            "credentials": 0.0,
+            "secrecy": 0.0,
+            "emotional": 0.0,
+            "trust_building": 0.0,
+            "isolation": 0.0
+          }
+        },
+        {
+          "id": "boundary_normal_05",
+          "label": "real",
+          "channel": "call",
+          "score": 0.0,
+          "top_category": null,
+          "expected_techniques": [],
+          "category_scores": {
+            "urgency": 0.0,
+            "authority": 0.0,
+            "money_transfer": 0.0,
+            "credentials": 0.0,
+            "secrecy": 0.0,
+            "emotional": 0.0,
+            "trust_building": 0.0,
+            "isolation": 0.0
+          }
+        },
+        {
+          "id": "boundary_fraud_01",
+          "label": "fake",
+          "channel": "call",
+          "score": 60.0,
+          "top_category": "urgency",
+          "expected_techniques": [
+            "urgency",
+            "money_transfer",
+            "isolation"
+          ],
+          "category_scores": {
+            "urgency": 90.0,
+            "authority": 0.0,
+            "money_transfer": 0.0,
+            "credentials": 0.0,
+            "secrecy": 0.0,
+            "emotional": 0.0,
+            "trust_building": 0.0,
+            "isolation": 0.0
+          }
+        },
+        {
+          "id": "boundary_fraud_02",
+          "label": "fake",
+          "channel": "call",
+          "score": 90.0,
+          "top_category": "urgency",
+          "expected_techniques": [
+            "urgency",
+            "authority",
+            "credentials"
+          ],
+          "category_scores": {
+            "urgency": 90.0,
+            "authority": 90.0,
+            "money_transfer": 90.0,
+            "credentials": 90.0,
+            "secrecy": 90.0,
+            "emotional": 90.0,
+            "trust_building": 90.0,
+            "isolation": 90.0
+          }
+        }
+      ]
+    }
+  }
+}
