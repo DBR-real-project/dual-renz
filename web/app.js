@@ -98,6 +98,7 @@ function watch(jobId) {
       document.querySelectorAll('.stages li').forEach(li => li.classList.add('done'));
       render(m.report);
       show('result');
+      loadHistory();
     } else if (m.type === 'error') {
       closedOk = true;
       $('progressMsg').textContent = `분석 실패: ${m.message}`;
@@ -296,6 +297,74 @@ function focusSegment(i) {
   el.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
+/* ---------- 분석 히스토리 (기획서 Phase 2-4) ---------- */
+async function loadHistory() {
+  try {
+    const r = await fetch('/api/history?limit=20');
+    const d = await r.json();
+    const card = $('historyCard');
+    if (!d.items || !d.items.length) { card.hidden = true; return; }
+    card.hidden = false;
+    drawTrend(d.items);
+
+    $('historyList').innerHTML = d.items.map(it => {
+      const when = (it.analyzed_at || '').replace('T', ' ').slice(5, 16);
+      return `<div class="hist lv-${it.overall_level}" data-id="${esc(it.job_id)}">
+        <span class="hist-score lv-${it.overall_level}">${
+          it.overall_score == null ? '-' : Math.round(it.overall_score)}</span>
+        <span class="hist-name" title="${esc(it.file_name)}">${esc(it.file_name)}</span>
+        <span class="hist-meta">${when} · ${fmtTime(it.duration || 0)} · ${it.n_segments}구간</span>
+        <button class="hist-del" title="이 기록 삭제">×</button>
+      </div>`;
+    }).join('');
+
+    $('historyList').querySelectorAll('.hist').forEach(el => {
+      el.addEventListener('click', async ev => {
+        if (ev.target.classList.contains('hist-del')) {
+          ev.stopPropagation();
+          await fetch(`/api/history/${el.dataset.id}`, { method: 'DELETE' });
+          loadHistory();
+          return;
+        }
+        const rr = await fetch(`/api/history/${el.dataset.id}`);
+        if (!rr.ok) return;
+        const dd = await rr.json();
+        render(dd.report);
+        show('result');
+      });
+    });
+  } catch { /* 히스토리 실패가 업로드를 막지 않는다 */ }
+}
+
+/* 위험도 추이 — 기획서 메뉴 구조도의 "위험도 추이 그래프" */
+function drawTrend(items) {
+  const pts = items.slice().reverse();
+  if (pts.length < 2) { $('historyTrend').innerHTML = ''; return; }
+  const W = 900, H = 90, P = { t: 10, r: 10, b: 10, l: 26 };
+  const iw = W - P.l - P.r, ih = H - P.t - P.b;
+  const x = i => P.l + (pts.length === 1 ? iw / 2 : (iw * i) / (pts.length - 1));
+  const y = v => P.t + ih - (Math.max(0, Math.min(100, v || 0)) / 100) * ih;
+
+  const line = pts.map((p, i) => `${x(i).toFixed(1)},${y(p.overall_score).toFixed(1)}`).join(' ');
+  const dots = pts.map((p, i) => {
+    const col = { '높음': '#ff5c5c', '중간': '#f5b942', '낮음': '#2ecc71' }[p.overall_level] || '#6b7887';
+    return `<circle cx="${x(i).toFixed(1)}" cy="${y(p.overall_score).toFixed(1)}" r="4" fill="${col}">
+      <title>${esc(p.file_name)} — ${Math.round(p.overall_score || 0)} (${p.overall_level})</title></circle>`;
+  }).join('');
+
+  $('historyTrend').innerHTML =
+    `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="분석 위험도 추이">
+      <line x1="${P.l}" y1="${y(70)}" x2="${W - P.r}" y2="${y(70)}"
+            stroke="#ff5c5c" stroke-width="1" stroke-dasharray="4 4" opacity=".4"/>
+      <line x1="${P.l}" y1="${y(0)}" x2="${W - P.r}" y2="${y(0)}" stroke="#2a323c"/>
+      <text x="${P.l - 6}" y="${y(100) + 4}" fill="#6b7887" font-size="9" text-anchor="end">100</text>
+      <text x="${P.l - 6}" y="${y(0) + 4}" fill="#6b7887" font-size="9" text-anchor="end">0</text>
+      <polyline points="${line}" fill="none" stroke="#5aa9ff" stroke-width="2"
+                stroke-linejoin="round"/>
+      ${dots}
+    </svg>`;
+}
+
 $('againBtn').addEventListener('click', () => {
   selectedFile = null;
   fileInput.value = '';
@@ -306,7 +375,9 @@ $('againBtn').addEventListener('click', () => {
   consent.checked = false;
   updateStart();
   $('progressBar').style.width = '0';
+  loadHistory();
   show('upload');
 });
 
 loadHealth();
+loadHistory();

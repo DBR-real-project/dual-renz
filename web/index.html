@@ -43,6 +43,14 @@
   <button id="startBtn" class="primary" disabled>분석 시작</button>
   <p class="err" id="uploadErr" hidden></p>
 
+  <section class="card history-card" id="historyCard" hidden>
+    <h3>분석 히스토리</h3>
+    <p class="card-sub">이전 분석 결과입니다. 클릭하면 리포트를 다시 엽니다.
+      서버를 재시작해도 남아 있습니다.</p>
+    <div id="historyTrend" class="trend"></div>
+    <div id="historyList" class="history-list"></div>
+  </section>
+
   <div class="notice">
     <h3>이 서비스가 보는 두 가지 신호</h3>
     <div class="two-col">

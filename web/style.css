@@ -181,6 +181,26 @@ button{font-family:inherit;font-size:15px;border-radius:10px;cursor:pointer;bord
 .rag b{color:var(--content);font-weight:600}
 .rag .src{color:var(--dim);font-size:11.5px}
 
+/* --- 히스토리 --- */
+.history-card{margin-top:26px}
+.trend{margin-bottom:14px}
+.trend svg{width:100%;height:auto;display:block}
+.history-list{display:flex;flex-direction:column;gap:7px}
+.hist{display:grid;grid-template-columns:auto 1fr auto auto;gap:12px;align-items:center;
+  padding:10px 13px;background:var(--panel-2);border-radius:10px;cursor:pointer;
+  border-left:3px solid var(--line);transition:.15s}
+.hist:hover{background:#232a33}
+.hist.lv-높음{border-left-color:var(--red)}
+.hist.lv-중간{border-left-color:var(--yellow)}
+.hist.lv-낮음{border-left-color:var(--green)}
+.hist-score{font-weight:700;font-variant-numeric:tabular-nums;min-width:38px;text-align:right}
+.hist-name{font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hist-meta{font-size:11.5px;color:var(--dim);white-space:nowrap}
+.hist-del{background:none;border:0;color:var(--dim);font-size:16px;line-height:1;
+  cursor:pointer;padding:2px 5px}
+.hist-del:hover{color:var(--red)}
+.hist-empty{color:var(--dim);font-size:13px}
+
 /* --- 엔진 --- */
 .engines{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
 .eng{padding:11px 13px;background:var(--panel-2);border-radius:10px;font-size:12.5px}

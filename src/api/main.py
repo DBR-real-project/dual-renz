@@ -25,11 +25,12 @@ DualGuard 백엔드 API (FastAPI)
 """
 
 import asyncio
-import shutil
+import json
 import sys
 import tempfile
 import time
 import uuid
+from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -50,6 +51,10 @@ from scoring.fraud_risk_score import ScoringStrategy  # noqa: E402
 STATIC_DIR = PROJECT_ROOT / "web"
 UPLOAD_DIR = Path(tempfile.gettempdir()) / "dualguard_uploads"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+# 분석 히스토리(결과 JSON만). 원본 미디어는 여기 저장하지 않는다.
+# 전사 텍스트가 들어가므로 민감 정보로 다뤄야 한다 — .gitignore 대상.
+HISTORY_DIR = PROJECT_ROOT / "data" / "reports"
 
 # 업로드 상한. 기획서 MVP는 통화 파일 한 건 분석이므로 넉넉히 200MB.
 MAX_UPLOAD_BYTES = 200 * 1024 * 1024
@@ -95,6 +100,32 @@ app = FastAPI(
 )
 
 
+def _save_history(job: Job) -> None:
+    """
+    분석 결과를 디스크에 남긴다. 기획서 [Phase 2-4] 분석 히스토리 대시보드 대응.
+
+    **원본 미디어가 아니라 분석 결과(JSON)만 저장한다.** 기획서 개인정보 보호 설계가
+    "업로드 파일은 분석 완료 즉시 삭제"라고 못박고 있으므로, 통화 내용 자체를
+    다시 들을 수 있게 남기지 않는다. 다만 전사 텍스트는 결과에 포함되므로
+    (근거 표시에 필요하다) 이 디렉터리도 민감 정보로 다뤄야 한다 — .gitignore 대상.
+    """
+    if not job.report:
+        return
+    try:
+        HISTORY_DIR.mkdir(parents=True, exist_ok=True)
+        payload = {
+            "job_id": job.id,
+            "file_name": job.file_name,
+            "analyzed_at": datetime.now().astimezone().isoformat(timespec="seconds"),
+            "report": job.report,
+        }
+        (HISTORY_DIR / f"{job.id}.json").write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    except Exception:
+        # 히스토리 저장 실패가 분석 결과 반환을 막으면 안 된다.
+        pass
+
+
 def _run_job(job: Job, loop: asyncio.AbstractEventLoop) -> None:
     """워커 스레드에서 실행된다. 진행률은 이벤트 루프로 안전하게 넘긴다."""
     def progress(stage: str, ratio: float, message: str):
@@ -111,6 +142,7 @@ def _run_job(job: Job, loop: asyncio.AbstractEventLoop) -> None:
         job.status = "done"
         job.message = "분석 완료"
         job.ratio = 1.0
+        _save_history(job)
     except Exception as exc:
         job.status = "error"
         job.error = f"{type(exc).__name__}: {exc}"
@@ -209,6 +241,63 @@ def get_result(job_id: str):
         return JSONResponse({"job_id": job_id, "status": job.status,
                              "message": "아직 분석 중입니다"}, status_code=202)
     return {"job_id": job_id, "status": "done", "report": job.report}
+
+
+@app.get("/api/history")
+def list_history(limit: int = 30) -> dict:
+    """
+    분석 히스토리 목록. 기획서 [Phase 2-4] + 메뉴 구조도의 '분석 히스토리' 대응.
+
+    메모리(JOBS)가 아니라 디스크에서 읽는다. 서버를 재시작해도 남아야 하고,
+    심사 중 실수로 창을 닫아도 결과를 다시 열 수 있어야 하기 때문이다.
+    """
+    items = []
+    if HISTORY_DIR.exists():
+        for p in sorted(HISTORY_DIR.glob("*.json"), key=lambda f: f.stat().st_mtime,
+                        reverse=True)[:limit]:
+            try:
+                d = json.loads(p.read_text(encoding="utf-8"))
+                r = d.get("report") or {}
+                items.append({
+                    "job_id": d.get("job_id", p.stem),
+                    "file_name": d.get("file_name", ""),
+                    "analyzed_at": d.get("analyzed_at", ""),
+                    "overall_score": r.get("overall_score"),
+                    "overall_level": r.get("overall_level"),
+                    "content_risk": r.get("content_risk"),
+                    "media_risk": r.get("media_risk"),
+                    "duration": r.get("duration"),
+                    "n_segments": len(r.get("segments") or []),
+                })
+            except Exception:
+                continue   # 깨진 파일 하나가 목록 전체를 막지 않게
+    return {"count": len(items), "items": items}
+
+
+@app.get("/api/history/{job_id}")
+def get_history(job_id: str):
+    """저장된 리포트를 그대로 돌려준다 (서버 재시작 후에도 열람 가능)."""
+    p = HISTORY_DIR / f"{Path(job_id).name}.json"     # 경로 조작 방지
+    if not p.exists():
+        raise HTTPException(404, "저장된 분석 결과가 없습니다")
+    d = json.loads(p.read_text(encoding="utf-8"))
+    return {"job_id": d.get("job_id", job_id), "status": "done",
+            "analyzed_at": d.get("analyzed_at"), "report": d.get("report")}
+
+
+@app.delete("/api/history/{job_id}")
+def delete_history(job_id: str) -> dict:
+    """
+    개별 기록 삭제.
+
+    기획서 개인정보 보호 설계상 사용자가 자기 분석 기록을 지울 수 있어야 한다.
+    전사 텍스트가 들어 있으므로 '남길지 말지'는 사용자가 정하는 게 맞다.
+    """
+    p = HISTORY_DIR / f"{Path(job_id).name}.json"
+    if not p.exists():
+        raise HTTPException(404, "저장된 분석 결과가 없습니다")
+    p.unlink()
+    return {"deleted": job_id}
 
 
 @app.websocket("/ws/jobs/{job_id}")
