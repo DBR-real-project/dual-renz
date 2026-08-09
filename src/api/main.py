@@ -7,12 +7,17 @@ DualGuard 백엔드 API (FastAPI)
    딥페이크 모델 추론 오케스트레이션"*, *"WebSocket — 실시간 청크 송수신"*
 
 엔드포인트:
-  POST /api/analyze        파일 업로드 -> job_id 반환 (분석은 백그라운드)
-  GET  /api/jobs/{id}      진행률/상태 조회 (웹소켓을 못 쓰는 환경용 폴백)
-  GET  /api/results/{id}   분석 리포트 (완료 후)
-  WS   /ws/jobs/{id}       진행률 실시간 스트림
-  GET  /api/health         엔진별 준비 상태
-  GET  /                   결과 대시보드 (정적 파일)
+  POST   /api/analyze              파일 업로드 -> job_id 반환 (분석은 백그라운드)
+  GET    /api/jobs/{id}            진행률/상태 조회 (웹소켓을 못 쓰는 환경용 폴백)
+  GET    /api/results/{id}         분석 리포트 (완료 후)
+  WS     /ws/jobs/{id}             진행률 실시간 스트림
+  GET    /api/history[/{id}]       지난 분석 목록·재조회 (DELETE로 삭제)
+  POST   /api/sessions             실시간 세션 시작 (모델 상주)
+  POST   /api/sessions/{id}/chunk  오디오 청크 투입 -> 갱신된 위험도
+  GET    /api/sessions/{id}        현재까지의 구간별 결과
+  DELETE /api/sessions/{id}        세션 종료 + 모델 해제
+  GET    /api/health               엔진별 준비 상태
+  GET    /                         결과 대시보드 (정적 파일)
 
 동시성 설계:
   분석은 CPU를 오래 잡는 동기 작업(torch 추론)이라 이벤트 루프에서 직접 돌리면
@@ -46,7 +51,7 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from orchestration.pipeline import analyze  # noqa: E402
-from scoring.fraud_risk_score import ScoringStrategy  # noqa: E402
+from scoring.fraud_risk_score import DEFAULT_STRATEGY  # noqa: E402
 
 STATIC_DIR = PROJECT_ROOT / "web"
 UPLOAD_DIR = Path(tempfile.gettempdir()) / "dualguard_uploads"
@@ -91,6 +96,8 @@ class Job:
 
 
 JOBS: Dict[str, Job] = {}
+# 실시간 세션. 동시에 하나만 살아 있지만, 종료 후 결과를 조회할 수 있게 dict로 둔다.
+SESSIONS: Dict[str, "object"] = {}
 EXECUTOR = ThreadPoolExecutor(max_workers=1, thread_name_prefix="dualguard")
 
 app = FastAPI(
@@ -134,7 +141,7 @@ def _run_job(job: Job, loop: asyncio.AbstractEventLoop) -> None:
 
     job.status = "running"
     try:
-        report = analyze(str(job.path), strategy=ScoringStrategy.MULTIPLICATIVE_BONUS,
+        report = analyze(str(job.path), strategy=DEFAULT_STRATEGY,
                          progress=progress)
         job.report = report.as_dict()
         # 파이프라인은 디스크상의 임시 파일명을 쓴다. 사용자에게는 올린 원본 이름을 보여준다.
@@ -182,8 +189,110 @@ def health() -> dict:
     }
 
 
+# ---------------------------------------------------------------- 실시간 세션
+#
+# 기획서 Phase 2. 파일 단건 분석과 달리 모델을 세션 동안 상주시킨다.
+# 메모리 한계 때문에 **동시에 하나의 세션만** 허용하고, 세션이 열려 있는 동안에는
+# 파일 분석을 막는다(둘이 겹치면 AASIST 추론에서 네이티브 크래시가 난다).
+# 엔진 쪽 설계는 src/orchestration/streaming.py docstring 참고.
+
+STREAM_CHUNK_SUFFIXES = {".webm", ".wav", ".ogg", ".mp4", ".m4a"}
+MAX_CHUNK_BYTES = 8 * 1024 * 1024
+
+
+@app.post("/api/sessions")
+async def create_session(stt_model: str = "base", audio_spoof: bool = True) -> dict:
+    from orchestration.streaming import StreamSession, StreamingBusyError, reap_stale
+
+    # 확장이 DELETE를 못 보내고 죽으면 세션이 락을 쥔 채 남는다. 새로 만들려는
+    # 지금이 바로 그게 문제가 되는 순간이라 여기서 정리한다.
+    reaped = reap_stale()
+
+    try:
+        session = StreamSession(stt_model=stt_model, use_audio_spoof=audio_spoof)
+    except StreamingBusyError as exc:
+        raise HTTPException(409, str(exc))
+
+    SESSIONS[session.session_id] = session
+
+    # 모델을 여기서 미리 올린다. 안 하면 첫 청크 하나가 26초 걸려
+    # 통화 시작 직후 — 사기에서 가장 중요한 구간 — 를 놓친다.
+    loop = asyncio.get_running_loop()
+    try:
+        warm = await loop.run_in_executor(EXECUTOR, session.warmup)
+    except Exception as exc:
+        # 여기서 그냥 던지면 **실패한 세션이 전역 락을 쥔 채 남아** 이후 모든
+        # 세션 생성이 409로 막힌다. 실제로 메모리 부족(mkl_malloc) 때 그렇게 됐다.
+        # 반드시 정리하고 이유를 알려준다.
+        SESSIONS.pop(session.session_id, None)
+        try:
+            session.close()
+        except Exception:
+            pass
+        detail = f"{type(exc).__name__}: {exc}"
+        if "malloc" in detail or "memory" in detail.lower():
+            detail += ("\n메모리가 부족합니다. 다른 프로그램(브라우저 탭 등)을 정리하고 "
+                       "서버를 다시 띄우세요. 여유 6GB 아래에서는 모델이 올라가지 않습니다.")
+        raise HTTPException(503, f"세션을 시작하지 못했습니다 — {detail}")
+
+    out = {**session.snapshot(), **warm}
+    if reaped:
+        out["reaped_session"] = reaped   # 죽은 세션을 정리했다는 사실을 숨기지 않는다
+    return out
+
+
+@app.post("/api/sessions/{session_id}/chunk")
+async def push_chunk(session_id: str, file: UploadFile = File(...)) -> dict:
+    session = SESSIONS.get(session_id)
+    if not session:
+        raise HTTPException(404, "해당 세션을 찾을 수 없습니다")
+
+    suffix = Path(file.filename or "").suffix.lower() or ".webm"
+    if suffix not in STREAM_CHUNK_SUFFIXES:
+        raise HTTPException(400, f"지원하지 않는 청크 형식입니다: {suffix}")
+
+    blob = await file.read(MAX_CHUNK_BYTES + 1)
+    if len(blob) > MAX_CHUNK_BYTES:
+        raise HTTPException(413, f"청크가 너무 큽니다 (상한 {MAX_CHUNK_BYTES // 1024 // 1024}MB)")
+    if not blob:
+        raise HTTPException(400, "빈 청크입니다")
+
+    # 추론은 CPU를 오래 잡는 동기 작업이라 이벤트 루프에서 직접 돌리면 서버가 멈춘다.
+    loop = asyncio.get_running_loop()
+    try:
+        return await loop.run_in_executor(EXECUTOR, session.add_chunk, blob, suffix)
+    except RuntimeError as exc:
+        raise HTTPException(400, str(exc))
+
+
+@app.get("/api/sessions/{session_id}")
+def get_session(session_id: str) -> dict:
+    session = SESSIONS.get(session_id)
+    if not session:
+        raise HTTPException(404, "해당 세션을 찾을 수 없습니다")
+    return {**session.snapshot(), "segments": session.segments()}
+
+
+@app.delete("/api/sessions/{session_id}")
+def close_session(session_id: str) -> dict:
+    session = SESSIONS.pop(session_id, None)
+    if not session:
+        raise HTTPException(404, "해당 세션을 찾을 수 없습니다")
+    return session.close()
+
+
 @app.post("/api/analyze")
 async def create_analysis(file: UploadFile = File(...)) -> dict:
+    from orchestration.streaming import is_busy
+
+    if is_busy():
+        raise HTTPException(
+            409,
+            "실시간 세션이 열려 있어 파일 분석을 시작할 수 없습니다. "
+            "세션을 먼저 종료하세요 (DELETE /api/sessions/{id}). "
+            "모델이 메모리를 동시에 잡으면 프로세스가 죽습니다.",
+        )
+
     suffix = Path(file.filename or "").suffix.lower()
     if suffix not in ALLOWED_SUFFIXES:
         raise HTTPException(

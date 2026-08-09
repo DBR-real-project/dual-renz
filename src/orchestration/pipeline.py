@@ -45,7 +45,11 @@ from media_detection import audio_spoof_detector as aasist  # noqa: E402
 from media_detection.deepfake_detector import FrameAggregation, aggregate_scores  # noqa: E402
 from media_detection.face_utils import crop_face, crop_face_square  # noqa: E402
 from media_detection.media_risk import MediaCombineMode, resolve_backend  # noqa: E402
-from scoring.fraud_risk_score import ScoringStrategy, compute_fraud_risk_score  # noqa: E402
+from scoring.fraud_risk_score import (  # noqa: E402
+    DEFAULT_STRATEGY,
+    ScoringStrategy,
+    compute_fraud_risk_score,
+)
 
 VIDEO_SUFFIXES = {".mp4", ".avi", ".mov", ".mkv", ".webm"}
 
@@ -59,8 +63,12 @@ AASIST_BATCH = 4
 AASIST_MIN_AUDIO_SEC = 3.0
 
 # 신호등 임계값. 기획서 [Phase 2-2] 신호등 UI + [3단계 액션 플랜] 대응.
-# 값 근거는 docs/validation_report.md 4-1 참고 (팀 확정 필요 사항).
-LEVEL_THRESHOLDS = {"높음": 70.0, "중간": 40.0}
+#
+# 70/40에서 55/30으로 낮췄다(2026-08-09). 감이 아니라 `scripts/decide_scoring.py`가
+# 실측 점수 격자 1,050쌍으로 스윕한 결과다. 70/40은 **사기를 '낮음'으로 놓치는 경우가
+# 84건**이었고, 55/30은 21건(더 못 줄이는 하한)으로 줄면서 헛경보는 0을 유지했다.
+# 근거 상세: docs/scoring_decision.json, docs/validation_report.md 4-1
+LEVEL_THRESHOLDS = {"높음": 55.0, "중간": 30.0}
 
 ACTION_PLANS = {
     "높음": {
@@ -235,7 +243,7 @@ def _sample_frames_by_segment(
 
 def analyze(
     media_path: str,
-    strategy: ScoringStrategy = ScoringStrategy.MULTIPLICATIVE_BONUS,
+    strategy: ScoringStrategy = DEFAULT_STRATEGY,
     combine_mode: MediaCombineMode = MediaCombineMode.MAX,
     aggregation: FrameAggregation = FrameAggregation.TOPK_MEAN,
     use_llm: bool = True,
@@ -354,15 +362,18 @@ def analyze(
                 vdet = vit.get_shared_detector()
                 square = False
                 warnings.append(
-                    "FF++ 가중치가 없어 ViT 폴백으로 분석했습니다. "
-                    "ViT는 판별력이 검증되지 않았으므로 영상 점수를 근거로 쓰지 마세요."
+                    "영상 판정을 제외했습니다 — FF++ 가중치가 없어 ViT 폴백만 쓸 수 "
+                    "있는데, ViT는 실측에서 진짜 얼굴을 70점으로 판정할 만큼 판별력이 "
+                    "없습니다. 근거 없는 점수로 위험도를 올리지 않기 위해 0으로 둡니다. "
+                    "영상 판정을 켜려면: scripts/download_ff_weights.py"
                 )
             buckets, face_counts = _sample_frames_by_segment(path, results, square_crop=square)
             for r in results:
                 frames = buckets.get(r.index, [])
                 r.faces_detected = face_counts.get(r.index, 0)
                 r.frames_analyzed = len(frames)
-                if frames:
+                # ViT일 때는 프레임을 세되 점수는 내지 않는다(위 경고 참고).
+                if frames and video_backend == "ff":
                     r.deepfake_score = aggregate_scores(vdet.score_frames(frames), aggregation)
             if all(r.frames_analyzed == 0 for r in results):
                 warnings.append("얼굴이 검출된 프레임이 없어 영상 분석 결과가 없습니다.")

@@ -10,44 +10,46 @@
       "backend": "ff",
       "n_samples": 50,
       "n_scored": 50,
-      "elapsed_sec": 140.7,
+      "elapsed_sec": 125.8,
       "separation": {
-        "real_max": 43.28,
-        "real_mean": 4.404999999999999,
-        "real_min": 0.0,
+        "real_max": 16.95,
+        "real_mean": 3.9879999999999987,
+        "real_min": 0.3,
         "fake_max": 100.0,
-        "fake_mean": 66.62299999999999,
-        "fake_min": 0.0,
-        "gap": -43.28
+        "fake_mean": 73.65133333333333,
+        "fake_min": 0.3,
+        "gap": -16.65
       },
       "at_threshold_50": {
         "threshold": 50.0,
-        "tp": 20,
-        "fn": 10,
+        "tp": 23,
+        "fn": 7,
         "fp": 0,
         "tn": 20,
-        "recall": 0.6666666666666666,
+        "recall": 0.7666666666666667,
         "fpr": 0.0,
         "precision": 1.0,
-        "accuracy": 0.8
+        "accuracy": 0.86
       },
       "best_threshold": {
-        "threshold": 7.48,
+        "threshold": 18.005,
         "tp": 24,
         "fn": 6,
-        "fp": 2,
-        "tn": 18,
+        "fp": 0,
+        "tn": 20,
         "recall": 0.8,
-        "fpr": 0.1,
-        "precision": 0.9230769230769231,
-        "accuracy": 0.84
+        "fpr": 0.0,
+        "precision": 1.0,
+        "accuracy": 0.88
       },
       "results": [
         {
           "file": "fake_DeepFakeDetection__01_04__walk_down_hall_angry__GBC7ZGDP.mp4",
           "label": "fake",
           "method": "DeepFakeDetection",
-          "score": 99.99,
+          "score": 99.98,
+          "score_raw": 99.91,
+          "face_detector": "yunet",
           "frames": 10,
           "face_rate": 1.0
         },
@@ -55,7 +57,9 @@
           "file": "fake_DeepFakeDetection__01_09__talking_angry_couch__P70H1JB0.mp4",
           "label": "fake",
           "method": "DeepFakeDetection",
-          "score": 0.6,
+          "score": 0.73,
+          "score_raw": 0.03,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -63,7 +67,9 @@
           "file": "fake_DeepFakeDetection__01_11__hugging_happy__4OJNJLOO.mp4",
           "label": "fake",
           "method": "DeepFakeDetection",
-          "score": 85.78,
+          "score": 99.21,
+          "score_raw": 94.57,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -71,7 +77,9 @@
           "file": "fake_DeepFakeDetection__01_11__meeting_serious__9OM3VE0Y.mp4",
           "label": "fake",
           "method": "DeepFakeDetection",
-          "score": 91.57,
+          "score": 99.46,
+          "score_raw": 96.45,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -79,7 +87,9 @@
           "file": "fake_DeepFakeDetection__01_11__meeting_serious__FCNL2OVP.mp4",
           "label": "fake",
           "method": "DeepFakeDetection",
-          "score": 0.16,
+          "score": 99.27,
+          "score_raw": 95.06,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -88,6 +98,8 @@
           "label": "fake",
           "method": "Deepfakes",
           "score": 100.0,
+          "score_raw": 100.0,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -96,6 +108,8 @@
           "label": "fake",
           "method": "Deepfakes",
           "score": 100.0,
+          "score_raw": 100.0,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -104,6 +118,8 @@
           "label": "fake",
           "method": "Deepfakes",
           "score": 100.0,
+          "score_raw": 100.0,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -112,6 +128,8 @@
           "label": "fake",
           "method": "Deepfakes",
           "score": 100.0,
+          "score_raw": 100.0,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -120,6 +138,8 @@
           "label": "fake",
           "method": "Deepfakes",
           "score": 100.0,
+          "score_raw": 100.0,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -128,6 +148,8 @@
           "label": "fake",
           "method": "Face2Face",
           "score": 100.0,
+          "score_raw": 100.0,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -136,6 +158,8 @@
           "label": "fake",
           "method": "Face2Face",
           "score": 100.0,
+          "score_raw": 100.0,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -144,6 +168,8 @@
           "label": "fake",
           "method": "Face2Face",
           "score": 100.0,
+          "score_raw": 100.0,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -152,6 +178,8 @@
           "label": "fake",
           "method": "Face2Face",
           "score": 100.0,
+          "score_raw": 100.0,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -160,14 +188,18 @@
           "label": "fake",
           "method": "Face2Face",
           "score": 100.0,
-          "frames": 11,
+          "score_raw": 100.0,
+          "face_detector": "yunet",
+          "frames": 12,
           "face_rate": 1.0
         },
         {
           "file": "fake_FaceShifter__995_233.mp4",
           "label": "fake",
           "method": "FaceShifter",
-          "score": 27.18,
+          "score": 78.86,
+          "score_raw": 26.29,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -175,7 +207,9 @@
           "file": "fake_FaceShifter__996_056.mp4",
           "label": "fake",
           "method": "FaceShifter",
-          "score": 3.37,
+          "score": 68.86,
+          "score_raw": 28.3,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -183,7 +217,9 @@
           "file": "fake_FaceShifter__997_040.mp4",
           "label": "fake",
           "method": "FaceShifter",
-          "score": 51.34,
+          "score": 1.52,
+          "score_raw": 0.06,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -191,7 +227,9 @@
           "file": "fake_FaceShifter__998_561.mp4",
           "label": "fake",
           "method": "FaceShifter",
-          "score": 0.0,
+          "score": 0.3,
+          "score_raw": 0.0,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -199,8 +237,10 @@
           "file": "fake_FaceShifter__999_960.mp4",
           "label": "fake",
           "method": "FaceShifter",
-          "score": 23.41,
-          "frames": 10,
+          "score": 19.06,
+          "score_raw": 1.71,
+          "face_detector": "yunet",
+          "frames": 12,
           "face_rate": 1.0
         },
         {
@@ -208,6 +248,8 @@
           "label": "fake",
           "method": "FaceSwap",
           "score": 100.0,
+          "score_raw": 100.0,
+          "face_detector": "yunet",
           "frames": 11,
           "face_rate": 1.0
         },
@@ -216,6 +258,8 @@
           "label": "fake",
           "method": "FaceSwap",
           "score": 100.0,
+          "score_raw": 100.0,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -224,6 +268,8 @@
           "label": "fake",
           "method": "FaceSwap",
           "score": 100.0,
+          "score_raw": 100.0,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -232,6 +278,8 @@
           "label": "fake",
           "method": "FaceSwap",
           "score": 100.0,
+          "score_raw": 100.0,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -240,14 +288,18 @@
           "label": "fake",
           "method": "FaceSwap",
           "score": 100.0,
-          "frames": 10,
+          "score_raw": 100.0,
+          "face_detector": "yunet",
+          "frames": 12,
           "face_rate": 1.0
         },
         {
           "file": "fake_NeuralTextures__012_026.mp4",
           "label": "fake",
           "method": "NeuralTextures",
-          "score": 0.47,
+          "score": 7.35,
+          "score_raw": 0.46,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -255,7 +307,9 @@
           "file": "fake_NeuralTextures__013_883.mp4",
           "label": "fake",
           "method": "NeuralTextures",
-          "score": 7.52,
+          "score": 5.02,
+          "score_raw": 0.27,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -263,7 +317,9 @@
           "file": "fake_NeuralTextures__014_790.mp4",
           "label": "fake",
           "method": "NeuralTextures",
-          "score": 0.0,
+          "score": 0.3,
+          "score_raw": 0.0,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -271,7 +327,9 @@
           "file": "fake_NeuralTextures__015_919.mp4",
           "label": "fake",
           "method": "NeuralTextures",
-          "score": 97.53,
+          "score": 58.04,
+          "score_raw": 10.32,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -279,7 +337,9 @@
           "file": "fake_NeuralTextures__016_209.mp4",
           "label": "fake",
           "method": "NeuralTextures",
-          "score": 9.77,
+          "score": 71.58,
+          "score_raw": 29.1,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -287,7 +347,9 @@
           "file": "real__980.mp4",
           "label": "real",
           "method": "-",
-          "score": 1.23,
+          "score": 13.37,
+          "score_raw": 0.89,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -295,7 +357,9 @@
           "file": "real__981.mp4",
           "label": "real",
           "method": "-",
-          "score": 0.0,
+          "score": 3.81,
+          "score_raw": 0.22,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -303,7 +367,9 @@
           "file": "real__982.mp4",
           "label": "real",
           "method": "-",
-          "score": 0.0,
+          "score": 0.3,
+          "score_raw": 0.0,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -311,7 +377,9 @@
           "file": "real__983.mp4",
           "label": "real",
           "method": "-",
-          "score": 1.01,
+          "score": 0.36,
+          "score_raw": 0.01,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -319,7 +387,9 @@
           "file": "real__984.mp4",
           "label": "real",
           "method": "-",
-          "score": 0.0,
+          "score": 0.3,
+          "score_raw": 0.0,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -327,7 +397,9 @@
           "file": "real__985.mp4",
           "label": "real",
           "method": "-",
-          "score": 0.0,
+          "score": 1.22,
+          "score_raw": 0.05,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -335,7 +407,9 @@
           "file": "real__986.mp4",
           "label": "real",
           "method": "-",
-          "score": 1.74,
+          "score": 1.4,
+          "score_raw": 0.06,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -343,7 +417,9 @@
           "file": "real__987.mp4",
           "label": "real",
           "method": "-",
-          "score": 0.0,
+          "score": 0.3,
+          "score_raw": 0.0,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -351,7 +427,9 @@
           "file": "real__988.mp4",
           "label": "real",
           "method": "-",
-          "score": 0.0,
+          "score": 6.75,
+          "score_raw": 0.48,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -359,7 +437,9 @@
           "file": "real__989.mp4",
           "label": "real",
           "method": "-",
-          "score": 0.44,
+          "score": 16.95,
+          "score_raw": 1.4,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -367,7 +447,9 @@
           "file": "real__990.mp4",
           "label": "real",
           "method": "-",
-          "score": 0.01,
+          "score": 0.3,
+          "score_raw": 0.0,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -375,7 +457,9 @@
           "file": "real__991.mp4",
           "label": "real",
           "method": "-",
-          "score": 7.44,
+          "score": 16.5,
+          "score_raw": 1.48,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -383,7 +467,9 @@
           "file": "real__992.mp4",
           "label": "real",
           "method": "-",
-          "score": 0.01,
+          "score": 1.34,
+          "score_raw": 0.06,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -391,7 +477,9 @@
           "file": "real__993.mp4",
           "label": "real",
           "method": "-",
-          "score": 0.0,
+          "score": 0.3,
+          "score_raw": 0.0,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -399,7 +487,9 @@
           "file": "real__994.mp4",
           "label": "real",
           "method": "-",
-          "score": 0.0,
+          "score": 0.3,
+          "score_raw": 0.0,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -407,7 +497,9 @@
           "file": "real__995.mp4",
           "label": "real",
           "method": "-",
-          "score": 2.59,
+          "score": 13.39,
+          "score_raw": 1.01,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -415,7 +507,9 @@
           "file": "real__996.mp4",
           "label": "real",
           "method": "-",
-          "score": 0.0,
+          "score": 0.45,
+          "score_raw": 0.01,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -423,7 +517,9 @@
           "file": "real__997.mp4",
           "label": "real",
           "method": "-",
-          "score": 43.28,
+          "score": 1.82,
+          "score_raw": 0.08,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -431,7 +527,9 @@
           "file": "real__998.mp4",
           "label": "real",
           "method": "-",
-          "score": 0.0,
+          "score": 0.3,
+          "score_raw": 0.0,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         },
@@ -439,446 +537,9 @@
           "file": "real__999.mp4",
           "label": "real",
           "method": "-",
-          "score": 30.35,
-          "frames": 12,
-          "face_rate": 1.0
-        }
-      ]
-    },
-    "vit": {
-      "backend": "vit",
-      "n_samples": 50,
-      "n_scored": 50,
-      "elapsed_sec": 140.7,
-      "separation": {
-        "real_max": 82.64,
-        "real_mean": 70.444,
-        "real_min": 37.62,
-        "fake_max": 87.51,
-        "fake_mean": 69.00566666666666,
-        "fake_min": 13.75,
-        "gap": -68.89
-      },
-      "at_threshold_50": {
-        "threshold": 50.0,
-        "tp": 27,
-        "fn": 3,
-        "fp": 19,
-        "tn": 1,
-        "recall": 0.9,
-        "fpr": 0.95,
-        "precision": 0.5869565217391305,
-        "accuracy": 0.56
-      },
-      "best_threshold": {
-        "threshold": 70.06,
-        "tp": 22,
-        "fn": 8,
-        "fp": 11,
-        "tn": 9,
-        "recall": 0.7333333333333333,
-        "fpr": 0.55,
-        "precision": 0.6666666666666666,
-        "accuracy": 0.62
-      },
-      "results": [
-        {
-          "file": "fake_DeepFakeDetection__01_04__walk_down_hall_angry__GBC7ZGDP.mp4",
-          "label": "fake",
-          "method": "DeepFakeDetection",
-          "score": 84.62,
-          "frames": 10,
-          "face_rate": 1.0
-        },
-        {
-          "file": "fake_DeepFakeDetection__01_09__talking_angry_couch__P70H1JB0.mp4",
-          "label": "fake",
-          "method": "DeepFakeDetection",
-          "score": 87.51,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "fake_DeepFakeDetection__01_11__hugging_happy__4OJNJLOO.mp4",
-          "label": "fake",
-          "method": "DeepFakeDetection",
-          "score": 86.97,
-          "frames": 12,
-          "face_rate": 0.75
-        },
-        {
-          "file": "fake_DeepFakeDetection__01_11__meeting_serious__9OM3VE0Y.mp4",
-          "label": "fake",
-          "method": "DeepFakeDetection",
-          "score": 85.63,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "fake_DeepFakeDetection__01_11__meeting_serious__FCNL2OVP.mp4",
-          "label": "fake",
-          "method": "DeepFakeDetection",
-          "score": 86.67,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "fake_Deepfakes__995_233.mp4",
-          "label": "fake",
-          "method": "Deepfakes",
-          "score": 73.7,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "fake_Deepfakes__996_056.mp4",
-          "label": "fake",
-          "method": "Deepfakes",
-          "score": 20.17,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "fake_Deepfakes__997_040.mp4",
-          "label": "fake",
-          "method": "Deepfakes",
-          "score": 78.3,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "fake_Deepfakes__998_561.mp4",
-          "label": "fake",
-          "method": "Deepfakes",
-          "score": 70.36,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "fake_Deepfakes__999_960.mp4",
-          "label": "fake",
-          "method": "Deepfakes",
-          "score": 72.51,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "fake_Face2Face__000_003.mp4",
-          "label": "fake",
-          "method": "Face2Face",
-          "score": 78.84,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "fake_Face2Face__001_870.mp4",
-          "label": "fake",
-          "method": "Face2Face",
-          "score": 74.53,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "fake_Face2Face__997_040.mp4",
-          "label": "fake",
-          "method": "Face2Face",
-          "score": 64.61,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "fake_Face2Face__998_561.mp4",
-          "label": "fake",
-          "method": "Face2Face",
-          "score": 74.67,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "fake_Face2Face__999_960.mp4",
-          "label": "fake",
-          "method": "Face2Face",
-          "score": 74.5,
-          "frames": 12,
-          "face_rate": 0.92
-        },
-        {
-          "file": "fake_FaceShifter__995_233.mp4",
-          "label": "fake",
-          "method": "FaceShifter",
-          "score": 79.36,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "fake_FaceShifter__996_056.mp4",
-          "label": "fake",
-          "method": "FaceShifter",
-          "score": 13.75,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "fake_FaceShifter__997_040.mp4",
-          "label": "fake",
-          "method": "FaceShifter",
-          "score": 71.4,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "fake_FaceShifter__998_561.mp4",
-          "label": "fake",
-          "method": "FaceShifter",
-          "score": 72.31,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "fake_FaceShifter__999_960.mp4",
-          "label": "fake",
-          "method": "FaceShifter",
-          "score": 80.86,
-          "frames": 12,
-          "face_rate": 0.83
-        },
-        {
-          "file": "fake_FaceSwap__031_163.mp4",
-          "label": "fake",
-          "method": "FaceSwap",
-          "score": 50.79,
-          "frames": 11,
-          "face_rate": 1.0
-        },
-        {
-          "file": "fake_FaceSwap__996_056.mp4",
-          "label": "fake",
-          "method": "FaceSwap",
-          "score": 25.2,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "fake_FaceSwap__997_040.mp4",
-          "label": "fake",
-          "method": "FaceSwap",
-          "score": 70.96,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "fake_FaceSwap__998_561.mp4",
-          "label": "fake",
-          "method": "FaceSwap",
-          "score": 67.73,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "fake_FaceSwap__999_960.mp4",
-          "label": "fake",
-          "method": "FaceSwap",
-          "score": 79.77,
-          "frames": 12,
-          "face_rate": 0.83
-        },
-        {
-          "file": "fake_NeuralTextures__012_026.mp4",
-          "label": "fake",
-          "method": "NeuralTextures",
-          "score": 71.07,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "fake_NeuralTextures__013_883.mp4",
-          "label": "fake",
-          "method": "NeuralTextures",
-          "score": 60.54,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "fake_NeuralTextures__014_790.mp4",
-          "label": "fake",
-          "method": "NeuralTextures",
-          "score": 78.52,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "fake_NeuralTextures__015_919.mp4",
-          "label": "fake",
-          "method": "NeuralTextures",
-          "score": 71.44,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "fake_NeuralTextures__016_209.mp4",
-          "label": "fake",
-          "method": "NeuralTextures",
-          "score": 62.88,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "real__980.mp4",
-          "label": "real",
-          "method": "-",
-          "score": 78.39,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "real__981.mp4",
-          "label": "real",
-          "method": "-",
-          "score": 68.16,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "real__982.mp4",
-          "label": "real",
-          "method": "-",
-          "score": 37.62,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "real__983.mp4",
-          "label": "real",
-          "method": "-",
-          "score": 68.69,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "real__984.mp4",
-          "label": "real",
-          "method": "-",
-          "score": 65.25,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "real__985.mp4",
-          "label": "real",
-          "method": "-",
-          "score": 58.89,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "real__986.mp4",
-          "label": "real",
-          "method": "-",
-          "score": 59.93,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "real__987.mp4",
-          "label": "real",
-          "method": "-",
-          "score": 73.25,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "real__988.mp4",
-          "label": "real",
-          "method": "-",
-          "score": 74.9,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "real__989.mp4",
-          "label": "real",
-          "method": "-",
-          "score": 69.23,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "real__990.mp4",
-          "label": "real",
-          "method": "-",
-          "score": 73.51,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "real__991.mp4",
-          "label": "real",
-          "method": "-",
-          "score": 82.64,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "real__992.mp4",
-          "label": "real",
-          "method": "-",
-          "score": 64.0,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "real__993.mp4",
-          "label": "real",
-          "method": "-",
-          "score": 76.61,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "real__994.mp4",
-          "label": "real",
-          "method": "-",
-          "score": 82.29,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "real__995.mp4",
-          "label": "real",
-          "method": "-",
-          "score": 81.76,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "real__996.mp4",
-          "label": "real",
-          "method": "-",
-          "score": 69.76,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "real__997.mp4",
-          "label": "real",
-          "method": "-",
-          "score": 72.51,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "real__998.mp4",
-          "label": "real",
-          "method": "-",
-          "score": 74.83,
-          "frames": 12,
-          "face_rate": 1.0
-        },
-        {
-          "file": "real__999.mp4",
-          "label": "real",
-          "method": "-",
-          "score": 76.66,
+          "score": 0.3,
+          "score_raw": 0.0,
+          "face_detector": "yunet",
           "frames": 12,
           "face_rate": 1.0
         }

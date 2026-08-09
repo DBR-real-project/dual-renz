@@ -1,0 +1,94 @@
+{
+  "videos": 50,
+  "frames_per_video": 10,
+  "note": "회전은 고개 돌림을 흉내 낸 것이지 실제 옆얼굴이 아니다. 하한선으로 읽을 것.",
+  "results": [
+    {
+      "haar": {
+        "backend": "haar",
+        "actual_backend": "haar",
+        "frames": 500,
+        "detected": 495,
+        "rate": 99.0,
+        "videos_undetectable": [],
+        "sec_per_frame": 0.0884,
+        "elapsed_sec": 44.2
+      },
+      "yunet": {
+        "backend": "yunet",
+        "actual_backend": "yunet",
+        "frames": 500,
+        "detected": 500,
+        "rate": 100.0,
+        "videos_undetectable": [],
+        "sec_per_frame": 0.0904,
+        "elapsed_sec": 45.2
+      },
+      "degrees": 0.0
+    },
+    {
+      "haar": {
+        "backend": "haar",
+        "actual_backend": "haar",
+        "frames": 500,
+        "detected": 424,
+        "rate": 84.8,
+        "videos_undetectable": [
+          "fake_Face2Face__999_960.mp4",
+          "fake_FaceShifter__999_960.mp4",
+          "real__999.mp4"
+        ],
+        "sec_per_frame": 0.0884,
+        "elapsed_sec": 44.2
+      },
+      "yunet": {
+        "backend": "yunet",
+        "actual_backend": "yunet",
+        "frames": 500,
+        "detected": 500,
+        "rate": 100.0,
+        "videos_undetectable": [],
+        "sec_per_frame": 0.0919,
+        "elapsed_sec": 46.0
+      },
+      "degrees": 15.0
+    },
+    {
+      "haar": {
+        "backend": "haar",
+        "actual_backend": "haar",
+        "frames": 500,
+        "detected": 170,
+        "rate": 34.0,
+        "videos_undetectable": [
+          "fake_Deepfakes__996_056.mp4",
+          "fake_Deepfakes__998_561.mp4",
+          "fake_Face2Face__000_003.mp4",
+          "fake_Face2Face__001_870.mp4",
+          "fake_Face2Face__998_561.mp4",
+          "fake_FaceShifter__996_056.mp4",
+          "fake_FaceShifter__998_561.mp4",
+          "fake_FaceSwap__996_056.mp4",
+          "fake_FaceSwap__999_960.mp4",
+          "fake_NeuralTextures__012_026.mp4",
+          "real__985.mp4",
+          "real__996.mp4",
+          "real__998.mp4"
+        ],
+        "sec_per_frame": 0.0836,
+        "elapsed_sec": 41.8
+      },
+      "yunet": {
+        "backend": "yunet",
+        "actual_backend": "yunet",
+        "frames": 500,
+        "detected": 500,
+        "rate": 100.0,
+        "videos_undetectable": [],
+        "sec_per_frame": 0.0928,
+        "elapsed_sec": 46.4
+      },
+      "degrees": 30.0
+    }
+  ]
+}

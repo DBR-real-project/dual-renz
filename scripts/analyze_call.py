@@ -26,7 +26,7 @@ setup_console()  # cp949 콘솔에서 유니코드 출력 중 죽는 문제 방�
 from media_detection.deepfake_detector import FrameAggregation  # noqa: E402
 from media_detection.media_risk_dummy import MediaCombineMode  # noqa: E402
 from orchestration.pipeline import analyze  # noqa: E402
-from scoring.fraud_risk_score import ScoringStrategy  # noqa: E402
+from scoring.fraud_risk_score import DEFAULT_STRATEGY, ScoringStrategy  # noqa: E402
 
 BAR_WIDTH = 24
 
@@ -44,7 +44,7 @@ def main():
                         choices=["tiny", "base", "small", "medium"])
     parser.add_argument("--no-llm", action="store_true", help="LLM 분류 끄고 키워드 규칙만")
     parser.add_argument("--no-rag", action="store_true", help="사례 검색 끄기")
-    parser.add_argument("--strategy", default=ScoringStrategy.MULTIPLICATIVE_BONUS.value,
+    parser.add_argument("--strategy", default=DEFAULT_STRATEGY.value,
                         choices=[s.value for s in ScoringStrategy],
                         help="통합 공식 (기획서 2개 버전)")
     parser.add_argument("--combine", default=MediaCombineMode.MAX.value,

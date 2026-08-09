@@ -99,15 +99,15 @@ def _load_waveform(path: Path) -> np.ndarray:
         data = data.mean(axis=1)
     if sr != SAMPLE_RATE:
         # AASIST는 16kHz로 학습됐다. 리샘플링 없이 넣으면 주파수 축이 어긋나 결과가 무의미해진다.
-        data = _resample_linear(data, sr, SAMPLE_RATE)
+        data = _resample(data, sr, SAMPLE_RATE)
     return data.astype(np.float64)
 
 
 def _resample_linear(x: np.ndarray, sr_from: int, sr_to: int) -> np.ndarray:
     """
-    선형 보간 리샘플링. scipy/librosa 의존성을 늘리지 않기 위한 최소 구현이다.
-    품질은 다운샘플 시 앤티앨리어싱이 없어 이상적이지 않다.
-    TODO(이상원): 실제 통화 오디오(대부분 8k/44.1k)를 다루게 되면 soxr나 librosa로 교체 검토.
+    선형 보간 리샘플링(폴백). 앤티앨리어싱이 없어 다운샘플 시 고주파가 접혀 들어온다.
+    AASIST는 주파수 구조를 보고 합성 여부를 판단하므로 이 왜곡이 그대로 점수에 영향을 준다.
+    scipy가 없는 환경을 위해 남겨두지만, 기본 경로는 _resample()의 폴리페이즈다.
     """
     if sr_from == sr_to or x.size == 0:
         return x
@@ -117,6 +117,34 @@ def _resample_linear(x: np.ndarray, sr_from: int, sr_to: int) -> np.ndarray:
         np.arange(x.size),
         x,
     )
+
+
+def _resample(x: np.ndarray, sr_from: int, sr_to: int) -> np.ndarray:
+    """
+    폴리페이즈 리샘플링 (scipy.signal.resample_poly).
+
+    왜 바꿨나: 실제 통화는 전화망 8kHz거나 44.1kHz 녹음이라 거의 항상 리샘플링을 거친다.
+    선형 보간은 다운샘플에서 저역통과 필터가 없어 에일리어싱이 생기고, AASIST가
+    그 인공물을 합성 흔적으로 오인할 수 있다. resample_poly는 유리수 비율로
+    업/다운 샘플하면서 FIR 저역통과를 함께 걸어 이 문제가 없다.
+
+    실측은 scripts/validate_audio_spoof.py --simulate-telephone 로 재현 가능하다
+    (docs/validation_report.md 3-4절).
+
+    scipy가 없으면 조용히 선형 보간으로 내려간다 — 데모가 멈추는 것보다 낫다.
+    """
+    if sr_from == sr_to or x.size == 0:
+        return x
+    try:
+        from math import gcd
+
+        from scipy.signal import resample_poly
+    except ImportError:
+        return _resample_linear(x, sr_from, sr_to)
+
+    g = gcd(int(sr_from), int(sr_to))
+    up, down = int(sr_to // g), int(sr_from // g)
+    return resample_poly(x, up, down).astype(np.float64)
 
 
 def _pad(x: np.ndarray, max_len: int = WINDOW_SAMPLES) -> np.ndarray:

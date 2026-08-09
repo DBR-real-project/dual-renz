@@ -11,7 +11,7 @@
      살아 있는 오프스크린 문서가 필요하다. 이 3계층이 MV3에서 실시간 캡처를 하는
      표준 구조다. */
 
-const STATE = { active: false, tabId: null, level: null, score: 0 };
+const STATE = { active: false, tabId: null, level: null, score: 0, error: null };
 
 async function ensureOffscreen() {
   const existing = await chrome.offscreen.hasDocument?.();
@@ -75,7 +75,17 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       // 오프스크린이 백엔드 분석 결과를 올려보낸다 → 오버레이로 전달
       STATE.level = msg.level;
       STATE.score = msg.score;
-      if (STATE.tabId) await pushOverlay(STATE.tabId, { type: 'risk', ...msg });
+      STATE.error = null;
+      // type을 **뒤에** 둬야 한다. `{type:'risk', ...msg}`로 쓰면 msg.type('result')이
+      // 덮어써서 콘텐츠 스크립트의 `msg.type === 'risk'` 분기에 걸리지 않는다.
+      // 브라우저에서는 경고 오버레이가 영영 안 뜨는 버그였다(scripts/test_extension.js가 잡음).
+      if (STATE.tabId) await pushOverlay(STATE.tabId, { ...msg, type: 'risk' });
+    } else if (msg.type === 'error') {
+      // 세션을 못 열었거나 백엔드가 꺼져 있는 경우. 조용히 죽으면 사용자가
+      // "분석 중"인 줄 알고 통화를 계속하므로 반드시 표면에 올린다.
+      STATE.error = msg.message;
+      STATE.active = false;
+      if (STATE.tabId) await pushOverlay(STATE.tabId, { ...msg, type: 'error' });
     }
   })();
   return true;   // 비동기 응답을 쓰므로 채널을 열어둔다

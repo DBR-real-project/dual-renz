@@ -1,0 +1,105 @@
+{
+  "_설명": "실측 점수 교차 격자로 통합 스코어링 설정을 고른 기록. 절대 성능이 아니라 설정 비교용. scripts/decide_scoring.py 참고.",
+  "n_pairs": 1050,
+  "n_content": 21,
+  "n_media": 50,
+  "expected_counts": {
+    "높음": 550,
+    "중간": 300,
+    "낮음": 200
+  },
+  "current_default": {
+    "strategy": "multiplicative_bonus",
+    "content_weight": 0.5,
+    "high": 70.0,
+    "mid": 40.0,
+    "accuracy": 63.24,
+    "missed": 84,
+    "under": 148,
+    "false_alarm": 0,
+    "over": 0
+  },
+  "best": {
+    "strategy": "threshold_bonus",
+    "content_weight": 0.65,
+    "high": 55.0,
+    "mid": 30.0,
+    "accuracy": 75.33,
+    "missed": 21,
+    "under": 63,
+    "false_alarm": 0,
+    "over": 21
+  },
+  "continuity_jump_at_threshold": {
+    "threshold_bonus": 15.2,
+    "multiplicative_bonus": 0.24
+  },
+  "top": [
+    {
+      "strategy": "threshold_bonus",
+      "content_weight": 0.65,
+      "high": 55.0,
+      "mid": 30.0,
+      "accuracy": 75.33,
+      "missed": 21,
+      "under": 63,
+      "false_alarm": 0,
+      "over": 21
+    },
+    {
+      "strategy": "threshold_bonus",
+      "content_weight": 0.65,
+      "high": 65.0,
+      "mid": 30.0,
+      "accuracy": 73.62,
+      "missed": 21,
+      "under": 197,
+      "false_alarm": 0,
+      "over": 21
+    },
+    {
+      "strategy": "threshold_bonus",
+      "content_weight": 0.7,
+      "high": 60.0,
+      "mid": 25.0,
+      "accuracy": 72.86,
+      "missed": 21,
+      "under": 92,
+      "false_alarm": 0,
+      "over": 80
+    },
+    {
+      "strategy": "multiplicative_bonus",
+      "content_weight": 0.65,
+      "high": 55.0,
+      "mid": 30.0,
+      "accuracy": 72.67,
+      "missed": 21,
+      "under": 63,
+      "false_alarm": 0,
+      "over": 21
+    },
+    {
+      "strategy": "threshold_bonus",
+      "content_weight": 0.65,
+      "high": 55.0,
+      "mid": 35.0,
+      "accuracy": 70.29,
+      "missed": 21,
+      "under": 63,
+      "false_alarm": 0,
+      "over": 20
+    },
+    {
+      "strategy": "threshold_bonus",
+      "content_weight": 0.7,
+      "high": 65.0,
+      "mid": 25.0,
+      "accuracy": 70.29,
+      "missed": 21,
+      "under": 176,
+      "false_alarm": 0,
+      "over": 80
+    }
+  ]
+}

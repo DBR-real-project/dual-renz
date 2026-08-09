@@ -26,6 +26,8 @@
 #dualguard-overlay.lv-높음 { border-left-color: #ff5c5c !important; }
 #dualguard-overlay.lv-중간 { border-left-color: #f5b942 !important; }
 #dualguard-overlay.lv-대기 { border-left-color: #5aa9ff !important; }
+/* 분석이 안 되고 있다는 사실도 사용자에게 알려야 할 정보다 (content.js renderError) */
+#dualguard-overlay.lv-오류 { border-left-color: #9aa4b2 !important; }
 
 #dualguard-overlay .dg-head {
   display: flex !important; align-items: center !important; gap: 8px !important;
@@ -37,6 +39,7 @@
 #dualguard-overlay.lv-높음 .dg-icon { color: #ff5c5c !important; }
 #dualguard-overlay.lv-중간 .dg-icon { color: #f5b942 !important; }
 #dualguard-overlay.lv-대기 .dg-icon { color: #5aa9ff !important; }
+#dualguard-overlay.lv-오류 .dg-icon { color: #9aa4b2 !important; }
 
 #dualguard-overlay .dg-title {
   font-weight: 700 !important; font-size: 14px !important; flex: 1 !important;

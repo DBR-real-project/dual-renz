@@ -1,0 +1,107 @@
+{
+  "_설명": "오디오·영상 결합 방식 비교. scripts/decide_media_combine.py 참고.",
+  "content_risk": 0.0,
+  "level_thresholds": {
+    "높음": 55.0,
+    "중간": 30.0
+  },
+  "rows": [
+    {
+      "clip": "both_real.mp4",
+      "desc": "진짜 영상 + 진짜 음성",
+      "should_warn": false,
+      "modes": {
+        "max": {
+          "media_risk": 18.79,
+          "audio": 3.7,
+          "video": 18.79,
+          "frs": 6.6,
+          "level": "낮음"
+        },
+        "weighted_average": {
+          "media_risk": 11.24,
+          "audio": 3.7,
+          "video": 18.79,
+          "frs": 3.9,
+          "level": "낮음"
+        }
+      }
+    },
+    {
+      "clip": "video_fake.mp4",
+      "desc": "위조 영상 + 진짜 음성",
+      "should_warn": true,
+      "modes": {
+        "max": {
+          "media_risk": 100.0,
+          "audio": 3.7,
+          "video": 100.0,
+          "frs": 35.0,
+          "level": "중간"
+        },
+        "weighted_average": {
+          "media_risk": 51.85,
+          "audio": 3.7,
+          "video": 100.0,
+          "frs": 18.1,
+          "level": "낮음"
+        }
+      }
+    },
+    {
+      "clip": "audio_fake.mp4",
+      "desc": "진짜 영상 + 합성 음성",
+      "should_warn": true,
+      "modes": {
+        "max": {
+          "media_risk": 99.95,
+          "audio": 99.95,
+          "video": 18.79,
+          "frs": 35.0,
+          "level": "중간"
+        },
+        "weighted_average": {
+          "media_risk": 59.37,
+          "audio": 99.95,
+          "video": 18.79,
+          "frs": 20.8,
+          "level": "낮음"
+        }
+      }
+    },
+    {
+      "clip": "both_fake.mp4",
+      "desc": "위조 영상 + 합성 음성",
+      "should_warn": true,
+      "modes": {
+        "max": {
+          "media_risk": 100.0,
+          "audio": 99.95,
+          "video": 100.0,
+          "frs": 35.0,
+          "level": "중간"
+        },
+        "weighted_average": {
+          "media_risk": 99.97,
+          "audio": 99.95,
+          "video": 100.0,
+          "frs": 35.0,
+          "level": "중간"
+        }
+      }
+    }
+  ],
+  "verdicts": {
+    "max": {
+      "missed": [],
+      "false_alarm": []
+    },
+    "weighted_average": {
+      "missed": [
+        "위조 영상 + 진짜 음성",
+        "진짜 영상 + 합성 음성"
+      ],
+      "false_alarm": []
+    }
+  }
+}

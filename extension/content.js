@@ -67,8 +67,25 @@
     node.querySelector('.dg-x').addEventListener('click', hide);
   }
 
+  function renderError(m) {
+    // 조용히 실패하면 사용자는 보호받고 있다고 착각한 채 통화를 계속한다.
+    // 분석이 안 되고 있다는 사실 자체가 알려야 할 정보다.
+    const node = ensure();
+    node.className = 'dg lv-오류';
+    node.innerHTML = `
+      <div class="dg-head">
+        <span class="dg-icon">×</span>
+        <span class="dg-title">분석을 시작하지 못했습니다</span>
+        <button class="dg-x" title="닫기">×</button>
+      </div>
+      <div class="dg-score">${m.message || '백엔드에 연결할 수 없습니다.'}</div>
+      <div class="dg-foot">듀얼가드 · 이 통화는 검사되고 있지 않습니다</div>`;
+    node.querySelector('.dg-x').addEventListener('click', hide);
+  }
+
   chrome.runtime.onMessage.addListener((msg) => {
     if (msg.type === 'risk') renderRisk(msg);
     else if (msg.type === 'status') renderStatus(msg.active);
+    else if (msg.type === 'error') renderError(msg);
   });
 })();

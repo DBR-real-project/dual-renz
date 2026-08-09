@@ -128,7 +128,9 @@ def main():
   두 버전의 차이: 버전A(PDF)는 둘 다 70 초과일 때만 +15를 한 번에 주고,
   버전B(DOCX)는 두 점수의 곱에 비례해 부드럽게 준다. 경계 근처에서
   버전A는 점수가 계단처럼 뛰고 버전B는 매끄럽게 오른다.
-  -> 어느 쪽을 쓸지는 팀 결정 사항 (docs/spec_reconciliation.md 참고)
+  -> 버전B(DOCX)로 확정했다. 정확도는 사실상 동률인데 버전A는 임계값에서
+     점수가 +15.2 계단으로 튀어 "확률적 표현" 원칙과 충돌한다.
+     근거: scripts/decide_scoring.py, docs/scoring_decision.json
 """)
 
 

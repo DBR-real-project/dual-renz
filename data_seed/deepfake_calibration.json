@@ -1,0 +1,64 @@
+{
+  "_설명": "FF++ Xception 원점수를 로짓 공간 1차 변환으로 재척도한다. 확률이 아니라 '50이 판정 경계'인 위험도 축이다. src/media_detection/calibration.py 참고.",
+  "a": 0.8799034221215518,
+  "b": 2.3077315711612534,
+  "method": "anchor",
+  "margin": 3.0,
+  "decision_threshold_raw": 6.769106292561818,
+  "real_max_raw": 1.48,
+  "n_samples": 50,
+  "fitted_on": "validation_report.json",
+  "face_detector": "yunet",
+  "metrics_before": {
+    "recall": 63.3,
+    "fpr": 0.0,
+    "precision": 100.0,
+    "accuracy": 78.0,
+    "tp": 19,
+    "fn": 11,
+    "fp": 0,
+    "tn": 20
+  },
+  "metrics_after_in_sample": {
+    "recall": 76.7,
+    "fpr": 0.0,
+    "precision": 100.0,
+    "accuracy": 86.0,
+    "tp": 23,
+    "fn": 7,
+    "fp": 0,
+    "tn": 20
+  },
+  "metrics_after_cv5": {
+    "recall": 73.3,
+    "fpr": 0.0,
+    "precision": 100.0,
+    "accuracy": 84.0,
+    "tp": 22,
+    "fn": 8,
+    "fp": 0,
+    "tn": 20
+  },
+  "metrics_cv_by_method": {
+    "anchor": {
+      "recall": 73.3,
+      "fpr": 0.0,
+      "precision": 100.0,
+      "accuracy": 84.0,
+      "tp": 22,
+      "fn": 8,
+      "fp": 0,
+      "tn": 20
+    },
+    "platt": {
+      "recall": 80.0,
+      "fpr": 25.0,
+      "precision": 82.8,
+      "accuracy": 78.0,
+      "tp": 24,
+      "fn": 6,
+      "fp": 5,
+      "tn": 15
+    }
+  }
+}

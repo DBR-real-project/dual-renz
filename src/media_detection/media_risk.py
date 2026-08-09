@@ -14,9 +14,12 @@ media_risk_dummy.py와 **동일한 인터페이스**를 제공하되, 영상 딥
     from media_detection.media_risk import get_media_risk
     get_media_risk(video_path="data/test_clips/xxx.mp4")
 
-TODO(이상원): get_audio_spoof_score를 clovaai/aasist 추론으로 교체
-TODO(팀 논의): audio/video 결합 방식(max vs weighted_average) - 더미 모듈과 동일하게
-               일단 max가 기본값. 결정되면 두 모듈 모두 반영할 것.
+audio/video 결합 방식은 **max로 확정**했다(2026-08-09). `scripts/decide_media_combine.py`가
+데모 4조합으로 재본 결과, 가중평균은 한쪽 채널만 위조된 경우 점수를 절반으로 깎아
+4개 중 2개("영상만 위조", "음성만 위조")를 '낮음'으로 놓쳤다. max는 0건이다.
+"영상만 위조와 둘 다 위조가 똑같이 100"이라는 지적은 맞지만, 사용자가 할 행동
+(통화를 끊을지)은 어차피 같아서 구분 실익이 없다. weighted_average도 그대로 두었으니
+필요하면 mode 인자로 쓸 수 있다. 근거: docs/media_combine_decision.json
 """
 
 from typing import Optional
@@ -186,6 +189,7 @@ def get_media_risk(
     fallback_reason = None
 
     backend_used = None
+    video_note = None
     if video_path:
         backend_used = resolve_backend(video_kwargs.get("backend", DEFAULT_BACKEND))
         try:
@@ -197,6 +201,21 @@ def get_media_risk(
             video_score = get_deepfake_score_dummy(video_path)
             fallback_reason = f"{type(exc).__name__}: {exc}"
             backend_used = "dummy"
+
+        # ViT 백엔드는 실측에서 판별력이 없었다. 진짜 얼굴을 Deepfake 70.43으로,
+        # 같은 입력을 FF++는 0.00으로 판정했다(docs/model_research.md 실측 결과).
+        # 이런 점수를 media_risk에 섞으면 **근거 없이 위험도가 부풀어 오른다.**
+        # 그래서 점수는 근거용으로 남기되 결합에서는 빼고, 이유를 사용자에게 알린다.
+        # 지우지 않는 이유는 FF++ 가중치가 없는 환경에서 파이프라인이 통째로
+        # 죽지 않게 하기 위해서다.
+        if backend_used == "vit":
+            video_note = (
+                "영상 판정 제외 — ViT 폴백 백엔드는 실측에서 진짜와 가짜를 구분하지 "
+                "못했습니다(진짜 얼굴을 70점으로 판정). 영상 딥페이크 판정을 켜려면 "
+                "FF++ 가중치를 설치하세요: scripts/download_ff_weights.py"
+            )
+            video_score = 0.0
+            is_real_model = False
 
     if mode == MediaCombineMode.MAX:
         media_risk = max(audio_score, video_score)
@@ -218,6 +237,8 @@ def get_media_risk(
         out["fallback_reason"] = fallback_reason
     if audio_note:
         out["audio_note"] = audio_note
+    if video_note:
+        out["video_note"] = video_note
     if video_detail:
         out["video_detail"] = video_detail
     if audio_detail:

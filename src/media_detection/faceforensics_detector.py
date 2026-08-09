@@ -34,7 +34,9 @@ from typing import List, Optional, Sequence
 import cv2
 import numpy as np
 
+from . import calibration
 from .deepfake_detector import FrameAggregation, aggregate_scores
+from .face_utils import active_backend as face_backend
 from .face_utils import crop_face_square
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -55,13 +57,21 @@ class FFVideoResult:
     faces_detected: int
     aggregation: FrameAggregation
     weights_path: str
+    # 재척도 전 원점수. 근거 화면과 디버깅에서 "모델이 실제로 뱉은 값"을 봐야 할 때 쓴다.
+    raw_frame_scores: Optional[List[float]] = None
+    raw_deepfake_score: Optional[float] = None
+    face_detector: str = "?"
 
     def as_dict(self) -> dict:
         return {
             "video_path": self.video_path,
             "deepfake_score": round(self.deepfake_score, 2),
+            "deepfake_score_raw": (round(self.raw_deepfake_score, 2)
+                                   if self.raw_deepfake_score is not None else None),
+            "score_scaling": calibration.describe(),
             "frames_analyzed": self.frames_analyzed,
             "faces_detected": self.faces_detected,
+            "face_detector": self.face_detector,
             "face_detection_rate": (
                 round(self.faces_detected / self.frames_analyzed, 2)
                 if self.frames_analyzed else 0.0
@@ -70,6 +80,8 @@ class FFVideoResult:
             "weights_path": self.weights_path,
             "backbone": "xception (FF++ 공식 베이스라인)",
             "frame_scores": [round(s, 2) for s in self.frame_scores],
+            "raw_frame_scores": ([round(s, 2) for s in self.raw_frame_scores]
+                                 if self.raw_frame_scores is not None else None),
         }
 
 
@@ -186,7 +198,18 @@ class FaceForensicsDetector:
             ])
 
     def score_frames(self, frames_bgr: Sequence[np.ndarray]) -> List[float]:
-        """BGR 프레임(얼굴 크롭 상태 권장) 리스트의 위조 확률(0~100)."""
+        """
+        BGR 프레임(얼굴 크롭 상태 권장) 리스트의 위조 위험도(0~100).
+
+        **재척도가 적용된 값**을 돌려준다. 파이프라인(orchestration/pipeline.py)은
+        score_video가 아니라 이 함수를 직접 부르기 때문에, 여기서 변환하지 않으면
+        검증 스크립트와 실제 서비스가 서로 다른 축의 점수를 쓰게 된다.
+        원점수가 필요하면 score_frames_raw()를 쓸 것.
+        """
+        return [calibration.calibrate(s) for s in self.score_frames_raw(frames_bgr)]
+
+    def score_frames_raw(self, frames_bgr: Sequence[np.ndarray]) -> List[float]:
+        """모델이 그대로 뱉은 위조 확률(0~100). 재척도 전 값."""
         self._ensure_loaded()
         if not frames_bgr:
             return []
@@ -249,9 +272,14 @@ class FaceForensicsDetector:
                 "FF++ Xception은 얼굴 크롭 전용 모델이라 얼굴 없는 영상은 판정할 수 없습니다."
             )
 
-        scores: List[float] = []
+        raw_scores: List[float] = []
         for i in range(0, len(frames), batch_size):
-            scores.extend(self.score_frames(frames[i:i + batch_size]))
+            raw_scores.extend(self.score_frames_raw(frames[i:i + batch_size]))
+
+        # 재척도는 **프레임 단위로** 먼저 한 뒤 집계한다. 원점수가 0/100에 몰려 있어
+        # 집계부터 하면 이미 정보가 뭉개진 값을 변환하게 된다. 순서를 바꾸면
+        # 상위 k개 평균 같은 집계에서 결과가 달라진다. (calibration.py 참고)
+        scores = [calibration.calibrate(s) for s in raw_scores]
 
         return FFVideoResult(
             video_path=str(path),
@@ -261,6 +289,9 @@ class FaceForensicsDetector:
             faces_detected=faces_detected,
             aggregation=aggregation,
             weights_path=str(self.weights_path),
+            raw_frame_scores=raw_scores,
+            raw_deepfake_score=aggregate_scores(raw_scores, aggregation),
+            face_detector=face_backend(),
         )
 
 

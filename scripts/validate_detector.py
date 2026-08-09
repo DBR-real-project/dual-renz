@@ -85,6 +85,11 @@ def run_backend(backend: str, samples: list, max_frames: int, aggregation: str) 
                 "label": s["label"],
                 "method": s["method"],
                 "score": d["deepfake_score"],
+                # 재척도 전 원점수도 같이 남긴다. calibrate_deepfake.py가 이 리포트로
+                # 파라미터를 다시 적합하는데, 변환된 점수로 적합하면 **이중 적용**이 된다.
+                # score_raw가 있으면 그쪽을 쓰도록 돼 있다.
+                "score_raw": d.get("deepfake_score_raw"),
+                "face_detector": d.get("face_detector"),
                 "frames": d["frames_analyzed"],
                 "face_rate": d["face_detection_rate"],
             })

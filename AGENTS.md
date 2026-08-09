@@ -44,18 +44,48 @@
 없으면 ViT. 결과 dict의 `deepfake_backend`로 실제 뭐가 쓰였는지 확인할 수 있다.
 
 **⚠ ViT는 판별을 못 한다.** 실측에서 진짜 얼굴을 Deepfake 69로 판정했다
-(같은 입력에 FF++는 0.64). 폴백으로만 두고, **점수를 탐지 근거로 쓰지 말 것.**
-수치와 근거는 `docs/model_research.md`의 "실측 결과" 참고.
+(같은 입력에 FF++는 0.64). 그래서 지금은 **ViT가 쓰이면 영상 점수를 media_risk에서
+아예 빼고** 사용자에게 "영상 판정 제외" 경고를 띄운다. 지우지는 않았다 —
+FF++ 가중치가 없는 환경에서 파이프라인이 통째로 죽는 걸 막는 안전판이다.
 
 **⚠ FF++는 얼굴 크롭 전용이다.** 얼굴이 검출 안 되면 점수를 내지 않고 예외를 던진다.
 이건 버그가 아니라 의도된 동작 — 전체 프레임을 넣으면 아무 값이나 나온다.
 
-## 중요한 미결 사항 (임의로 결정하지 말 것)
+**⚠ 딥페이크 점수는 재척도된 값이다.** `score_frames()`가 이미 변환을 적용해서 돌려준다
+(파이프라인이 `score_video`가 아니라 이걸 직접 부르기 때문). 원점수가 필요하면
+`score_frames_raw()`. 검증 리포트로 재척도 파라미터를 다시 적합할 때는 반드시
+`score_raw` 필드를 쓸 것 — 변환된 점수로 적합하면 **이중 적용**된다.
 
-1. **통합 공식이 기획서 두 버전에서 다름.** 둘 다 구현돼 있고 `ScoringStrategy` enum으로 선택.
-   기본값은 `MULTIPLICATIVE_BONUS`(DOCX 버전). 팀 회의 전까지 기본값 바꾸지 말 것.
-2. **audio/video 점수 결합 방식** — 현재 `max()`가 기본(보수적). `weighted_average`도 구현돼 있음.
-   팀 논의 필요.
+## 실시간 스트리밍 (Phase 2)
+
+`src/orchestration/streaming.py` + `POST /api/sessions`. 파일 분석 경로와 반대로
+**모델을 세션 동안 상주**시킨다. 그래서 제약이 있다:
+
+- **동시에 세션 하나만.** 세션 중에는 파일 분석이 409로 막힌다(동시에 돌리면 죽는다).
+- 청크가 90초 끊기면 죽은 세션으로 보고 자동 정리한다(`IDLE_TIMEOUT_SEC`).
+  확장이 DELETE를 못 보내고 죽는 경우가 실제로 있었다.
+- 영상은 안 본다. 프레임마다 얼굴 검출 + Xception은 실시간 예산에 안 맞는다.
+- 실측: 오디오 78초를 26초에 처리(약 3배속).
+
+크롬 확장은 브라우저 없이도 검증할 수 있다: `node scripts/test_extension.js`
+(서버를 먼저 띄울 것). 확장 코드를 그대로 실행해 3계층 메시지 흐름과 세션 통신을 본다.
+
+## 확정된 설정 (2026-08-09, 전부 실측 근거 있음)
+
+바꾸려면 **먼저 해당 스크립트를 다시 돌려 반박 데이터를 낼 것.** 감으로 바꾸지 말 것.
+
+| 항목 | 값 | 재현 스크립트 |
+|---|---|---|
+| 통합 공식 | `MULTIPLICATIVE_BONUS` (DOCX). 버전A는 임계값에서 +15.2 계단이 생긴다 | `decide_scoring.py` |
+| 콘텐츠/미디어 가중치 | 0.65 / 0.35 (놓침 84→21) | `decide_scoring.py` |
+| 신호등 경계 | 높음 55 / 중간 30 | `decide_scoring.py` |
+| audio/video 결합 | `max` (가중평균은 4조합 중 2개를 놓침) | `decide_media_combine.py` |
+| 딥페이크 점수 | 재척도 후 임계값 50 하나만 사용 | `calibrate_deepfake.py` |
+| 얼굴 검출기 | YuNet 1순위, Haar 폴백 | `benchmark_face_detector.py` |
+| STT | 파일 `small`, 스트리밍 `base` | `compare_stt_models.py` |
+
+기본값은 `src/scoring/fraud_risk_score.py`의 `DEFAULT_STRATEGY` / `DEFAULT_CONTENT_WEIGHT`와
+`src/orchestration/pipeline.py`의 `LEVEL_THRESHOLDS` **한 곳씩**에만 있다. 하드코딩하지 말 것.
 
 ## 인터페이스 계약
 
@@ -89,6 +119,10 @@ scoring 모듈은 이 계약만 알고 있으면 되도록 설계돼 있음.
 .venv\Scripts\python.exe scripts\validate_audio_spoof.py        # 음성 성능 실측
 .venv\Scripts\python.exe scripts\make_korean_call_samples.py    # 한국어 통화 샘플 (TTS)
 .venv\Scripts\python.exe scripts\fetch_korean_speech_samples.py # 초록 시연용 진짜 사람 목소리
+.venv\Scripts\python.exe scripts\test_streaming.py              # 실시간 세션 E2E (서버 필요)
+node scripts\test_extension.js                                  # 크롬 확장 검증 (서버 필요)
+.venv\Scripts\python.exe scripts\decide_scoring.py              # 스코어링 설정 재결정
+.venv\Scripts\python.exe scripts\benchmark_face_detector.py     # 얼굴 검출기 비교
 ```
 
 전체 목록과 각 스크립트 설명은 `README.md` 참고.

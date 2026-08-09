@@ -11,8 +11,20 @@ data/asvspoof_samples/ 의 라벨링된 ASVspoof2019 LA 음성으로 측정한�
     bonafide__<id>.flac  -> 진짜 사람 음성
     spoof__<id>.flac     -> 합성/변조 음성
 
+## --simulate-telephone
+
+AASIST는 16kHz로 학습됐는데 **실제 통화는 전화망 8kHz**다. 이 차이가 성능에
+얼마나 영향을 주는지 몰라서 "알려진 한계"에 문장으로만 적어뒀었다.
+이 옵션은 검증 음성을 8kHz로 낮췄다가 되돌려(= 전화망을 통과시킨 셈) 다시 측정한다.
+막연한 우려 대신 **수치**로 한계를 말할 수 있게 하는 것이 목적이다.
+
+같이 비교하는 것:
+    --resample poly    폴리페이즈(기본) — 저역통과 필터 포함
+    --resample linear  선형 보간 — 예전 구현. 에일리어싱이 생긴다
+
 실행:
     .venv\\Scripts\\python.exe scripts/validate_audio_spoof.py
+    .venv\\Scripts\\python.exe scripts/validate_audio_spoof.py --simulate-telephone
 """
 
 import argparse
@@ -58,6 +70,35 @@ def load_samples(sample_dir: Path) -> list:
     return samples
 
 
+TELEPHONE_RATE = 8000  # G.711 등 전화망 표준 샘플레이트
+
+
+def to_telephone(src: Path, dst_dir: Path, method: str) -> Path:
+    """
+    16kHz 음성을 8kHz로 낮췄다가 다시 16kHz로 올린다 (전화망 통과 흉내).
+
+    되돌리는 이유: AASIST 입력은 16kHz 고정이라 어차피 올려야 한다. 즉 실제
+    통화에서 벌어지는 일과 같다 — 8kHz로 잃은 고주파는 돌아오지 않는다.
+    그 손실이 판정에 얼마나 영향을 주는지가 우리가 알고 싶은 값이다.
+    """
+    import numpy as np
+    import soundfile as sf
+
+    from media_detection.audio_spoof_detector import _resample, _resample_linear
+
+    fn = _resample_linear if method == "linear" else _resample
+
+    data, sr = sf.read(str(src))
+    if data.ndim > 1:
+        data = data.mean(axis=1)
+    narrow = fn(np.asarray(data, dtype=np.float64), sr, TELEPHONE_RATE)
+    wide = fn(narrow, TELEPHONE_RATE, 16000)
+
+    dst = dst_dir / f"{src.stem}.wav"
+    sf.write(str(dst), wide.astype("float32"), 16000, subtype="PCM_16")
+    return dst
+
+
 def main():
     parser = argparse.ArgumentParser(description="AASIST 음성 스푸핑 탐지 성능 실측")
     parser.add_argument("--sample-dir", default=str(SAMPLE_DIR))
@@ -65,6 +106,10 @@ def main():
                         help="영상/음성 하나당 분석할 4초 창 수")
     parser.add_argument("--aggregation", default=FrameAggregation.TOPK_MEAN.value,
                         choices=[a.value for a in FrameAggregation])
+    parser.add_argument("--simulate-telephone", action="store_true",
+                        help="8kHz 전화망을 통과시킨 뒤 측정 (도메인 갭 수치화)")
+    parser.add_argument("--resample", default="poly", choices=["poly", "linear"],
+                        help="전화망 흉내에 쓸 리샘플링 방식")
     parser.add_argument("--out", default=str(REPORT_PATH))
     args = parser.parse_args()
 
@@ -84,7 +129,19 @@ def main():
 
     n_real = sum(1 for s in samples if s["label"] == "real")
     print(f"샘플 {len(samples)}개 (진짜 {n_real}, 합성 {len(samples) - n_real})")
-    print(f"창 {args.max_windows}개/파일(각 4.04초), 집계 {args.aggregation}\n")
+    print(f"창 {args.max_windows}개/파일(각 4.04초), 집계 {args.aggregation}")
+
+    tmpdir = None
+    if args.simulate_telephone:
+        import tempfile
+
+        tmpdir = tempfile.TemporaryDirectory()
+        out_dir = Path(tmpdir.name)
+        print(f"전화망 흉내: 16kHz -> {TELEPHONE_RATE}Hz -> 16kHz "
+              f"(리샘플링 {args.resample})")
+        for s in samples:
+            s["path"] = to_telephone(s["path"], out_dir, args.resample)
+    print()
 
     detector = get_shared_detector()
     results = []
@@ -147,6 +204,8 @@ def main():
         "n_spoof": len(samples) - n_real,
         "max_windows": args.max_windows,
         "aggregation": args.aggregation,
+        "simulate_telephone": args.simulate_telephone,
+        "resample": args.resample if args.simulate_telephone else None,
         "model": "AASIST (clovaai)",
         "elapsed_sec": round(elapsed, 1),
         "separation": sep,
@@ -155,9 +214,15 @@ def main():
         "results": results,
     }
     out = Path(args.out)
+    if args.simulate_telephone:
+        # 기본 리포트를 덮어쓰면 발표용 수치가 전화망 조건으로 바뀌어버린다. 따로 남긴다.
+        out = out.with_name(f"{out.stem}_telephone_{args.resample}{out.suffix}")
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"\n상세 결과 저장: {out}")
+
+    if tmpdir is not None:
+        tmpdir.cleanup()
 
 
 if __name__ == "__main__":

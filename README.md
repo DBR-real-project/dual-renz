@@ -24,14 +24,15 @@
 | STT (한국어) | ✅ | faster-whisper. 8문장 통화를 정확히 8구간으로 분리 |
 | 8대 사회공학 기법 분류 | ✅ | LLM(**Claude / Gemini / Ollama**) + **오프라인 분류기** 폴백 |
 | RAG 사기사례 대조 | ✅ | 사기/정상 13문장 판별 **13/13** |
-| 음성 스푸핑 (AASIST) | ✅ | 정탐률 96.7%, 오탐률 0%, 정확도 98% |
-| 딥페이크 (FF++ Xception) | ✅ | 정탐률 66.7%, 오탐률 0%, 정확도 80% |
+| 음성 스푸핑 (AASIST) | ✅ | 정탐률 96.7%, 오탐률 0%, 정확도 98%. **8kHz 전화망 조건에서도 98% 유지** |
+| 딥페이크 (FF++ Xception) | ✅ | 정탐률 **73.3%**, 오탐률 0%, 정확도 **84%** (5-겹 교차검증). 점수 재척도 + YuNet 검출기로 63.3%에서 개선 |
+| **실시간 스트리밍** | ✅ | 세션 API. 모델 상주 + 청크 누적 분석. **오디오 78초를 26초에 처리(3배속)** |
 | STT 모델 크기 비교 | ✅ | tiny/base/small CER·처리시간 실측, 화이트노이즈 강건성 포함 (`scripts/compare_stt_models.py`) |
 | **콘텐츠 분류 성능 실측** | ✅ | 시나리오 21건 기준 **정탐 90.9% / 오탐 10.0% / 정확도 90.5%** (키 없이). 키워드만 쓰던 기존 66.7%에서 개선 |
 | **콘텐츠 카테고리별 정밀 채점** | ✅ | 기대 점수대(밴드) vs 실제 비교, 168개 항목 밴드 일치율 62.5% (`scripts/grade_content_rubric.py`) |
 | 통합 스코어링 | ✅ | 기획서 두 버전 공식 모두 구현 |
 | **분석 히스토리** | ✅ | 결과를 디스크에 저장, 서버 재시작 후에도 열람·삭제 가능 + 위험도 추이 그래프 |
-| 크롬 확장 (MV3) | ⚠️ | 코드 작성 완료, **브라우저 실제 로드 테스트 미실시** |
+| 크롬 확장 (MV3) | ⚠️ | 세션 API 연동 완료 + **자동 검증 통과**(`node scripts/test_extension.js`). 브라우저 실제 로드만 미실시 |
 | LLM 실제 호출 | ⚠️ | `ANTHROPIC_API_KEY` 또는 `GEMINI_API_KEY` 필요. **없어도 오프라인 분류기(정확도 90.5%)로 정상 동작한다.** `DUALGUARD_LLM_PROVIDER=ollama`로 로컬 LLM도 가능(**이 환경엔 Ollama가 없어 연동 코드만 있고 실제 호출은 미검증**) |
 
 성능 수치의 측정 조건은 **[docs/validation_report.md](docs/validation_report.md)** 에 있다.
@@ -52,8 +53,8 @@
 | STT(Whisper)로 대화 텍스트화 | ✅ | faster-whisper. 구간별 타임스탬프까지 |
 | LLM이 8대 사회공학 기법 분류 | ✅ | Claude/Gemini/Ollama 3백엔드 + 오프라인 폴백 |
 | `콘텐츠위험도 = 0.5×최고 + 0.5×상위3평균` | ✅ | 공식 그대로 |
-| AASIST 음성 스푸핑 판별 | ✅ | 정확도 98% 실측 |
-| 딥페이크 탐지 모델로 얼굴 위조 판별 | ✅ | FF++ Xception, 오탐률 0% |
+| AASIST 음성 스푸핑 판별 | ✅ | 정확도 98% 실측. 전화망 8kHz 조건도 확인 |
+| 딥페이크 탐지 모델로 얼굴 위조 판별 | ✅ | FF++ Xception + YuNet 검출기, 오탐률 0% |
 | 통합 Fraud Risk Score (교차 가산) | ✅ | 기획서 두 버전 공식 모두 |
 | RAG 실제 사기사례 참조 (ChromaDB) | ✅ | 한국어 임베딩, 사례 18건 |
 | 프레임 추출 (초당 1프레임, 224~256px) | ✅ | 명세 그대로 |
@@ -76,12 +77,12 @@
 |---|---|---|
 | 신호등 경고 UI (초록/노랑/빨강) | ✅ | 대시보드 + 확장 오버레이 |
 | 3단계 액션 플랜 (주의/재확인/즉시종료+신고) | ✅ | 112·1332·사이버수사대 링크 포함 |
-| 분석 히스토리 대시보드 + 위험도 추이 | ✅ | 이번에 추가 |
-| 크롬 확장 실시간 캡처 (MV3 3계층) | ⚠️ | 코드 완료, 브라우저 로드 미검증 |
-| 실시간 스트리밍 백엔드 | ❌ | 현재 파일 단건 분석. 세션 API 필요 |
+| 분석 히스토리 대시보드 + 위험도 추이 | ✅ | |
+| **실시간 스트리밍 백엔드** | ✅ | 세션 API. 3배속으로 실시간을 따라간다 (음성·화법만) |
+| 크롬 확장 실시간 캡처 (MV3 3계층) | ⚠️ | 세션 API 연동 + 자동 검증 통과. 브라우저 실제 로드만 남음 |
 
 > 기획서 PDF 2장이 본선 범위를 *"실시간 가로채기 대신 업로드 기반 MVP"* 로
-> 명시했으므로, 위 표의 ⚠️·❌ 두 항목은 **본선 범위 밖**이다.
+> 명시했으므로 Phase 2는 원래 본선 범위 밖인데, 스트리밍까지 구현했다.
 
 ### Phase 3 — B2B·공공 확장
 
@@ -122,6 +123,9 @@ git clone --depth 1 https://github.com/ondyari/FaceForensics.git external/FaceFo
 .venv\Scripts\python.exe scripts\download_ff_weights.py
 .venv\Scripts\python.exe -c "import zipfile; zipfile.ZipFile(r'models\faceforensics++_models.zip').extractall(r'models')"
 
+# 3-1. 얼굴 검출기 YuNet (232KB, 몇 초). 없으면 Haar로 폴백하지만 검출률이 떨어진다
+.venv\Scripts\python.exe scripts\download_face_detector.py
+
 # 4. 웹 대시보드 실행
 .venv\Scripts\python.exe scripts\run_server.py
 #   → http://127.0.0.1:8000
@@ -159,8 +163,10 @@ git clone --depth 1 https://github.com/ondyari/FaceForensics.git external/FaceFo
 
 ```
 src/
-  api/main.py                  FastAPI. 업로드/진행률(WebSocket)/결과 API
-  orchestration/pipeline.py    ★ 전체 분석 파이프라인. 시간축 정렬이 핵심
+  api/main.py                  FastAPI. 업로드/진행률(WebSocket)/히스토리/실시간 세션
+  orchestration/
+    pipeline.py                ★ 전체 분석 파이프라인. 시간축 정렬이 핵심
+    streaming.py               ★ 실시간 세션. 모델을 상주시키고 청크를 누적 분석
   content_analysis/
     stt.py                     faster-whisper STT (구간별 타임스탬프)
     content_risk.py            8대 카테고리 + 집계 공식
@@ -171,9 +177,10 @@ src/
     media_risk.py              영상+음성을 media_risk 하나로
     faceforensics_detector.py  FF++ Xception (영상, 정식 경로)
     audio_spoof_detector.py    AASIST (음성)
-    deepfake_detector.py       HuggingFace ViT (폴백 전용 — 판별력 없음)
-    face_utils.py              Haar cascade 얼굴 검출. dlib 대체
-  scoring/fraud_risk_score.py  통합 Fraud Risk Score
+    calibration.py             딥페이크 점수 재척도 — 임계값 결정 문제를 없앤 부분
+    deepfake_detector.py       HuggingFace ViT (폴백 전용 — 점수는 쓰지 않는다)
+    face_utils.py              YuNet + Haar 얼굴 검출. dlib 대체
+  scoring/fraud_risk_score.py  통합 Fraud Risk Score (확정된 기본값이 여기 한 곳)
 
 web/                           대시보드 (외부 라이브러리 0 — CDN 의존 없음)
 extension/                     크롬 확장 (Manifest V3)
@@ -193,6 +200,13 @@ scripts/
   validate_detector.py         영상 성능 실측
   validate_audio_spoof.py      음성 성능 실측
   validate_content_risk.py     콘텐츠(8대 기법) 성능 실측 — 키워드 / 오프라인 / LLM 비교
+  test_streaming.py            ★ 실시간 세션 E2E (서버 필요)
+  test_extension.js            ★ 크롬 확장 자동 검증 — 브라우저 없이 확장 코드 실행
+  decide_scoring.py            통합 공식·가중치·신호등 경계를 실측으로 결정
+  decide_media_combine.py      오디오·영상 결합 방식(max vs 가중평균) 결정
+  calibrate_deepfake.py        딥페이크 점수 재척도 파라미터 적합 (5-겹 교차검증)
+  benchmark_face_detector.py   Haar vs YuNet 검출률 비교 (회전 스트레스 포함)
+  download_face_detector.py    YuNet 가중치 232KB 받기
   calibrate_semantic.py        의미 분류기 유사도 분포 진단 (임계값 근거)
   record_call_sample.py        마이크로 통화 샘플 녹음 — 한국어 '초록(안전)' 데모용
   grade_content_rubric.py      콘텐츠 카테고리별 정밀 채점 — 기대 점수대(밴드) vs 실제
@@ -231,6 +245,10 @@ docs/
 | `GET` | `/api/history` | 지난 분석 목록 (`limit`, 기본 30건). 디스크 저장이라 서버 재시작 후에도 남는다 |
 | `GET` | `/api/history/{id}` | 저장된 리포트 전문 재조회 |
 | `DELETE` | `/api/history/{id}` | 기록 삭제 |
+| `POST` | `/api/sessions` | **실시간 세션 시작.** 모델을 미리 올린다(안 하면 첫 청크가 26초) |
+| `POST` | `/api/sessions/{id}/chunk` | 오디오 청크 투입 → 갱신된 위험도를 즉시 응답 |
+| `GET` | `/api/sessions/{id}` | 현재까지의 구간별 결과 |
+| `DELETE` | `/api/sessions/{id}` | 세션 종료 + 모델 해제 |
 
 ```python
 from orchestration.pipeline import analyze
@@ -244,32 +262,71 @@ report.as_dict()["overall_score"]
 
 ---
 
-## 팀이 정해야 할 것
+## 확정된 설정 (전부 실측으로 정했다)
 
-코드에는 선택지가 모두 구현돼 있고 기본값만 잡아둔 상태다.
-근거는 **[docs/spec_reconciliation.md](docs/spec_reconciliation.md)**.
+기획서 두 벌이 서로 다르거나 근거 없이 잡아뒀던 값들을, 감이 아니라 데이터로 확정했다.
+재현 스크립트와 근거 파일을 함께 적었으니 이견이 있으면 스크립트를 다시 돌려서 반박하면 된다.
 
-1. **통합 공식** — 기획서 PDF 버전 vs DOCX 버전 (내용이 다르다)
-2. **오디오·영상 결합** — `max` vs `weighted_average`
-3. **딥페이크 임계값** — 50(오탐 0%) vs 7.5(정탐 80%)
-4. **신호등 경계** — 현재 높음 70 / 중간 40
-5. **STT 모델 크기** — 현재 `small`(강건성 우선) vs `base`(3배 빠름, clean 정확도
-   거의 동일) — 근거: **[docs/stt_benchmark.md](docs/stt_benchmark.md)**
+| 항목 | 확정값 | 근거 | 재현 |
+|---|---|---|---|
+| **통합 공식** | 버전 B (DOCX, `multiplicative_bonus`) | 정확도는 두 공식이 사실상 동률인데, 버전 A는 임계값에서 점수가 **+15.20 계단**으로 튄다(입력 0.2 변화). "확률적 표현으로 과신 방지"라는 기획 원칙과 충돌 | `decide_scoring.py` |
+| **콘텐츠·미디어 가중치** | 0.65 / 0.35 | 0.5/0.5 대비 사기를 '낮음'으로 놓치는 건수 **84 → 21**, 헛경보는 0 유지 | `decide_scoring.py` |
+| **신호등 경계** | 높음 **55** / 중간 **30** (70/40에서 내림) | 위와 같은 스윕. 756개 조합 중 최적 | `decide_scoring.py` |
+| **오디오·영상 결합** | `max` 유지 | 가중평균은 한쪽 채널만 위조된 경우 점수를 절반으로 깎아 **4조합 중 2개를 놓친다** | `decide_media_combine.py` |
+| **딥페이크 임계값** | **결정 사항 자체를 없앰** — 점수를 재척도해 50 하나만 쓴다 | 원점수가 0/100에 몰려 임계값이 불안정했다. 재척도 후 정탐 63.3 → **73.3%**(교차검증), 오탐 0% 유지 | `calibrate_deepfake.py` |
+| **얼굴 검출기** | YuNet (Haar는 폴백) | 30° 회전(고개 돌림)에서 검출률 **34% → 100%**, 판정 불가 영상 13개 → 0개 | `benchmark_face_detector.py` |
+| **STT 모델 크기** | 파일 분석 `small`, 스트리밍 `base` | 5dB 소음에서 small CER 0.34 vs base 0.56. 스트리밍은 실시간을 따라가야 해서 3.1배 빠른 base | `compare_stt_models.py` |
+| **리샘플링** | 폴리페이즈 (선형 보간에서 교체) | 8kHz 전화망 조건에서 분포 겹침 18.3 → **14.7**로 감소 | `validate_audio_spoof.py --simulate-telephone` |
+
+> 결정 기록 원본: [docs/scoring_decision.json](docs/scoring_decision.json),
+> [docs/media_combine_decision.json](docs/media_combine_decision.json),
+> [data_seed/deepfake_calibration.json](data_seed/deepfake_calibration.json),
+> [docs/face_detector_benchmark.json](docs/face_detector_benchmark.json)
+
+**주의 — 스코어링 결정에 쓴 격자는 실제 통화 1,050건이 아니다.** 콘텐츠 21건과
+음성 50건의 실측 점수를 교차한 합성 격자이고, 두 축이 독립이라고 가정했다.
+**설정 A와 B 중 무엇이 나은지 고르는 용도**로만 유효하며, 격자에서 나온 절대
+정확도(75.3%)를 제품 성능으로 인용하면 안 된다.
+
+---
+
+## 해야 할 것
+
+여기 남은 건 전부 **내가 못 하는 종류**(외부 계정·브라우저 조작·사람 목소리)거나
+데이터가 더 필요한 것이다. 코드로 풀 수 있는 건 위 표로 옮겼다.
+
+| # | 항목 | 왜 남았나 | 어떻게 끝내나 |
+|---|---|---|---|
+| 1 | 크롬 확장 **브라우저 실제 로드** | 자동 하네스로 로직·통신·오류 처리까지 검증했지만, manifest 권한 승인과 실제 탭 캡처는 브라우저에서만 확인된다 | `chrome://extensions` → 압축해제 로드 → 구글 미트에서 5분 |
+| 2 | LLM 실제 호출 수치 | API 키 필요 | `ANTHROPIC_API_KEY` 또는 `GEMINI_API_KEY` 후 `validate_content_risk.py --backend both` |
+| 3 | DFDC 크로스도메인 검증 | Kaggle 계정 + 대회 규칙 동의 | `download_kaggle_data.py --dataset dfdc` |
+| 4 | "진짜 목소리 + 사기 화법" 샘플 | 사람이 사기 대본을 읽어야 한다. 공개 낭독 코퍼스에는 사기 대본이 없다 | `record_call_sample.py --script scam` (30초) |
+| 5 | 검증셋 확충 | 콘텐츠 21건·영상 50건·음성 50건은 통계적으로 작다. 오탐 1건이 10%p를 움직인다 | 실제 통화 녹취 확보 (개인정보 처리 방침 선행 필요) |
+| 6 | FaceShifter·NeuralTextures | 2019년 체크포인트의 학습 범위 밖. 재척도로 1/5 → 2/5까지 올렸지만 모델 교체 없이는 한계 | 최신 체크포인트 또는 앙상블 |
+
+세부 절차는 **[docs/blocked_and_next.md](docs/blocked_and_next.md)**.
 
 ---
 
 ## 알려진 한계
 
-- **FaceShifter·NeuralTextures 조작은 거의 못 잡는다.** 2019년 체크포인트가 학습하지
-  않은 기법이다. 학습한 3개 기법은 100% 탐지.
-- **실측은 모두 학습 도메인 내에서 이뤄졌다.** 한국어 음성, 실제 통화 화질,
-  전화망 8kHz 압축 환경에서는 성능이 달라질 수 있다.
+- **FaceShifter·NeuralTextures 조작은 절반도 못 잡는다.** 2019년 체크포인트가 학습하지
+  않은 기법이다(각 2/5). 학습한 3개 기법은 100% 탐지.
+- **실측은 대부분 학습 도메인 내에서 이뤄졌다.** 다만 전화망 8kHz 조건은 실제로
+  재봤다 — 정확도 98%는 유지되지만 **진짜 음성 점수가 2.2 → 30.9로 올라 오탐 여유가
+  크게 줄어든다.** 한국어 음성과 실제 통화 화질은 아직 검증 못 했다.
 - **TTS 안내방송도 합성 음성으로 잡힌다.** 대화 내용이 정상이면 그 사실을 경고에
   같이 표시하지만, 근본적으로는 "합성 음성 = 사기"가 아니라는 한계가 있다.
-- **크롬 확장은 브라우저에서 실제로 로드해 보지 않았다.** 문법 검사만 통과한 상태.
-- **실시간 스트리밍은 미구현.** 백엔드가 파일 단건 분석만 지원한다. 확장의 청크
-  전송은 그 엔드포인트를 반복 호출하는 임시 형태다.
-- **ViT 백엔드는 판별력이 없다.** 진짜를 가짜로 판정한다. 오프라인 폴백 용도.
+- **크롬 확장을 브라우저에 올려보진 않았다.** 대신 `scripts/test_extension.js`가
+  확장 코드를 그대로 실행해 3계층 메시지 흐름·세션 통신·오류 처리·오버레이 분기를
+  검증한다(실제로 이 하네스가 **경고 오버레이가 안 뜨는 버그**를 잡았다).
+  권한 승인과 실제 탭 캡처는 여전히 브라우저에서만 확인 가능하다.
+- **실시간 스트리밍은 음성·화법만 본다.** 영상 딥페이크는 프레임마다 얼굴 검출 +
+  Xception이라 실시간 예산에 안 맞아 통화 종료 후 파일 분석에서 처리한다.
+- **스트리밍 세션은 동시에 하나만.** 모델을 상주시키기 때문이다. 세션 중에는 파일
+  분석이 409로 막힌다(동시에 돌리면 메모리 부족으로 프로세스가 죽는다).
+- **ViT 백엔드는 판별력이 없다.** 진짜를 가짜로 판정한다. 이제 점수를 미디어 위험도에
+  반영하지 않고 "영상 판정 제외" 경고를 띄운다.
 - **오프라인 분류기 90.5%는 21건짜리 자체 시나리오 기준이다.** 실제 통화 녹취로
   측정한 값이 아니고, 기준 문장(`category_prototypes.json`)을 팀이 직접 쓴 것이라
   같은 팀이 만든 검증셋과 표현이 겹칠 여지가 있다. 남은 오답 2건은
