@@ -15,6 +15,7 @@ ContentRiskBreakdown을 돌려주므로, 파이프라인 입장에서는 구분�
 | `anthropic` | `ANTHROPIC_API_KEY` / `ant auth login`| Messages API structured outputs |
 | `gemini`    | `GEMINI_API_KEY` / `GOOGLE_API_KEY`   | `response_schema` (JSON 강제) |
 | `ollama`    | 없음 (로컬 서버 `localhost:11434`)     | `format`에 JSON 스키마 (Ollama 0.5+) |
+| `local`     | 없음 (transformers + 가중치만)         | 없음 — 프롬프트로 지시 후 관용 파싱 |
 
   ollama는 실제 서비스용이 아니라 **프롬프트 구조를 로컬에서 공짜로 미리 검증**하는
   용도다. Gemini 무료 티어 쿼터가 막혔을 때 특히 쓸모 있다. 그래서 auto 폴백
@@ -29,6 +30,10 @@ ContentRiskBreakdown을 돌려주므로, 파이프라인 입장에서는 구분�
         않는다(Ollama도 표준 JSON Schema 기반이라 마찬가지일 가능성이 높지만
         로컬 서버가 없어 미확인). 그래서 0~100 범위 검증은 백엔드에 맡기지 않고
         세 백엔드 공통 경로인 `_finalize()`에서 항상 한다.
+
+`local`은 **키도 서버 설치도 없이 LLM 경로를 검수**하려고 만들었다. 이미 깔린
+torch/transformers만 쓰고 소형 모델 가중치만 받는다. 소형 모델이라 성능을 기대하면
+안 되고, 그래서 auto 체인에도 넣지 않았다 — 조용히 쓰이면 성능을 오해하게 된다.
 
 백엔드 선택 (`DUALGUARD_LLM_PROVIDER`):
   `auto`(기본) → Claude 키가 있으면 Claude, 없으면 Gemini, 둘 다 없으면 키워드 폴백.
@@ -86,6 +91,11 @@ OLLAMA_DEFAULT_MODEL = os.environ.get("OLLAMA_MODEL", "llama3.1")
 OLLAMA_TIMEOUT_SEC = float(os.environ.get("OLLAMA_TIMEOUT_SEC", "120"))
 
 # auto | anthropic | gemini | ollama
+# 로컬 트랜스포머 백엔드. API 키도, 별도 서버 설치도 필요 없다.
+# 이미 requirements에 있는 transformers/torch만 쓰고 모델 가중치만 내려받는다.
+LOCAL_MODEL = os.environ.get("DUALGUARD_LOCAL_LLM_MODEL", "Qwen/Qwen2.5-1.5B-Instruct")
+LOCAL_MAX_NEW_TOKENS = int(os.environ.get("DUALGUARD_LOCAL_LLM_MAX_TOKENS", "220"))
+
 PROVIDER_ENV = "DUALGUARD_LLM_PROVIDER"
 
 _CATEGORY_DESCRIPTIONS = {
@@ -375,6 +385,164 @@ class GeminiClassifier:
         return _finalize(json.loads(raw))
 
 
+def _extract_json(raw: str) -> dict:
+    """
+    소형 모델 출력에서 JSON 객체를 꺼낸다.
+
+    구조화 출력(Claude output_config, Ollama format)을 못 쓰는 백엔드용이다.
+    소형 모델은 ```json 펜스를 두르거나, 앞뒤에 설명을 붙이거나, 객체를 두 번
+    내놓기도 한다. 그래서 **중괄호 균형을 세어 첫 번째 완결된 객체**를 잘라낸다.
+    `{.*}` 정규식은 마지막 중괄호까지 삼켜 뒤쪽 쓰레기를 함께 물고 오므로 쓰지 않는다.
+    """
+    import json
+
+    text = raw.strip()
+    if "```" in text:                     # ```json ... ``` 펜스 제거
+        parts = text.split("```")
+        for part in parts:
+            cand = part.lstrip()
+            if cand.startswith("json"):
+                cand = cand[4:]
+            if cand.lstrip().startswith("{"):
+                text = cand
+                break
+
+    start = text.find("{")
+    if start < 0:
+        raise RuntimeError(f"로컬 모델이 JSON을 내지 않았습니다: {raw[:160]}")
+
+    depth = 0
+    in_str = False
+    escape = False
+    for i in range(start, len(text)):
+        ch = text[i]
+        if in_str:
+            if escape:
+                escape = False
+            elif ch == "\\":
+                escape = True
+            elif ch == '"':
+                in_str = False
+            continue
+        if ch == '"':
+            in_str = True
+        elif ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0:
+                return json.loads(text[start:i + 1])
+
+    raise RuntimeError(f"JSON 객체가 닫히지 않았습니다(토큰 부족?): {raw[:160]}")
+
+
+class LocalTransformersClassifier:
+    """
+    로컬 소형 LLM 백엔드 (transformers).
+
+    ## 왜 만들었나
+
+    Claude/Gemini는 API 키가 필요하고 Ollama는 별도 프로그램 설치가 필요하다.
+    둘 다 없는 환경에서 **LLM 경로가 실제 모델로 동작하는지 검수**하려면
+    이미 깔려 있는 것만으로 돌아가는 백엔드가 하나 필요했다.
+    torch·transformers는 이미 requirements에 있으므로 가중치만 받으면 된다.
+
+    ## 기대치를 낮춰서 볼 것
+
+    1.5B 소형 모델이다. 상용 LLM 수준의 분류를 기대하면 안 된다.
+    **"키 없이도 LLM 경로가 실제로 돈다"를 보이고 대략의 감을 잡는 용도**이고,
+    발표용 수치는 진짜 키로 다시 재야 한다. 실측 결과는
+    docs/validation_report.md 5장에 조건과 함께 적어둔다.
+
+    ## 구조화 출력이 없다
+
+    Claude(output_config)나 Ollama(format)와 달리 스키마를 강제할 수단이 없다.
+    프롬프트로 JSON만 내라고 지시하고, 응답에서 첫 번째 {...} 블록을 꺼내 파싱한다.
+    소형 모델은 앞뒤에 설명을 붙이는 일이 잦아서 이 관용 파서가 필요하다.
+    """
+
+    provider = "local"
+
+    def __init__(self, model: str = LOCAL_MODEL):
+        self.model_name = model
+        self._tok = None
+        self._model = None
+        self._system = _build_system()
+
+    @property
+    def label(self) -> str:
+        return f"로컬 transformers ({self.model_name})"
+
+    @property
+    def available(self) -> bool:
+        try:
+            import torch  # noqa: F401
+            import transformers  # noqa: F401
+        except ImportError:
+            return False
+        return True
+
+    def _ensure_loaded(self):
+        if self._model is not None:
+            return
+        import torch
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+
+        self._tok = AutoTokenizer.from_pretrained(self.model_name)
+
+        # bfloat16으로 올린다. float32면 1.5B 모델이 약 6GB를 먹어서
+        # 이 환경(여유 7GB)에서 **아무 메시지 없이 프로세스가 죽는다** — 실제로 그랬다.
+        # bf16이면 절반이고 CPU에서도 동작한다. 지원 안 하는 환경이면 float32로 내려간다.
+        try:
+            self._model = AutoModelForCausalLM.from_pretrained(
+                self.model_name, dtype=torch.bfloat16, low_cpu_mem_usage=True,
+            )
+        except (RuntimeError, ValueError, TypeError):
+            self._model = AutoModelForCausalLM.from_pretrained(
+                self.model_name, dtype=torch.float32, low_cpu_mem_usage=True,
+            )
+        self._model.eval()
+
+    def classify(
+        self,
+        text: str,
+        context_before: str = "",
+        context_after: str = "",
+    ) -> ContentRiskBreakdown:
+        import json
+        import re
+
+        import torch
+
+        self._ensure_loaded()
+
+        keys = ", ".join(f'"{c.value}"' for c in SocialEngineeringCategory)
+        instruction = (
+            _build_user_prompt(text, context_before, context_after)
+            + "\n\n반드시 아래 형태의 JSON 하나만 출력하십시오. 설명을 붙이지 마십시오.\n"
+            + f'{{{keys} 각각 0~100 정수, "evidence": [인용문], "summary": "한 문장"}}'
+        )
+        messages = [
+            {"role": "system", "content": self._system},
+            {"role": "user", "content": instruction},
+        ]
+        prompt = self._tok.apply_chat_template(
+            messages, tokenize=False, add_generation_prompt=True)
+        inputs = self._tok(prompt, return_tensors="pt")
+
+        with torch.no_grad():
+            out = self._model.generate(
+                **inputs,
+                max_new_tokens=LOCAL_MAX_NEW_TOKENS,
+                do_sample=False,            # 분류이므로 결정적으로
+                pad_token_id=self._tok.eos_token_id,
+            )
+        raw = self._tok.decode(out[0][inputs["input_ids"].shape[1]:],
+                               skip_special_tokens=True)
+
+        return _finalize(_extract_json(raw))
+
+
 class OllamaClassifier:
     """
     로컬 LLM(Ollama) 백엔드. Claude/Gemini와 인터페이스(available / classify / label)를
@@ -465,7 +633,7 @@ _shared = None
 def _resolve_provider() -> str:
     """DUALGUARD_LLM_PROVIDER 해석. 잘못된 값이면 auto로 떨어진다."""
     want = (os.environ.get(PROVIDER_ENV) or "auto").strip().lower()
-    return want if want in ("auto", "anthropic", "gemini", "ollama") else "auto"
+    return want if want in ("auto", "anthropic", "gemini", "ollama", "local") else "auto"
 
 
 def get_shared_classifier(model: Optional[str] = None):
@@ -488,11 +656,15 @@ def get_shared_classifier(model: Optional[str] = None):
         candidates = [LLMClassifier]
     elif want == "ollama":
         candidates = [OllamaClassifier]
+    elif want == "local":
+        # 키도 서버도 없이 검수하려는 경우. auto 체인에는 넣지 않는다 —
+        # 소형 모델이라 조용히 쓰이면 성능을 오해하게 된다.
+        candidates = [LocalTransformersClassifier]
     else:
         candidates = [LLMClassifier, GeminiClassifier]
 
     for cls in candidates:
-        if isinstance(_shared, cls) and (model is None or _shared.model == model):
+        if isinstance(_shared, cls) and (model is None or getattr(_shared, 'model', None) == model):
             if _shared.available:
                 return _shared
         probe = cls(model=model) if model else cls()

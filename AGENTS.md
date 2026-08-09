@@ -33,7 +33,7 @@
 | `media_risk.py` | **정식 진입점.** 영상+음성 둘 다 실제 모델. 실패 시 더미 폴백 |
 | `media_risk_dummy.py` | 전체 더미. 오프라인 데모 안전판이므로 지우지 말 것 |
 | `faceforensics_detector.py` | **FF++ Xception (영상) — 정식 경로** |
-| `audio_spoof_detector.py` | **AASIST (음성) — 정확도 98.3%. 도메인이 바뀌어도 유지되는 유일한 엔진** |
+| `audio_spoof_detector.py` | **AASIST (음성) — ASVspoof 98.3%. 단, 실제 통화 녹취를 합성으로 오판한다(원인 미규명)** |
 | `calibration.py` | 딥페이크 점수 재척도 (임계값 50 하나만 쓰게 만드는 부분) |
 | `deepfake_detector.py` | HuggingFace ViT (영상) — 폴백 전용 |
 | `face_utils.py` | YuNet(1순위) + Haar(폴백) 얼굴 검출/크롭. dlib 대체 |
@@ -51,6 +51,11 @@ FF++ 가중치가 없는 환경에서 파이프라인이 통째로 죽는 걸 �
 
 **⚠ FF++는 얼굴 크롭 전용이다.** 얼굴이 검출 안 되면 점수를 내지 않고 예외를 던진다.
 이건 버그가 아니라 의도된 동작 — 전체 프레임을 넣으면 아무 값이나 나온다.
+
+**⚠⚠ 음성 엔진도 실제 통화 녹취에서 오작동한다.** 금감원 공개 녹취 5건을 전부
+합성(100)으로 판정했다. 전화망·코덱은 원인이 아님을 통제 실험으로 확인했고
+(G.711 통과 시 오히려 6.5로 내려간다) 원인은 아직 모른다.
+`docs/validation_report.md` 0-7절. **"음성 엔진은 도메인에 강하다"고 쓰지 말 것.**
 
 **⚠⚠ 영상 엔진은 학습 도메인 밖에서 못 쓴다.** FF++ 안에서는 오탐 2%인데
 DFDC에서는 **55%**다(실측, `docs/validation_report.md` 0-3). 파이프라인이 영상 분석
@@ -139,6 +144,8 @@ node scripts\verify_extension_chrome.js                         # 실제 크롬�
 .venv\Scripts\python.exe scripts\test_llm_client.py              # LLM 클라이언트 경로 (키 불필요)
 .venv\Scripts\python.exe scripts\fetch_dfdc_samples.py           # DFDC 크로스도메인 샘플
 .venv\Scripts\python.exe scripts\validate_content_fpr.py         # 콘텐츠 도메인 밖 오탐률
+.venv\Scripts\python.exe scripts\fetch_real_call_samples.py      # 실제 보이스피싱 녹취(금감원)
+.venv\Scripts\python.exe scripts\validate_real_calls.py          # 실제 통화 탐지 성능
 .venv\Scripts\python.exe scripts\decide_scoring.py              # 스코어링 설정 재결정
 .venv\Scripts\python.exe scripts\benchmark_face_detector.py     # 얼굴 검출기 비교
 ```

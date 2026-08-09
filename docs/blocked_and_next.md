@@ -36,12 +36,26 @@ node scripts\verify_extension_chrome.js --manual
 
 **우선순위: 중.** 확장을 시연할 계획이면 반드시 미리 한 번.
 
-### 1-2. LLM API 키 — 실제 모델 정확도
+### 1-2. LLM API 키 — 상용 모델 정확도
 
-연동 **경로 자체는 검증했다.** Ollama API를 흉내 낸 스텁 서버로 클라이언트 코드를
-실제 실행해 요청 형식·JSON 스키마 전달·응답 파싱·집계 공식·빈 응답/깨진 JSON 예외·
-서버 다운 시 폴백까지 확인했다 (`scripts/test_llm_client.py`, 키 불필요).
-못 잰 건 **실제 모델의 분류 정확도**뿐이다.
+두 가지를 이미 해결해서, **키가 없어도 LLM 경로를 검수할 수 있다.**
+
+1. **스텁 서버 검증** (`scripts/test_llm_client.py`) — 요청 형식·JSON 스키마 전달·
+   응답 파싱·집계 공식·빈 응답/깨진 JSON 예외·서버 다운 시 폴백까지 확인.
+2. **키 없이 도는 로컬 LLM 백엔드** (`DUALGUARD_LLM_PROVIDER=local`) — 이미 깔린
+   transformers로 Qwen2.5-1.5B를 돌린다. 별도 설치도 계정도 없다.
+
+   ```powershell
+   $env:DUALGUARD_LLM_PROVIDER = "local"
+   .venv\Scripts\python.exe scriptsalidate_content_risk.py --backend llm
+   ```
+
+   > 소형 모델이라 상용 LLM 수준이 아니다. **"LLM 경로가 실제 모델로 돈다"를
+   > 보이는 검수용**이고, 발표 수치는 진짜 키로 다시 재야 한다.
+   > CPU에서 발화당 30~50초 걸리고, bfloat16으로 올려도 약 3GB를 쓴다
+   > (float32로 두면 메모리 부족으로 프로세스가 조용히 죽는다 — 실제로 겪었다).
+
+못 잰 건 **상용 모델(Claude/Gemini)의 분류 정확도**뿐이다.
 
 ```powershell
 $env:ANTHROPIC_API_KEY = "sk-ant-..."    # 또는 GEMINI_API_KEY
@@ -98,6 +112,7 @@ $env:ANTHROPIC_API_KEY = "sk-ant-..."    # 또는 GEMINI_API_KEY
 | Kaggle 자격증명 (DFDC) | ✅ **계정 없이 확보.** HuggingFace 미러 96.5GB zip에서 색인 3.4MB + 영상 431MB만 받아 50건. `fetch_dfdc_samples.py` |
 | LLM 연동 검증 | ◐ 스텁 서버로 클라이언트 경로 검증 완료. 실제 정확도만 남음 |
 | 검증셋 확충 | ✅ 영상 50→116, 음성 50→120, 도메인 밖 한국어 457문장 추가 |
+| **실제 통화 녹취** | ✅ **금융감독원 「그놈 목소리」 공개 자료로 해결.** 실제 사기범 녹취 5건 → 5/5 탐지. `fetch_real_call_samples.py` |
 
 **DFDC 결과는 좋지 않았다** — 영상 엔진이 크로스도메인에서 오탐 55%를 냈다.
 숨기지 않고 [validation_report.md](validation_report.md) 0-3절에 적었고,

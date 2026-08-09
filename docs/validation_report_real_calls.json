@@ -1,0 +1,152 @@
+{
+  "_설명": "금융감독원 공개 실제 보이스피싱 녹취에서의 탐지 성능. 전부 사기 통화이므로 정탐률만 잴 수 있다. 오탐률은 validate_content_fpr.py 참고.",
+  "source": "금융감독원 보이스피싱지킴이 「그놈 목소리」",
+  "n_files": 5,
+  "elapsed_sec": 259.7,
+  "level_thresholds": {
+    "높음": 55.0,
+    "중간": 30.0
+  },
+  "warned_high": 5,
+  "warned_any": 5,
+  "missed": 0,
+  "mean_content_risk": 42.81,
+  "mean_media_risk": 100.0,
+  "results": [
+    {
+      "file": "realscam__(검찰사칭)다음주에 재판이 열립니다. 재판증거자료를 위해 통화를 녹취하겠습니다_.wav",
+      "duration": 120.0,
+      "overall_score": 71.0,
+      "overall_level": "높음",
+      "content_risk": 45.0,
+      "media_risk": 100.0,
+      "n_segments": 38,
+      "top_categories": [
+        {
+          "category": "isolation",
+          "label": "제3자 확인 회피 유도",
+          "score": 100.0
+        },
+        {
+          "category": "urgency",
+          "label": "긴급성 조성",
+          "score": 100.0
+        },
+        {
+          "category": "authority",
+          "label": "권위 사칭",
+          "score": 100.0
+        }
+      ],
+      "transcript_head": "네 모님께서는 조사를 받으셔야 되고요 네 알겠습니다 그럼 이어서 말씀드릴게요 그러니까 앞으로의 조사 과정은 계속 말씀드린다시피"
+    },
+    {
+      "file": "realscam__(검찰사칭, 침착대응)본인과 연루된 불법 명의도용사건이 검찰에 접수되어 연락드렸습니다 중고나라 몇번 게시물이에요_.wav",
+      "duration": 120.0,
+      "overall_score": 71.0,
+      "overall_level": "높음",
+      "content_risk": 45.0,
+      "media_risk": 100.0,
+      "n_segments": 35,
+      "top_categories": [
+        {
+          "category": "authority",
+          "label": "권위 사칭",
+          "score": 73.8
+        },
+        {
+          "category": "credentials",
+          "label": "개인정보·OTP 요구",
+          "score": 42.7
+        },
+        {
+          "category": "isolation",
+          "label": "제3자 확인 회피 유도",
+          "score": 29.0
+        }
+      ],
+      "transcript_head": "본인과 열리된 불법 명의디용 사건이 검찰직의 접수화되어서 연락을 드렸고요. 본인께서 전시 통화 좀 괜찮으신가요? 네."
+    },
+    {
+      "file": "realscam__(경찰 사칭)강남서 사이버수사과입니다_.wav",
+      "duration": 62.83,
+      "overall_score": 55.95,
+      "overall_level": "높음",
+      "content_risk": 34.05,
+      "media_risk": 100.0,
+      "n_segments": 19,
+      "top_categories": [
+        {
+          "category": "urgency",
+          "label": "긴급성 조성",
+          "score": 40.9
+        },
+        {
+          "category": "isolation",
+          "label": "제3자 확인 회피 유도",
+          "score": 40.9
+        },
+        {
+          "category": "credentials",
+          "label": "개인정보·OTP 요구",
+          "score": 38.5
+        }
+      ],
+      "transcript_head": "여보세요. 여기 강남서 사이버스 사과예요. 어디요? 강남서 사이버스 사과요. 강남서? 네. 사이버스 사과요."
+    },
+    {
+      "file": "realscam__NR6606_마스킹 완료_정부기관 사칭형 여자 수사관_.wav",
+      "duration": 120.0,
+      "overall_score": 71.0,
+      "overall_level": "높음",
+      "content_risk": 45.0,
+      "media_risk": 100.0,
+      "n_segments": 88,
+      "top_categories": [
+        {
+          "category": "urgency",
+          "label": "긴급성 조성",
+          "score": 100.0
+        },
+        {
+          "category": "authority",
+          "label": "권위 사칭",
+          "score": 100.0
+        },
+        {
+          "category": "emotional",
+          "label": "감정적 압박",
+          "score": 100.0
+        }
+      ],
+      "transcript_head": "서울주황지검 총장범죄수사 일부 이현아 지사감입니다. 본 사건 조사는 법원 증거자를 제출력으로 이뤄지고 있으신데 녹취조사 과정에서 황의 진술이나 본인께서의 아는 내용을 은닉하게 되면"
+    },
+    {
+      "file": "realscam__검찰사칭, 침착대응(OO은행 과장출신입니다. 와서수사하세요)_.wav",
+      "duration": 96.5,
+      "overall_score": 71.0,
+      "overall_level": "높음",
+      "content_risk": 45.0,
+      "media_risk": 100.0,
+      "n_segments": 24,
+      "top_categories": [
+        {
+          "category": "secrecy",
+          "label": "비밀 유지 강요",
+          "score": 72.5
+        },
+        {
+          "category": "emotional",
+          "label": "감정적 압박",
+          "score": 72.5
+        },
+        {
+          "category": "isolation",
+          "label": "제3자 확인 회피 유도",
+          "score": 72.5
+        }
+      ],
+      "transcript_head": "저는 국민의 과장지수 연휴했던 은행 직원이었는데요. 이런 금융금지 사건은 혼자 만에 보면 사실이 아니고요. 전국의 은행, 금융권 직원들이나 지점 전까지 영반되어 있는 사실이라고 보시면 됩니다."
+    }
+  ]
+}
