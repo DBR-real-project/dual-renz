@@ -1,44 +1,44 @@
 {
   "sample_dir": "C:\\Users\\migle\\DualGuard-MediaAnalysis\\data\\asvspoof_samples",
-  "n_samples": 50,
-  "n_bonafide": 20,
-  "n_spoof": 30,
+  "n_samples": 120,
+  "n_bonafide": 50,
+  "n_spoof": 70,
   "max_windows": 8,
   "aggregation": "topk_mean",
   "simulate_telephone": false,
   "resample": null,
   "model": "AASIST (clovaai)",
-  "elapsed_sec": 14.2,
+  "elapsed_sec": 33.0,
   "separation": {
     "real_max": 2.22,
-    "real_mean": 0.13,
+    "real_mean": 0.052000000000000005,
     "real_min": 0.0,
     "fake_max": 100.0,
-    "fake_mean": 96.43666666666667,
-    "fake_min": 0.37,
-    "gap": -1.85
+    "fake_mean": 94.40585714285713,
+    "fake_min": 0.01,
+    "gap": -2.2100000000000004
   },
   "at_threshold_50": {
     "threshold": 50.0,
-    "tp": 29,
-    "fn": 1,
+    "tp": 68,
+    "fn": 2,
     "fp": 0,
-    "tn": 20,
-    "recall": 0.9666666666666667,
+    "tn": 50,
+    "recall": 0.9714285714285714,
     "fpr": 0.0,
     "precision": 1.0,
-    "accuracy": 0.98
+    "accuracy": 0.9833333333333333
   },
   "best_threshold": {
     "threshold": 0.36,
-    "tp": 30,
-    "fn": 0,
+    "tp": 69,
+    "fn": 1,
     "fp": 1,
-    "tn": 19,
-    "recall": 1.0,
-    "fpr": 0.05,
-    "precision": 0.967741935483871,
-    "accuracy": 0.98
+    "tn": 49,
+    "recall": 0.9857142857142858,
+    "fpr": 0.02,
+    "precision": 0.9857142857142858,
+    "accuracy": 0.9833333333333333
   },
   "results": [
     {
@@ -49,11 +49,32 @@
       "duration": 2.21
     },
     {
+      "file": "bonafide__LA_E_1047198.flac",
+      "label": "real",
+      "score": 0.0,
+      "windows": 1,
+      "duration": 3.84
+    },
+    {
+      "file": "bonafide__LA_E_1116303.flac",
+      "label": "real",
+      "score": 0.0,
+      "windows": 1,
+      "duration": 2.3
+    },
+    {
       "file": "bonafide__LA_E_1235824.flac",
       "label": "real",
       "score": 0.35,
       "windows": 2,
       "duration": 5.38
+    },
+    {
+      "file": "bonafide__LA_E_1311985.flac",
+      "label": "real",
+      "score": 0.0,
+      "windows": 1,
+      "duration": 3.54
     },
     {
       "file": "bonafide__LA_E_1395552.flac",
@@ -63,11 +84,60 @@
       "duration": 4.26
     },
     {
+      "file": "bonafide__LA_E_1514361.flac",
+      "label": "real",
+      "score": 0.0,
+      "windows": 1,
+      "duration": 2.69
+    },
+    {
+      "file": "bonafide__LA_E_1648428.flac",
+      "label": "real",
+      "score": 0.0,
+      "windows": 1,
+      "duration": 3.62
+    },
+    {
+      "file": "bonafide__LA_E_1911910.flac",
+      "label": "real",
+      "score": 0.0,
+      "windows": 1,
+      "duration": 3.88
+    },
+    {
+      "file": "bonafide__LA_E_2050154.flac",
+      "label": "real",
+      "score": 0.0,
+      "windows": 1,
+      "duration": 2.9
+    },
+    {
       "file": "bonafide__LA_E_2161075.flac",
       "label": "real",
       "score": 0.0,
       "windows": 1,
       "duration": 4.05
+    },
+    {
+      "file": "bonafide__LA_E_2291153.flac",
+      "label": "real",
+      "score": 0.0,
+      "windows": 1,
+      "duration": 3.83
+    },
+    {
+      "file": "bonafide__LA_E_2607678.flac",
+      "label": "real",
+      "score": 0.0,
+      "windows": 1,
+      "duration": 3.28
+    },
+    {
+      "file": "bonafide__LA_E_2919347.flac",
+      "label": "real",
+      "score": 0.0,
+      "windows": 1,
+      "duration": 3.37
     },
     {
       "file": "bonafide__LA_E_3003752.flac",
@@ -91,6 +161,20 @@
       "duration": 2.13
     },
     {
+      "file": "bonafide__LA_E_3593479.flac",
+      "label": "real",
+      "score": 0.0,
+      "windows": 1,
+      "duration": 2.22
+    },
+    {
+      "file": "bonafide__LA_E_3698865.flac",
+      "label": "real",
+      "score": 0.0,
+      "windows": 1,
+      "duration": 2.39
+    },
+    {
       "file": "bonafide__LA_E_3757378.flac",
       "label": "real",
       "score": 0.0,
@@ -98,11 +182,39 @@
       "duration": 3.15
     },
     {
+      "file": "bonafide__LA_E_3924689.flac",
+      "label": "real",
+      "score": 0.0,
+      "windows": 1,
+      "duration": 3.33
+    },
+    {
+      "file": "bonafide__LA_E_4402351.flac",
+      "label": "real",
+      "score": 0.0,
+      "windows": 1,
+      "duration": 3.28
+    },
+    {
+      "file": "bonafide__LA_E_4494506.flac",
+      "label": "real",
+      "score": 0.0,
+      "windows": 1,
+      "duration": 2.47
+    },
+    {
       "file": "bonafide__LA_E_4581379.flac",
       "label": "real",
       "score": 0.0,
       "windows": 1,
       "duration": 2.13
+    },
+    {
+      "file": "bonafide__LA_E_4620575.flac",
+      "label": "real",
+      "score": 0.0,
+      "windows": 1,
+      "duration": 3.03
     },
     {
       "file": "bonafide__LA_E_4716734.flac",
@@ -119,11 +231,32 @@
       "duration": 2.43
     },
     {
+      "file": "bonafide__LA_E_5313973.flac",
+      "label": "real",
+      "score": 0.0,
+      "windows": 1,
+      "duration": 1.83
+    },
+    {
       "file": "bonafide__LA_E_5323454.flac",
       "label": "real",
       "score": 0.0,
       "windows": 1,
       "duration": 4.56
+    },
+    {
+      "file": "bonafide__LA_E_5432558.flac",
+      "label": "real",
+      "score": 0.0,
+      "windows": 1,
+      "duration": 1.87
+    },
+    {
+      "file": "bonafide__LA_E_5533127.flac",
+      "label": "real",
+      "score": 0.0,
+      "windows": 1,
+      "duration": 2.51
     },
     {
       "file": "bonafide__LA_E_5783993.flac",
@@ -161,11 +294,60 @@
       "duration": 2.26
     },
     {
+      "file": "bonafide__LA_E_6964855.flac",
+      "label": "real",
+      "score": 0.0,
+      "windows": 1,
+      "duration": 3.58
+    },
+    {
+      "file": "bonafide__LA_E_7069231.flac",
+      "label": "real",
+      "score": 0.0,
+      "windows": 1,
+      "duration": 2.43
+    },
+    {
+      "file": "bonafide__LA_E_7205247.flac",
+      "label": "real",
+      "score": 0.0,
+      "windows": 1,
+      "duration": 3.37
+    },
+    {
+      "file": "bonafide__LA_E_7769271.flac",
+      "label": "real",
+      "score": 0.0,
+      "windows": 1,
+      "duration": 2.77
+    },
+    {
       "file": "bonafide__LA_E_7824929.flac",
       "label": "real",
       "score": 0.02,
       "windows": 1,
       "duration": 2.77
+    },
+    {
+      "file": "bonafide__LA_E_7905661.flac",
+      "label": "real",
+      "score": 0.0,
+      "windows": 1,
+      "duration": 2.77
+    },
+    {
+      "file": "bonafide__LA_E_8189776.flac",
+      "label": "real",
+      "score": 0.0,
+      "windows": 1,
+      "duration": 4.09
+    },
+    {
+      "file": "bonafide__LA_E_8713676.flac",
+      "label": "real",
+      "score": 0.0,
+      "windows": 1,
+      "duration": 3.07
     },
     {
       "file": "bonafide__LA_E_8739004.flac",
@@ -182,6 +364,41 @@
       "duration": 3.11
     },
     {
+      "file": "bonafide__LA_E_9578227.flac",
+      "label": "real",
+      "score": 0.0,
+      "windows": 1,
+      "duration": 2.47
+    },
+    {
+      "file": "bonafide__LA_E_9617894.flac",
+      "label": "real",
+      "score": 0.0,
+      "windows": 1,
+      "duration": 2.98
+    },
+    {
+      "file": "bonafide__LA_E_9695181.flac",
+      "label": "real",
+      "score": 0.0,
+      "windows": 1,
+      "duration": 3.45
+    },
+    {
+      "file": "bonafide__LA_E_9766259.flac",
+      "label": "real",
+      "score": 0.0,
+      "windows": 1,
+      "duration": 3.67
+    },
+    {
+      "file": "spoof__LA_E_1070406.flac",
+      "label": "fake",
+      "score": 100.0,
+      "windows": 1,
+      "duration": 4.85
+    },
+    {
       "file": "spoof__LA_E_1425990.flac",
       "label": "fake",
       "score": 99.95,
@@ -194,6 +411,13 @@
       "score": 99.99,
       "windows": 1,
       "duration": 4.32
+    },
+    {
+      "file": "spoof__LA_E_1746654.flac",
+      "label": "fake",
+      "score": 100.0,
+      "windows": 1,
+      "duration": 2.52
     },
     {
       "file": "spoof__LA_E_1781840.flac",
@@ -210,6 +434,13 @@
       "duration": 5.12
     },
     {
+      "file": "spoof__LA_E_2143322.flac",
+      "label": "fake",
+      "score": 94.94,
+      "windows": 1,
+      "duration": 1.57
+    },
+    {
       "file": "spoof__LA_E_2355000.flac",
       "label": "fake",
       "score": 99.88,
@@ -222,6 +453,13 @@
       "score": 99.95,
       "windows": 1,
       "duration": 2.98
+    },
+    {
+      "file": "spoof__LA_E_2417530.flac",
+      "label": "fake",
+      "score": 100.0,
+      "windows": 1,
+      "duration": 1.86
     },
     {
       "file": "spoof__LA_E_2520601.flac",
@@ -238,6 +476,20 @@
       "duration": 3.0
     },
     {
+      "file": "spoof__LA_E_2634822.flac",
+      "label": "fake",
+      "score": 100.0,
+      "windows": 1,
+      "duration": 2.9
+    },
+    {
+      "file": "spoof__LA_E_2775552.flac",
+      "label": "fake",
+      "score": 100.0,
+      "windows": 2,
+      "duration": 6.7
+    },
+    {
       "file": "spoof__LA_E_2834763.flac",
       "label": "fake",
       "score": 100.0,
@@ -245,11 +497,109 @@
       "duration": 1.43
     },
     {
+      "file": "spoof__LA_E_2947508.flac",
+      "label": "fake",
+      "score": 100.0,
+      "windows": 1,
+      "duration": 3.05
+    },
+    {
+      "file": "spoof__LA_E_2985346.flac",
+      "label": "fake",
+      "score": 99.99,
+      "windows": 1,
+      "duration": 1.47
+    },
+    {
       "file": "spoof__LA_E_3125426.flac",
       "label": "fake",
       "score": 100.0,
       "windows": 1,
       "duration": 2.47
+    },
+    {
+      "file": "spoof__LA_E_3558965.flac",
+      "label": "fake",
+      "score": 56.27,
+      "windows": 1,
+      "duration": 4.38
+    },
+    {
+      "file": "spoof__LA_E_3820322.flac",
+      "label": "fake",
+      "score": 97.1,
+      "windows": 1,
+      "duration": 1.73
+    },
+    {
+      "file": "spoof__LA_E_4430413.flac",
+      "label": "fake",
+      "score": 100.0,
+      "windows": 1,
+      "duration": 1.99
+    },
+    {
+      "file": "spoof__LA_E_4550461.flac",
+      "label": "fake",
+      "score": 100.0,
+      "windows": 1,
+      "duration": 1.67
+    },
+    {
+      "file": "spoof__LA_E_4557471.flac",
+      "label": "fake",
+      "score": 82.44,
+      "windows": 1,
+      "duration": 4.23
+    },
+    {
+      "file": "spoof__LA_E_4641783.flac",
+      "label": "fake",
+      "score": 98.6,
+      "windows": 1,
+      "duration": 4.14
+    },
+    {
+      "file": "spoof__LA_E_4732931.flac",
+      "label": "fake",
+      "score": 100.0,
+      "windows": 1,
+      "duration": 1.58
+    },
+    {
+      "file": "spoof__LA_E_4751686.flac",
+      "label": "fake",
+      "score": 99.98,
+      "windows": 1,
+      "duration": 3.65
+    },
+    {
+      "file": "spoof__LA_E_4920751.flac",
+      "label": "fake",
+      "score": 100.0,
+      "windows": 1,
+      "duration": 2.64
+    },
+    {
+      "file": "spoof__LA_E_5118048.flac",
+      "label": "fake",
+      "score": 100.0,
+      "windows": 1,
+      "duration": 2.17
+    },
+    {
+      "file": "spoof__LA_E_5210371.flac",
+      "label": "fake",
+      "score": 99.89,
+      "windows": 1,
+      "duration": 2.2
+    },
+    {
+      "file": "spoof__LA_E_5246322.flac",
+      "label": "fake",
+      "score": 72.79,
+      "windows": 1,
+      "duration": 4.15
     },
     {
       "file": "spoof__LA_E_5884357.flac",
@@ -264,6 +614,13 @@
       "score": 99.9,
       "windows": 2,
       "duration": 5.8
+    },
+    {
+      "file": "spoof__LA_E_6092883.flac",
+      "label": "fake",
+      "score": 90.57,
+      "windows": 1,
+      "duration": 4.98
     },
     {
       "file": "spoof__LA_E_6163791.flac",
@@ -308,6 +665,20 @@
       "duration": 2.44
     },
     {
+      "file": "spoof__LA_E_7355163.flac",
+      "label": "fake",
+      "score": 99.99,
+      "windows": 1,
+      "duration": 1.41
+    },
+    {
+      "file": "spoof__LA_E_7462445.flac",
+      "label": "fake",
+      "score": 100.0,
+      "windows": 1,
+      "duration": 1.7
+    },
+    {
       "file": "spoof__LA_E_7535126.flac",
       "label": "fake",
       "score": 99.94,
@@ -315,11 +686,39 @@
       "duration": 3.47
     },
     {
+      "file": "spoof__LA_E_7655544.flac",
+      "label": "fake",
+      "score": 100.0,
+      "windows": 1,
+      "duration": 3.61
+    },
+    {
       "file": "spoof__LA_E_7783830.flac",
       "label": "fake",
       "score": 100.0,
       "windows": 1,
       "duration": 3.29
+    },
+    {
+      "file": "spoof__LA_E_8110643.flac",
+      "label": "fake",
+      "score": 100.0,
+      "windows": 1,
+      "duration": 3.61
+    },
+    {
+      "file": "spoof__LA_E_8155315.flac",
+      "label": "fake",
+      "score": 99.96,
+      "windows": 1,
+      "duration": 2.3
+    },
+    {
+      "file": "spoof__LA_E_8285179.flac",
+      "label": "fake",
+      "score": 100.0,
+      "windows": 1,
+      "duration": 4.02
     },
     {
       "file": "spoof__LA_E_8339197.flac",
@@ -336,6 +735,13 @@
       "duration": 2.99
     },
     {
+      "file": "spoof__LA_E_8469160.flac",
+      "label": "fake",
+      "score": 99.78,
+      "windows": 1,
+      "duration": 4.13
+    },
+    {
       "file": "spoof__LA_E_8617121.flac",
       "label": "fake",
       "score": 0.37,
@@ -350,11 +756,39 @@
       "duration": 3.15
     },
     {
+      "file": "spoof__LA_E_8806575.flac",
+      "label": "fake",
+      "score": 99.55,
+      "windows": 1,
+      "duration": 1.37
+    },
+    {
       "file": "spoof__LA_E_8814547.flac",
       "label": "fake",
       "score": 99.8,
       "windows": 1,
       "duration": 2.21
+    },
+    {
+      "file": "spoof__LA_E_8816717.flac",
+      "label": "fake",
+      "score": 99.99,
+      "windows": 2,
+      "duration": 5.08
+    },
+    {
+      "file": "spoof__LA_E_8844552.flac",
+      "label": "fake",
+      "score": 81.85,
+      "windows": 1,
+      "duration": 4.12
+    },
+    {
+      "file": "spoof__LA_E_8868279.flac",
+      "label": "fake",
+      "score": 87.89,
+      "windows": 2,
+      "duration": 5.42
     },
     {
       "file": "spoof__LA_E_8872199.flac",
@@ -371,11 +805,32 @@
       "duration": 3.98
     },
     {
+      "file": "spoof__LA_E_8925219.flac",
+      "label": "fake",
+      "score": 69.37,
+      "windows": 1,
+      "duration": 2.18
+    },
+    {
+      "file": "spoof__LA_E_8992946.flac",
+      "label": "fake",
+      "score": 0.01,
+      "windows": 1,
+      "duration": 1.31
+    },
+    {
       "file": "spoof__LA_E_9088738.flac",
       "label": "fake",
       "score": 99.68,
       "windows": 1,
       "duration": 3.45
+    },
+    {
+      "file": "spoof__LA_E_9120891.flac",
+      "label": "fake",
+      "score": 99.39,
+      "windows": 1,
+      "duration": 1.31
     },
     {
       "file": "spoof__LA_E_9157999.flac",
@@ -385,11 +840,46 @@
       "duration": 2.73
     },
     {
+      "file": "spoof__LA_E_9276097.flac",
+      "label": "fake",
+      "score": 100.0,
+      "windows": 1,
+      "duration": 2.49
+    },
+    {
+      "file": "spoof__LA_E_9328266.flac",
+      "label": "fake",
+      "score": 95.32,
+      "windows": 1,
+      "duration": 3.24
+    },
+    {
+      "file": "spoof__LA_E_9382115.flac",
+      "label": "fake",
+      "score": 100.0,
+      "windows": 1,
+      "duration": 4.01
+    },
+    {
       "file": "spoof__LA_E_9472752.flac",
       "label": "fake",
       "score": 99.98,
       "windows": 1,
       "duration": 2.78
+    },
+    {
+      "file": "spoof__LA_E_9804952.flac",
+      "label": "fake",
+      "score": 99.95,
+      "windows": 1,
+      "duration": 1.5
+    },
+    {
+      "file": "spoof__LA_E_9817776.flac",
+      "label": "fake",
+      "score": 89.69,
+      "windows": 1,
+      "duration": 2.59
     }
   ]
 }

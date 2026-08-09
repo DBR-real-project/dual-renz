@@ -24,12 +24,11 @@
 
 **앵커 방식**(기본값)은 두 점을 고정해 1차 변환을 결정한다:
 
-    원점수 t*      -> 50    t* = 오탐률 0%를 지키면서 정탐이 가장 높은 임계값
-    원점수 real_max -> 10    진짜 샘플 최고점은 확실히 낮은 쪽에 두기
+    원점수 t*       -> 50    t* = 오탐률을 --max-fpr 이하로 지키며 정탐이 최대인 임계값
+    원점수 t*/5    -> 20    기울기를 정하는 두 번째 앵커 (SLOPE_DIVISOR 주석 참고)
 
-t*는 진짜 최고점보다 안전 여유를 두고 고른다. 실측에서 진짜 최고점이 1.48,
-가짜 24개가 1.71 이상이라 1.6에서 자르면 정탐 80%가 나오지만 여유가 0.12뿐이라
-환경이 조금만 달라져도 무너진다. 그래서 여유 배수(--margin)를 둔다.
+기준을 '진짜 최고점'이 아니라 '분위수'로 잡은 이유는 anchor_points() docstring에
+적어뒀다. 요약하면 **진짜 영상 한 건이 튀면 설정 전체가 끌려가기 때문**이다.
 
 ## 이건 확률이 아니다
 
@@ -71,6 +70,16 @@ THRESHOLD = 50.0
 # 신호등 '중간' 경계가 40이라 20은 여전히 확실한 '낮음'이다.
 REAL_MAX_TARGET = 20.0
 
+# 기울기를 정하는 두 번째 앵커의 위치: "판정 경계의 1/SLOPE_DIVISOR 인 원점수"가
+# REAL_MAX_TARGET(20)으로 가도록 맞춘다.
+#
+# 왜 데이터에서 뽑지 않고 상수로 두는가: 처음엔 두 번째 앵커도 데이터(진짜 점수
+# 분위수)에서 잡았는데, 하필 진짜 22.90 바로 위에 가짜 23.71이 있어서 두 앵커가
+# 22.9와 23.3으로 붙어버렸다. 두 점이 붙으면 기울기가 62까지 치솟아 변환이
+# 계단 함수가 되고("원점수 30 -> 100") 재척도의 목적인 '중간값 살리기'가 무너진다.
+# 위치(정확도)는 t*가 정하고, 기울기(가독성)는 이 상수가 정하도록 분리했다.
+SLOPE_DIVISOR = 5.0
+
 
 def to_logit(score: float) -> float:
     x = min(max(score / 100.0, EPS), 1.0 - EPS)
@@ -81,42 +90,65 @@ def sigmoid(z: float) -> float:
     return 1.0 / (1.0 + math.exp(-z))
 
 
-def best_threshold_at_zero_fpr(raw, labels, margin: float):
+def anchor_points(raw, labels, max_fpr: float):
     """
-    오탐률 0%를 지키면서 정탐이 최대가 되는 원점수 임계값 t*.
+    "오탐률을 max_fpr 이하로 유지하면서 정탐 최대"가 되는 원점수 임계값 t*와,
+    변환 후 REAL_MAX_TARGET으로 보낼 기준점(real_ref)을 고른다.
 
-    진짜 샘플 최고점(real_max)보다 margin배 위를 하한으로 잡아 여유를 둔다.
-    그 하한 위에서, 실제로 정탐이 떨어지기 시작하기 직전 지점을 고른다.
+    ## 왜 '오탐 0%'가 아니라 상한을 두는가 (실측으로 바꾼 부분)
+
+    처음엔 오탐 0%를 강제했다. 검증셋이 50건일 때는 잘 맞았는데, 116건으로 늘리자
+    무너졌다. 진짜 영상 50개 중 **하나가 원점수 64.28로 튀었기 때문**이다
+    (나머지는 22.9 이하). 오탐 0%를 지키려면 임계값을 64.28 위로 올려야 하고,
+    거기에 안전 여유까지 곱하면 t*가 192가 돼 점수 범위(0~100) 밖으로 나간다.
+    그 결과 정탐이 66.7% -> 57.6%로 오히려 떨어졌다.
+
+    이상치 하나에 전체 설정이 끌려가면 안 된다. 그래서 기준을 **진짜 점수의
+    (1 - max_fpr) 분위수**로 바꿨다. max_fpr=0.02면 50개 중 1개까지는 넘어가도
+    좋다고 보는 것이고, 이는 우리가 실제로 보고하는 오탐률 해상도(1/50 = 2%)와도 맞는다.
     """
-    real_max = max((s for s, l in zip(raw, labels) if l == 0), default=0.0)
-    floor = max(real_max * margin, real_max + 1e-6)
+    reals = sorted(s for s, l in zip(raw, labels) if l == 0)
+    if not reals:
+        return 1.0, 1.0
 
-    # 후보: 하한 이상인 가짜 점수들. 그 중 가장 낮은 값 바로 아래가 최적이다.
-    fakes_above = sorted(s for s, l in zip(raw, labels) if l == 1 and s >= floor)
+    # max_fpr 만큼의 진짜는 임계값을 넘어도 좋다고 본다. 50개에 max_fpr=0.02면
+    # 1개를 허용하므로 기준점은 **두 번째로 높은** 값이다.
+    #
+    # 주의: 여기서 분위수를 (1-max_fpr) 위치로 잡으면 사실상 최댓값이 나와서
+    # 앵커 두 점(t* -> 50, real_ref -> 20)의 순서가 뒤집힌다. 그러면 변환이
+    # 기울기 62짜리 계단 함수가 돼 "0 아니면 100" 문제가 그대로 돌아온다
+    # (실제로 한 번 그렇게 나왔다). real_ref는 반드시 t*보다 **아래**여야 한다.
+    # 올림(ceil)을 쓴다. 내림이면 교차검증 훈련 폴드(진짜 40개)에서
+    # int(40*0.02) = 0 이 돼 이상치 허용이 사라지고, 폴드마다 t*가 튀어
+    # 교차검증 수치가 변환 전과 같아진다(실제로 그랬다).
+    allowed = math.ceil(len(reals) * max_fpr) if max_fpr > 0 else 0
+    real_ref = reals[max(0, len(reals) - 1 - allowed)]
+
+    fakes_above = sorted(s for s, l in zip(raw, labels) if l == 1 and s > real_ref)
     if not fakes_above:
-        return floor, real_max
+        return max(real_ref * 1.5, real_ref + 1e-6), real_ref
 
-    # 가장 낮은 "잡히는 가짜"와 하한 사이 어디를 골라도 성능은 같다.
-    # 가운데를 잡아 양쪽으로 여유를 남긴다 (기하평균 — 점수 축이 로그에 가깝다).
-    t_star = math.sqrt(floor * fakes_above[0]) if floor > 0 else fakes_above[0] / 2
-    return t_star, real_max
+    # real_ref 와 "잡히는 가장 낮은 가짜" 사이 어디를 골라도 이 데이터에서는 성능이
+    # 같다. 기하평균을 잡아 양쪽으로 여유를 남긴다 (점수 축이 로그에 가깝다).
+    lo = max(real_ref, EPS * 100)
+    return math.sqrt(lo * fakes_above[0]), real_ref
 
 
-def fit_anchor(raw, labels, margin: float):
-    """두 점(t*->50, real_max->REAL_MAX_TARGET)을 지나는 로짓 1차 변환."""
-    t_star, real_max = best_threshold_at_zero_fpr(raw, labels, margin)
+def fit_anchor(raw, labels, max_fpr: float):
+    """두 점(t*->50, real_ref->REAL_MAX_TARGET)을 지나는 로짓 1차 변환."""
+    t_star, real_ref = anchor_points(raw, labels, max_fpr)
 
     z1, y1 = to_logit(t_star), to_logit(THRESHOLD)
-    z2, y2 = to_logit(max(real_max, EPS * 100)), to_logit(REAL_MAX_TARGET)
+    z2, y2 = to_logit(max(t_star / SLOPE_DIVISOR, EPS * 100)), to_logit(REAL_MAX_TARGET)
 
     if abs(z1 - z2) < 1e-9:
-        return 1.0, 0.0, t_star, real_max
+        return 1.0, 0.0, t_star, real_ref
     a = (y1 - y2) / (z1 - z2)
     b = y1 - a * z1
-    return a, b, t_star, real_max
+    return a, b, t_star, real_ref
 
 
-def fit_platt(raw, labels, margin: float = 0.0):
+def fit_platt(raw, labels, max_fpr: float = 0.0):
     """비교용. 로지스틱 회귀로 로그손실 최소화."""
     import numpy as np
     from sklearn.linear_model import LogisticRegression
@@ -158,7 +190,7 @@ def show(title: str, m: dict) -> None:
     print(f"    정확도(Accuracy)  {m['accuracy']:>5.1f}%")
 
 
-def cross_validate(raw, labels, fitter, margin, folds: int):
+def cross_validate(raw, labels, fitter, max_fpr, folds: int):
     """겹마다 파라미터를 새로 적합해 못 본 데이터로만 평가한다."""
     import numpy as np
     from sklearn.model_selection import StratifiedKFold
@@ -168,7 +200,7 @@ def cross_validate(raw, labels, fitter, margin, folds: int):
     out = [0.0] * len(raw)
     skf = StratifiedKFold(n_splits=folds, shuffle=True, random_state=0)
     for tr, te in skf.split(X, y):
-        fa, fb, *_ = fitter([raw[i] for i in tr], [labels[i] for i in tr], margin)
+        fa, fb, *_ = fitter([raw[i] for i in tr], [labels[i] for i in tr], max_fpr)
         for i in te:
             out[i] = sigmoid(fa * to_logit(raw[i]) + fb) * 100.0
     return out
@@ -179,8 +211,9 @@ def main():
     parser.add_argument("--report", default=str(REPORT), help="validate_detector 결과 JSON")
     parser.add_argument("--method", default="anchor", choices=sorted(FITTERS),
                         help="anchor(기본) | platt(비교용)")
-    parser.add_argument("--margin", type=float, default=3.0,
-                        help="임계값을 진짜 최고점의 몇 배 위에 둘지 (안전 여유)")
+    parser.add_argument("--max-fpr", type=float, default=0.02,
+                        help="허용 오탐률 상한. 이 안에서 정탐을 최대로 만드는 "
+                             "임계값을 고른다 (이상치 한 건에 끌려가지 않게)")
     parser.add_argument("--folds", type=int, default=5, help="교차검증 겹 수")
     parser.add_argument("--dry-run", action="store_true", help="파일로 저장하지 않음")
     args = parser.parse_args()
@@ -227,14 +260,14 @@ def main():
     print(f"\n--- 방법 비교 ({args.folds}-겹 교차검증, 임계값 50) ---")
     compare = {}
     for name, fitter in sorted(FITTERS.items()):
-        cv = cross_validate(raw, labels, fitter, args.margin, args.folds)
+        cv = cross_validate(raw, labels, fitter, args.max_fpr, args.folds)
         compare[name] = metrics(cv, labels)
         mark = " ←기본값" if name == args.method else ""
         print(f"\n  [{name}]{mark}")
         show("", compare[name])
 
     fitter = FITTERS[args.method]
-    a, b, t_star, _ = fitter(raw, labels, args.margin)
+    a, b, t_star, _ = fitter(raw, labels, args.max_fpr)
     cal = apply(raw, a, b)
     after_in = metrics(cal, labels)
     after_cv = compare[args.method]
@@ -243,7 +276,7 @@ def main():
     print(f"  a = {a:.4f}, b = {b:.4f}")
     if t_star is not None:
         print(f"  판정 경계 원점수 t* = {t_star:.2f}  "
-              f"(진짜 최고점 {real_max:.2f}의 {t_star / max(real_max, 1e-9):.1f}배)")
+              f"(진짜 {(1-args.max_fpr)*100:.0f}분위 {real_max:.2f}의 {t_star / max(real_max, 1e-9):.1f}배)")
     print(f"  변환 예시:  원점수  0 -> {apply([0.0], a, b)[0]:5.1f}    "
           f"1.48 -> {apply([1.48], a, b)[0]:5.1f}    "
           f"30 -> {apply([30.0], a, b)[0]:5.1f}    "
@@ -268,7 +301,7 @@ def main():
         "a": a,
         "b": b,
         "method": args.method,
-        "margin": args.margin,
+        "max_fpr": args.max_fpr,
         "decision_threshold_raw": t_star,
         "real_max_raw": real_max,
         "n_samples": len(rows),

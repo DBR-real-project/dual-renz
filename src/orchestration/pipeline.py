@@ -373,10 +373,23 @@ def analyze(
                 r.faces_detected = face_counts.get(r.index, 0)
                 r.frames_analyzed = len(frames)
                 # ViT일 때는 프레임을 세되 점수는 내지 않는다(위 경고 참고).
+                # 재척도는 집계 뒤에 한 번만 — 검증 스크립트와 같은 순서여야
+                # 임계값 50이 같은 의미를 갖는다 (calibration.py 참고).
                 if frames and video_backend == "ff":
-                    r.deepfake_score = aggregate_scores(vdet.score_frames(frames), aggregation)
+                    from media_detection import calibration as _cal
+                    r.deepfake_score = _cal.calibrate(
+                        aggregate_scores(vdet.score_frames(frames), aggregation))
             if all(r.frames_analyzed == 0 for r in results):
                 warnings.append("얼굴이 검출된 프레임이 없어 영상 분석 결과가 없습니다.")
+            elif video_backend == "ff":
+                # 학습 도메인 밖에서 성능이 무너진다는 걸 실측으로 확인했다.
+                # FF++ 안에서는 오탐 2%인데 DFDC에서는 55%였다. 사용자가 이 점수를
+                # 무조건 믿게 두면 안 되므로 결과에 항상 같이 띄운다.
+                warnings.append(
+                    "영상 딥페이크 점수는 FaceForensics++ 계열 영상에서 검증된 값입니다. "
+                    "다른 촬영 환경(DFDC 실측 오탐률 55%)에서는 신뢰도가 크게 떨어지므로, "
+                    "영상 점수만으로 판단하지 마세요."
+                )
         except Exception as exc:
             warnings.append(f"영상 분석을 건너뜀: {type(exc).__name__}: {exc}")
         finally:

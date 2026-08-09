@@ -23,7 +23,7 @@
 - **content_risk** — `src/content_analysis/`. STT(faster-whisper) → 8대 사회공학 기법 분류
   (LLM, 키 없으면 키워드 규칙) + RAG 사례 대조. `content_risk_stub.py`는 구버전이니 쓰지 말 것.
 - **media_risk** — 이상원 담당. `src/media_detection/media_risk.py`가 정식 진입점.
-  영상 딥페이크는 실제 모델 추론, 음성 스푸핑(AASIST)은 아직 더미.
+  영상·음성 **둘 다 실제 모델 추론**이다. 더미는 오프라인 폴백용으로만 남아 있다.
 - **통합** — `src/scoring/fraud_risk_score.py`. 이 부분은 완성 상태.
 
 ### src/media_detection 구성
@@ -33,9 +33,10 @@
 | `media_risk.py` | **정식 진입점.** 영상+음성 둘 다 실제 모델. 실패 시 더미 폴백 |
 | `media_risk_dummy.py` | 전체 더미. 오프라인 데모 안전판이므로 지우지 말 것 |
 | `faceforensics_detector.py` | **FF++ Xception (영상) — 정식 경로** |
-| `audio_spoof_detector.py` | **AASIST (음성) — 정확도 98%로 가장 신뢰도 높음** |
+| `audio_spoof_detector.py` | **AASIST (음성) — 정확도 98.3%. 도메인이 바뀌어도 유지되는 유일한 엔진** |
+| `calibration.py` | 딥페이크 점수 재척도 (임계값 50 하나만 쓰게 만드는 부분) |
 | `deepfake_detector.py` | HuggingFace ViT (영상) — 폴백 전용 |
-| `face_utils.py` | Haar cascade 얼굴 검출/크롭. dlib 대체 |
+| `face_utils.py` | YuNet(1순위) + Haar(폴백) 얼굴 검출/크롭. dlib 대체 |
 
 `get_media_risk(video_path=...)` 에 영상만 줘도 ffmpeg으로 오디오 트랙을 뽑아
 두 엔진을 모두 돌린다. 오디오 트랙이 없으면 조용히 건너뛰고 `audio_note`에 이유를 남긴다.
@@ -51,10 +52,16 @@ FF++ 가중치가 없는 환경에서 파이프라인이 통째로 죽는 걸 �
 **⚠ FF++는 얼굴 크롭 전용이다.** 얼굴이 검출 안 되면 점수를 내지 않고 예외를 던진다.
 이건 버그가 아니라 의도된 동작 — 전체 프레임을 넣으면 아무 값이나 나온다.
 
-**⚠ 딥페이크 점수는 재척도된 값이다.** `score_frames()`가 이미 변환을 적용해서 돌려준다
-(파이프라인이 `score_video`가 아니라 이걸 직접 부르기 때문). 원점수가 필요하면
-`score_frames_raw()`. 검증 리포트로 재척도 파라미터를 다시 적합할 때는 반드시
-`score_raw` 필드를 쓸 것 — 변환된 점수로 적합하면 **이중 적용**된다.
+**⚠⚠ 영상 엔진은 학습 도메인 밖에서 못 쓴다.** FF++ 안에서는 오탐 2%인데
+DFDC에서는 **55%**다(실측, `docs/validation_report.md` 0-3). 파이프라인이 영상 분석
+결과에 항상 경고를 붙이도록 해놨으니 **그 경고를 지우지 말 것.** 발표·문서에서
+영상 수치를 인용할 때는 반드시 "FF++ 기준"을 함께 적을 것.
+
+**⚠ 딥페이크 점수 재척도는 '집계 뒤 한 번만'이다.** `score_frames()`는 **원점수**를
+돌려주고, 프레임 점수를 집계한 뒤 `calibration.calibrate()`를 한 번 적용한다.
+프레임마다 변환한 뒤 집계하면 적합 방식(영상 단위)과 어긋나 **판정 경계가 50에서
+벗어난다**(실제로 32에 생겼다). 순서를 바꾸지 말 것.
+검증 리포트로 파라미터를 다시 적합할 때는 반드시 `score_raw` 필드를 쓸 것.
 
 ## 실시간 스트리밍 (Phase 2)
 
@@ -67,8 +74,13 @@ FF++ 가중치가 없는 환경에서 파이프라인이 통째로 죽는 걸 �
 - 영상은 안 본다. 프레임마다 얼굴 검출 + Xception은 실시간 예산에 안 맞는다.
 - 실측: 오디오 78초를 26초에 처리(약 3배속).
 
-크롬 확장은 브라우저 없이도 검증할 수 있다: `node scripts/test_extension.js`
-(서버를 먼저 띄울 것). 확장 코드를 그대로 실행해 3계층 메시지 흐름과 세션 통신을 본다.
+크롬 확장 검증은 두 단계다 (둘 다 서버를 먼저 띄울 것):
+
+- `node scripts/test_extension.js` — 브라우저 없이 확장 코드를 그대로 실행. 빠르다.
+- `node scripts/verify_extension_chrome.js` — **진짜 크롬을 띄워** CDP로 조작.
+  `--load-extension`은 Chrome 137+에서 막혔으므로 `Extensions.loadUnpacked`를 쓴다.
+  `tabCapture`의 activeTab 검사는 사람의 실제 클릭에만 통과하므로, 자동 실행은
+  `--allowlisted-extension-id`로 그 검사만 건너뛴다. 사람이 눌러 확인하려면 `--manual`.
 
 ## 확정된 설정 (2026-08-09, 전부 실측 근거 있음)
 
@@ -83,6 +95,7 @@ FF++ 가중치가 없는 환경에서 파이프라인이 통째로 죽는 걸 �
 | 딥페이크 점수 | 재척도 후 임계값 50 하나만 사용 | `calibrate_deepfake.py` |
 | 얼굴 검출기 | YuNet 1순위, Haar 폴백 | `benchmark_face_detector.py` |
 | STT | 파일 `small`, 스트리밍 `base` | `compare_stt_models.py` |
+| 좌우 반전 TTA | 켬 (`DUALGUARD_FF_TTA=0`으로 끔). 정탐 +3%p, 오탐 동일 | `validate_detector.py` |
 
 기본값은 `src/scoring/fraud_risk_score.py`의 `DEFAULT_STRATEGY` / `DEFAULT_CONTENT_WEIGHT`와
 `src/orchestration/pipeline.py`의 `LEVEL_THRESHOLDS` **한 곳씩**에만 있다. 하드코딩하지 말 것.
@@ -99,8 +112,9 @@ scoring 모듈은 이 계약만 알고 있으면 되도록 설계돼 있음.
   (venv 밖에서 돌려야 하면 `py -3.9`)
 - venv는 Python 3.9.7 기반. 패키지는 `requirements.txt` 참고.
 - **opencv는 4.x로 고정.** 5.0에는 `cv2.CascadeClassifier`가 없어서 얼굴 크롭이 죽는다.
-- **dlib은 설치하지 않았고 필요 없다.** 얼굴 검출은 `face_utils.py`의 Haar cascade로 대체했다.
-  dlib을 요구하는 코드를 만나면 설치하지 말고 `face_utils`로 갈아끼울 것.
+- **dlib은 설치하지 않았고 필요 없다.** 얼굴 검출은 `face_utils.py`가 한다
+  (YuNet 1순위, Haar 폴백). YuNet 가중치는 `scripts/download_face_detector.py`로
+  받는다(232KB, 없으면 Haar로 자동 폴백).
 - torch는 CPU 전용 휠. `--extra-index-url https://download.pytorch.org/whl/cpu` 없이 설치하면
   CUDA 휠 2GB를 받으려 하니 주의.
 - **콘솔이 cp949라 한글 출력 중에 죽을 수 있다.** `—`(em dash), `█`, `⚠` 같은 글자가
@@ -121,6 +135,10 @@ scoring 모듈은 이 계약만 알고 있으면 되도록 설계돼 있음.
 .venv\Scripts\python.exe scripts\fetch_korean_speech_samples.py # 초록 시연용 진짜 사람 목소리
 .venv\Scripts\python.exe scripts\test_streaming.py              # 실시간 세션 E2E (서버 필요)
 node scripts\test_extension.js                                  # 크롬 확장 검증 (서버 필요)
+node scripts\verify_extension_chrome.js                         # 실제 크롬으로 확장 검증
+.venv\Scripts\python.exe scripts\test_llm_client.py              # LLM 클라이언트 경로 (키 불필요)
+.venv\Scripts\python.exe scripts\fetch_dfdc_samples.py           # DFDC 크로스도메인 샘플
+.venv\Scripts\python.exe scripts\validate_content_fpr.py         # 콘텐츠 도메인 밖 오탐률
 .venv\Scripts\python.exe scripts\decide_scoring.py              # 스코어링 설정 재결정
 .venv\Scripts\python.exe scripts\benchmark_face_detector.py     # 얼굴 검출기 비교
 ```
@@ -142,7 +160,11 @@ node scripts\test_extension.js                                  # 크롬 확장 
 ASVspoof 464MB parquet). `scripts/_http_range.py`의 `HttpRangeFile`이
 HTTP Range로 원격 파일을 로컬 파일처럼 읽게 해줘서, zipfile과 pyarrow 둘 다
 그대로 쓸 수 있다. **전체를 받지 말고 이 패턴을 먼저 검토할 것.**
-(실적: FF++ 영상 50개를 91.9MB로, ASVspoof 음성 50개를 14.2MB로 확보)
+실적:
+  - FF++ 영상 116개 ← 16.66GB zip
+  - ASVspoof 음성 120개 ← 464MB parquet
+  - **DFDC 영상 50개 ← 96.5GB zip에서 431MB만** (Kaggle 계정 없이 크로스도메인 검증 확보)
+  - Zeroth-Korean 문장 457개 ← 오디오 컬럼을 건너뛰고 텍스트 컬럼만
 
 ## 컨벤션
 

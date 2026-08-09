@@ -1,0 +1,549 @@
+{
+  "sample_dir": "data\\dfdc_samples",
+  "n_samples": 50,
+  "n_real": 20,
+  "n_fake": 30,
+  "max_frames": 12,
+  "aggregation": "topk_mean",
+  "backends": {
+    "ff": {
+      "backend": "ff",
+      "n_samples": 50,
+      "n_scored": 50,
+      "elapsed_sec": 257.8,
+      "separation": {
+        "real_max": 90.67,
+        "real_mean": 48.537000000000006,
+        "real_min": 0.5,
+        "fake_max": 99.96,
+        "fake_mean": 57.976,
+        "fake_min": 0.23,
+        "gap": -90.44
+      },
+      "at_threshold_50": {
+        "threshold": 50.0,
+        "tp": 21,
+        "fn": 9,
+        "fp": 11,
+        "tn": 9,
+        "recall": 0.7,
+        "fpr": 0.55,
+        "precision": 0.65625,
+        "accuracy": 0.6
+      },
+      "best_threshold": {
+        "threshold": 21.84,
+        "tp": 26,
+        "fn": 4,
+        "fp": 12,
+        "tn": 8,
+        "recall": 0.8666666666666667,
+        "fpr": 0.6,
+        "precision": 0.6842105263157895,
+        "accuracy": 0.68
+      },
+      "results": [
+        {
+          "file": "fake_DFDC__clzkcmoyhb.mp4",
+          "label": "fake",
+          "method": "DFDC",
+          "score": 53.47,
+          "score_raw": 26.73,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "fake_DFDC__dtjcyzgdts.mp4",
+          "label": "fake",
+          "method": "DFDC",
+          "score": 70.43,
+          "score_raw": 48.8,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "fake_DFDC__fckxaqjbxk.mp4",
+          "label": "fake",
+          "method": "DFDC",
+          "score": 56.87,
+          "score_raw": 30.42,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "fake_DFDC__hqzwudvhih.mp4",
+          "label": "fake",
+          "method": "DFDC",
+          "score": 57.66,
+          "score_raw": 31.33,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "fake_DFDC__hsxrmrcaqh.mp4",
+          "label": "fake",
+          "method": "DFDC",
+          "score": 98.67,
+          "score_raw": 98.88,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "fake_DFDC__iafvzgpbix.mp4",
+          "label": "fake",
+          "method": "DFDC",
+          "score": 38.31,
+          "score_raw": 13.95,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "fake_DFDC__idczhqbbqz.mp4",
+          "label": "fake",
+          "method": "DFDC",
+          "score": 3.74,
+          "score_raw": 0.42,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "fake_DFDC__inzrlbgtul.mp4",
+          "label": "fake",
+          "method": "DFDC",
+          "score": 99.7,
+          "score_raw": 99.84,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "fake_DFDC__jaurxwocly.mp4",
+          "label": "fake",
+          "method": "DFDC",
+          "score": 24.03,
+          "score_raw": 6.25,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "fake_DFDC__kgfcupxgur.mp4",
+          "label": "fake",
+          "method": "DFDC",
+          "score": 65.0,
+          "score_raw": 40.71,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "fake_DFDC__komngcqveq.mp4",
+          "label": "fake",
+          "method": "DFDC",
+          "score": 57.8,
+          "score_raw": 31.5,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "fake_DFDC__lobxktzhbg.mp4",
+          "label": "fake",
+          "method": "DFDC",
+          "score": 88.07,
+          "score_raw": 80.89,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "fake_DFDC__muksyyltmg.mp4",
+          "label": "fake",
+          "method": "DFDC",
+          "score": 84.92,
+          "score_raw": 74.76,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "fake_DFDC__nkojmntmdg.mp4",
+          "label": "fake",
+          "method": "DFDC",
+          "score": 24.29,
+          "score_raw": 6.36,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "fake_DFDC__owxbbpjpch.mp4",
+          "label": "fake",
+          "method": "DFDC",
+          "score": 74.97,
+          "score_raw": 56.32,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "fake_DFDC__rfpjsloxzg.mp4",
+          "label": "fake",
+          "method": "DFDC",
+          "score": 47.73,
+          "score_raw": 21.23,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "fake_DFDC__sglzgdcjkb.mp4",
+          "label": "fake",
+          "method": "DFDC",
+          "score": 62.79,
+          "score_raw": 37.71,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "fake_DFDC__sphirandia.mp4",
+          "label": "fake",
+          "method": "DFDC",
+          "score": 71.2,
+          "score_raw": 50.03,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "fake_DFDC__txxungvxms.mp4",
+          "label": "fake",
+          "method": "DFDC",
+          "score": 99.96,
+          "score_raw": 100.0,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "fake_DFDC__uaukglhmje.mp4",
+          "label": "fake",
+          "method": "DFDC",
+          "score": 62.15,
+          "score_raw": 36.86,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "fake_DFDC__uvfkppqsjy.mp4",
+          "label": "fake",
+          "method": "DFDC",
+          "score": 1.06,
+          "score_raw": 0.08,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "fake_DFDC__viuioldtnu.mp4",
+          "label": "fake",
+          "method": "DFDC",
+          "score": 0.23,
+          "score_raw": 0.01,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "fake_DFDC__vsmadeuczx.mp4",
+          "label": "fake",
+          "method": "DFDC",
+          "score": 84.76,
+          "score_raw": 74.46,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "fake_DFDC__vvwuqslvnq.mp4",
+          "label": "fake",
+          "method": "DFDC",
+          "score": 61.94,
+          "score_raw": 36.59,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "fake_DFDC__wnaweyzlqh.mp4",
+          "label": "fake",
+          "method": "DFDC",
+          "score": 65.1,
+          "score_raw": 40.86,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "fake_DFDC__xpzfhhwkwb.mp4",
+          "label": "fake",
+          "method": "DFDC",
+          "score": 94.53,
+          "score_raw": 92.85,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "fake_DFDC__xxvwbfmgzy.mp4",
+          "label": "fake",
+          "method": "DFDC",
+          "score": 64.76,
+          "score_raw": 40.38,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "fake_DFDC__ykbhmueovi.mp4",
+          "label": "fake",
+          "method": "DFDC",
+          "score": 13.95,
+          "score_raw": 2.69,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "fake_DFDC__ztwlbdwyni.mp4",
+          "label": "fake",
+          "method": "DFDC",
+          "score": 40.71,
+          "score_raw": 15.62,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "fake_DFDC__zvsivkdkak.mp4",
+          "label": "fake",
+          "method": "DFDC",
+          "score": 70.48,
+          "score_raw": 48.88,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "real__DFDC_apedduehoy.mp4",
+          "label": "real",
+          "method": "-",
+          "score": 7.43,
+          "score_raw": 1.08,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "real__DFDC_dhjnjkzuhq.mp4",
+          "label": "real",
+          "method": "-",
+          "score": 83.92,
+          "score_raw": 72.83,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "real__DFDC_exseruhiuk.mp4",
+          "label": "real",
+          "method": "-",
+          "score": 1.29,
+          "score_raw": 0.1,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "real__DFDC_fufcmupzen.mp4",
+          "label": "real",
+          "method": "-",
+          "score": 1.64,
+          "score_raw": 0.14,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "real__DFDC_hivnldfvyl.mp4",
+          "label": "real",
+          "method": "-",
+          "score": 86.77,
+          "score_raw": 78.36,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "real__DFDC_hplxtssgnz.mp4",
+          "label": "real",
+          "method": "-",
+          "score": 63.1,
+          "score_raw": 38.11,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "real__DFDC_jawgcggquk.mp4",
+          "label": "real",
+          "method": "-",
+          "score": 90.67,
+          "score_raw": 85.88,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "real__DFDC_lnhkjhyhvw.mp4",
+          "label": "real",
+          "method": "-",
+          "score": 75.93,
+          "score_raw": 57.98,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "real__DFDC_lokzwdldxp.mp4",
+          "label": "real",
+          "method": "-",
+          "score": 41.04,
+          "score_raw": 15.86,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "real__DFDC_pqdeutauqc.mp4",
+          "label": "real",
+          "method": "-",
+          "score": 5.46,
+          "score_raw": 0.7,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "real__DFDC_prdrkaxeob.mp4",
+          "label": "real",
+          "method": "-",
+          "score": 15.42,
+          "score_raw": 3.12,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "real__DFDC_qyqufaskjs.mp4",
+          "label": "real",
+          "method": "-",
+          "score": 82.75,
+          "score_raw": 70.57,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "real__DFDC_rnpefxwptv.mp4",
+          "label": "real",
+          "method": "-",
+          "score": 0.5,
+          "score_raw": 0.03,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "real__DFDC_upmgtackuf.mp4",
+          "label": "real",
+          "method": "-",
+          "score": 85.95,
+          "score_raw": 76.76,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "real__DFDC_vpmyeepbep.mp4",
+          "label": "real",
+          "method": "-",
+          "score": 69.52,
+          "score_raw": 47.38,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "real__DFDC_vtunvalyji.mp4",
+          "label": "real",
+          "method": "-",
+          "score": 80.72,
+          "score_raw": 66.72,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "real__DFDC_xcruhaccxc.mp4",
+          "label": "real",
+          "method": "-",
+          "score": 55.36,
+          "score_raw": 28.74,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "real__DFDC_xjzkfqddyk.mp4",
+          "label": "real",
+          "method": "-",
+          "score": 15.06,
+          "score_raw": 3.01,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "real__DFDC_xugmhbetrw.mp4",
+          "label": "real",
+          "method": "-",
+          "score": 88.56,
+          "score_raw": 81.85,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        },
+        {
+          "file": "real__DFDC_yexeazbqig.mp4",
+          "label": "real",
+          "method": "-",
+          "score": 19.65,
+          "score_raw": 4.53,
+          "face_detector": "yunet",
+          "frames": 10,
+          "face_rate": 1.0
+        }
+      ]
+    }
+  }
+}

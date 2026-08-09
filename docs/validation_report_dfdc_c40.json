@@ -1,0 +1,325 @@
+{
+  "weights": "all_c40.p",
+  "results": [
+    {
+      "file": "fake_DFDC__clzkcmoyhb.mp4",
+      "label": "fake",
+      "score": 86.27151679027956,
+      "score_raw": 77.39287614822388
+    },
+    {
+      "file": "fake_DFDC__dtjcyzgdts.mp4",
+      "label": "fake",
+      "score": 94.02118668017408,
+      "score_raw": 91.97879135608673
+    },
+    {
+      "file": "fake_DFDC__fckxaqjbxk.mp4",
+      "label": "fake",
+      "score": 65.60283225334817,
+      "score_raw": 41.56228452920914
+    },
+    {
+      "file": "fake_DFDC__hqzwudvhih.mp4",
+      "label": "fake",
+      "score": 87.24526510975177,
+      "score_raw": 79.288050532341
+    },
+    {
+      "file": "fake_DFDC__hsxrmrcaqh.mp4",
+      "label": "fake",
+      "score": 99.82270557029436,
+      "score_raw": 99.9219536781311
+    },
+    {
+      "file": "fake_DFDC__iafvzgpbix.mp4",
+      "label": "fake",
+      "score": 37.31760194672046,
+      "score_raw": 13.295207626651973
+    },
+    {
+      "file": "fake_DFDC__idczhqbbqz.mp4",
+      "label": "fake",
+      "score": 82.18825343804112,
+      "score_raw": 69.49952244758606
+    },
+    {
+      "file": "fake_DFDC__inzrlbgtul.mp4",
+      "label": "fake",
+      "score": 97.33825945310764,
+      "score_raw": 97.21217155456543
+    },
+    {
+      "file": "fake_DFDC__jaurxwocly.mp4",
+      "label": "fake",
+      "score": 98.83295976299239,
+      "score_raw": 99.06065762042999
+    },
+    {
+      "file": "fake_DFDC__kgfcupxgur.mp4",
+      "label": "fake",
+      "score": 93.0665496620852,
+      "score_raw": 90.29812216758728
+    },
+    {
+      "file": "fake_DFDC__komngcqveq.mp4",
+      "label": "fake",
+      "score": 63.477738111522044,
+      "score_raw": 38.62345218658447
+    },
+    {
+      "file": "fake_DFDC__lobxktzhbg.mp4",
+      "label": "fake",
+      "score": 98.70864503056609,
+      "score_raw": 98.92628788948059
+    },
+    {
+      "file": "fake_DFDC__muksyyltmg.mp4",
+      "label": "fake",
+      "score": 96.87138981726943,
+      "score_raw": 96.55210375785828
+    },
+    {
+      "file": "fake_DFDC__nkojmntmdg.mp4",
+      "label": "fake",
+      "score": 73.89662346173976,
+      "score_raw": 54.48125600814819
+    },
+    {
+      "file": "fake_DFDC__owxbbpjpch.mp4",
+      "label": "fake",
+      "score": 96.32707170449883,
+      "score_raw": 95.74464559555054
+    },
+    {
+      "file": "fake_DFDC__rfpjsloxzg.mp4",
+      "label": "fake",
+      "score": 97.03553199315903,
+      "score_raw": 96.78781926631927
+    },
+    {
+      "file": "fake_DFDC__sglzgdcjkb.mp4",
+      "label": "fake",
+      "score": 98.55938837868905,
+      "score_raw": 98.75943064689636
+    },
+    {
+      "file": "fake_DFDC__sphirandia.mp4",
+      "label": "fake",
+      "score": 94.87712140904233,
+      "score_raw": 93.43203008174896
+    },
+    {
+      "file": "fake_DFDC__txxungvxms.mp4",
+      "label": "fake",
+      "score": 88.55735170004877,
+      "score_raw": 81.83352947235107
+    },
+    {
+      "file": "fake_DFDC__uaukglhmje.mp4",
+      "label": "fake",
+      "score": 87.2728058146713,
+      "score_raw": 79.34161126613617
+    },
+    {
+      "file": "fake_DFDC__uvfkppqsjy.mp4",
+      "label": "fake",
+      "score": 45.35481420949407,
+      "score_raw": 19.197657704353333
+    },
+    {
+      "file": "fake_DFDC__viuioldtnu.mp4",
+      "label": "fake",
+      "score": 26.67065351081393,
+      "score_raw": 7.415668899193406
+    },
+    {
+      "file": "fake_DFDC__vsmadeuczx.mp4",
+      "label": "fake",
+      "score": 93.31249222892285,
+      "score_raw": 90.73644876480103
+    },
+    {
+      "file": "fake_DFDC__vvwuqslvnq.mp4",
+      "label": "fake",
+      "score": 92.94813211766233,
+      "score_raw": 90.0858610868454
+    },
+    {
+      "file": "fake_DFDC__wnaweyzlqh.mp4",
+      "label": "fake",
+      "score": 87.92682662179048,
+      "score_raw": 80.61217665672302
+    },
+    {
+      "file": "fake_DFDC__xpzfhhwkwb.mp4",
+      "label": "fake",
+      "score": 90.47302703021516,
+      "score_raw": 85.5050265789032
+    },
+    {
+      "file": "fake_DFDC__xxvwbfmgzy.mp4",
+      "label": "fake",
+      "score": 21.534059209017563,
+      "score_raw": 5.236766627058387
+    },
+    {
+      "file": "fake_DFDC__ykbhmueovi.mp4",
+      "label": "fake",
+      "score": 56.076127085335834,
+      "score_raw": 29.53064925968647
+    },
+    {
+      "file": "fake_DFDC__ztwlbdwyni.mp4",
+      "label": "fake",
+      "score": 67.14387997599918,
+      "score_raw": 43.788181245326996
+    },
+    {
+      "file": "fake_DFDC__zvsivkdkak.mp4",
+      "label": "fake",
+      "score": 96.62316828659291,
+      "score_raw": 96.18861973285675
+    },
+    {
+      "file": "real__DFDC_apedduehoy.mp4",
+      "label": "real",
+      "score": 95.3687360268553,
+      "score_raw": 94.23939287662506
+    },
+    {
+      "file": "real__DFDC_dhjnjkzuhq.mp4",
+      "label": "real",
+      "score": 98.47131465064255,
+      "score_raw": 98.65831434726715
+    },
+    {
+      "file": "real__DFDC_exseruhiuk.mp4",
+      "label": "real",
+      "score": 45.33751476409479,
+      "score_raw": 19.183392077684402
+    },
+    {
+      "file": "real__DFDC_fufcmupzen.mp4",
+      "label": "real",
+      "score": 82.17279745500329,
+      "score_raw": 69.4700300693512
+    },
+    {
+      "file": "real__DFDC_hivnldfvyl.mp4",
+      "label": "real",
+      "score": 95.94384799309388,
+      "score_raw": 95.15454471111298
+    },
+    {
+      "file": "real__DFDC_hplxtssgnz.mp4",
+      "label": "real",
+      "score": 73.5177904070485,
+      "score_raw": 53.84167917072773
+    },
+    {
+      "file": "real__DFDC_jawgcggquk.mp4",
+      "label": "real",
+      "score": 78.19292029668357,
+      "score_raw": 62.03888952732086
+    },
+    {
+      "file": "real__DFDC_lnhkjhyhvw.mp4",
+      "label": "real",
+      "score": 77.31941323821022,
+      "score_raw": 60.4591965675354
+    },
+    {
+      "file": "real__DFDC_lokzwdldxp.mp4",
+      "label": "real",
+      "score": 94.15957318363061,
+      "score_raw": 92.21747815608978
+    },
+    {
+      "file": "real__DFDC_pqdeutauqc.mp4",
+      "label": "real",
+      "score": 91.05473337065102,
+      "score_raw": 86.60235702991486
+    },
+    {
+      "file": "real__DFDC_prdrkaxeob.mp4",
+      "label": "real",
+      "score": 95.17802434925045,
+      "score_raw": 93.92877519130707
+    },
+    {
+      "file": "real__DFDC_qyqufaskjs.mp4",
+      "label": "real",
+      "score": 78.8039791557431,
+      "score_raw": 63.15595805644989
+    },
+    {
+      "file": "real__DFDC_rnpefxwptv.mp4",
+      "label": "real",
+      "score": 10.435518382152994,
+      "score_raw": 1.7554902005940676
+    },
+    {
+      "file": "real__DFDC_upmgtackuf.mp4",
+      "label": "real",
+      "score": 99.38975533624547,
+      "score_raw": 99.6010810136795
+    },
+    {
+      "file": "real__DFDC_vpmyeepbep.mp4",
+      "label": "real",
+      "score": 83.18908364919095,
+      "score_raw": 71.41733765602112
+    },
+    {
+      "file": "real__DFDC_vtunvalyji.mp4",
+      "label": "real",
+      "score": 96.78830142871671,
+      "score_raw": 96.43135368824005
+    },
+    {
+      "file": "real__DFDC_xcruhaccxc.mp4",
+      "label": "real",
+      "score": 95.12071646959438,
+      "score_raw": 93.83478462696075
+    },
+    {
+      "file": "real__DFDC_xjzkfqddyk.mp4",
+      "label": "real",
+      "score": 97.6642517633517,
+      "score_raw": 97.65284657478333
+    },
+    {
+      "file": "real__DFDC_xugmhbetrw.mp4",
+      "label": "real",
+      "score": 87.3396244336859,
+      "score_raw": 79.47154343128204
+    },
+    {
+      "file": "real__DFDC_yexeazbqig.mp4",
+      "label": "real",
+      "score": 84.62433903000229,
+      "score_raw": 74.19049441814423
+    }
+  ],
+  "separation": {
+    "real_max": 99.38975533624547,
+    "real_mean": 83.00361176919239,
+    "real_min": 10.435518382152994,
+    "fake_max": 99.82270557029436,
+    "fake_mean": 80.51179927879484,
+    "fake_min": 21.534059209017563,
+    "gap": -77.8556961272279
+  },
+  "at_threshold_50": {
+    "threshold": 50.0,
+    "tp": 26,
+    "fn": 4,
+    "fp": 18,
+    "tn": 2,
+    "recall": 0.8666666666666667,
+    "fpr": 0.9,
+    "precision": 0.5909090909090909,
+    "accuracy": 0.56
+  }
+}

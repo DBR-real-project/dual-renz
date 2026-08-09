@@ -25,6 +25,7 @@ docs/model_research.md 1순위 경로. FF++ 데이터로 학습된 공식 Xcepti
   3. pip install -r requirements.txt (pretrainedmodels 필요)
 """
 
+import os
 import sys
 import warnings
 from dataclasses import dataclass
@@ -46,6 +47,14 @@ MODELS_DIR = PROJECT_ROOT / "models"
 # 원본 코드 기준: 출력 인덱스 1 = fake, 0 = real
 FAKE_INDEX = 1
 INPUT_SIZE = 299
+
+
+def _tta_enabled() -> bool:
+    """
+    좌우 반전 TTA 사용 여부. 기본 켜짐, `DUALGUARD_FF_TTA=0`으로 끈다.
+    추론이 2배로 늘어나므로 끄고 싶을 때가 있다(스트리밍 등).
+    """
+    return os.environ.get("DUALGUARD_FF_TTA", "1").strip() not in ("0", "false", "no")
 
 
 @dataclass
@@ -199,17 +208,32 @@ class FaceForensicsDetector:
 
     def score_frames(self, frames_bgr: Sequence[np.ndarray]) -> List[float]:
         """
-        BGR 프레임(얼굴 크롭 상태 권장) 리스트의 위조 위험도(0~100).
+        BGR 프레임(얼굴 크롭 상태 권장) 리스트의 **원점수**(0~100).
 
-        **재척도가 적용된 값**을 돌려준다. 파이프라인(orchestration/pipeline.py)은
-        score_video가 아니라 이 함수를 직접 부르기 때문에, 여기서 변환하지 않으면
-        검증 스크립트와 실제 서비스가 서로 다른 축의 점수를 쓰게 된다.
-        원점수가 필요하면 score_frames_raw()를 쓸 것.
+        재척도는 여기서 하지 않는다. 프레임마다 변환한 뒤 집계하면,
+        재척도 파라미터를 **영상 단위 점수로 적합**한 것과 어긋난다
+        (상위 k개 평균은 단조 변환과 교환되지 않는다). 실제로 그렇게 했더니
+        판정 경계가 50이 아니라 32에 생겼다.
+        집계까지 끝난 뒤 `calibration.calibrate()`를 한 번만 적용할 것.
         """
-        return [calibration.calibrate(s) for s in self.score_frames_raw(frames_bgr)]
+        return self.score_frames_raw(frames_bgr)
 
     def score_frames_raw(self, frames_bgr: Sequence[np.ndarray]) -> List[float]:
-        """모델이 그대로 뱉은 위조 확률(0~100). 재척도 전 값."""
+        """
+        모델이 그대로 뱉은 위조 확률(0~100). 재척도 전 값.
+
+        TTA(테스트 시 증강)가 켜져 있으면 좌우 반전본도 함께 넣고 **큰 쪽**을 쓴다.
+        평균이 아니라 최댓값인 이유: 위조 흔적은 얼굴 한쪽에만 남는 경우가 많아서
+        평균을 내면 깨끗한 쪽이 신호를 희석한다. `DUALGUARD_FF_TTA=0`으로 끌 수 있다.
+        효과 실측은 docs/validation_report.md 참고.
+        """
+        scores = self._infer(frames_bgr)
+        if not _tta_enabled() or not frames_bgr:
+            return scores
+        flipped = self._infer([cv2.flip(f, 1) for f in frames_bgr])
+        return [max(a, b) for a, b in zip(scores, flipped)]
+
+    def _infer(self, frames_bgr: Sequence[np.ndarray]) -> List[float]:
         self._ensure_loaded()
         if not frames_bgr:
             return []
@@ -276,21 +300,21 @@ class FaceForensicsDetector:
         for i in range(0, len(frames), batch_size):
             raw_scores.extend(self.score_frames_raw(frames[i:i + batch_size]))
 
-        # 재척도는 **프레임 단위로** 먼저 한 뒤 집계한다. 원점수가 0/100에 몰려 있어
-        # 집계부터 하면 이미 정보가 뭉개진 값을 변환하게 된다. 순서를 바꾸면
-        # 상위 k개 평균 같은 집계에서 결과가 달라진다. (calibration.py 참고)
-        scores = [calibration.calibrate(s) for s in raw_scores]
+        # 재척도는 **집계 뒤에 한 번만** 적용한다. 파라미터를 영상 단위 점수로
+        # 적합했기 때문이다(순서를 바꾸면 판정 경계가 50에서 벗어난다).
+        raw_video = aggregate_scores(raw_scores, aggregation)
+        scores = raw_scores
 
         return FFVideoResult(
             video_path=str(path),
-            deepfake_score=aggregate_scores(scores, aggregation),
+            deepfake_score=calibration.calibrate(raw_video),
             frame_scores=scores,
             frames_analyzed=len(scores),
             faces_detected=faces_detected,
             aggregation=aggregation,
             weights_path=str(self.weights_path),
             raw_frame_scores=raw_scores,
-            raw_deepfake_score=aggregate_scores(raw_scores, aggregation),
+            raw_deepfake_score=raw_video,
             face_detector=face_backend(),
         )
 
