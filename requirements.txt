@@ -69,7 +69,7 @@ faster-whisper==1.2.1
 anthropic==0.121.0
 # Gemini 백엔드. 구버전 google-generativeai가 아니라 신규 공식 SDK(google-genai)다.
 # 둘은 API 모양이 완전히 다르니 섞어 쓰지 말 것.
-google-genai==2.17.0
+google-genai==1.47.0
 
 # --- 콘텐츠 분석: RAG 사례 검색 ---
 # 임베딩 모델은 반드시 한국어 모델(jhgan/ko-sroberta-multitask)을 쓸 것.
