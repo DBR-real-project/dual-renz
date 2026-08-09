@@ -21,6 +21,10 @@ from pathlib import Path
 import cv2
 
 
+from _console import setup_console  # noqa: E402
+
+setup_console()  # cp949 콘솔에서 유니코드 출력 중 죽는 문제 방지 (_console.py)
+
 def extract_frames(input_path: Path, output_dir: Path, target_fps: float, size: int) -> dict:
     output_dir.mkdir(parents=True, exist_ok=True)
 

@@ -24,6 +24,10 @@ import zipfile
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
+from _console import setup_console  # noqa: E402
+
+setup_console()  # cp949 콘솔에서 유니코드 출력 중 죽는 문제 방지 (_console.py)
+
 URL = "http://kaldir.vc.in.tum.de/FaceForensics/models/faceforensics++_models.zip"
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 MODELS_DIR = PROJECT_ROOT / "models"

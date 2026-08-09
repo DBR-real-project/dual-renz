@@ -22,6 +22,10 @@ from pathlib import Path
 import cv2
 import numpy as np
 
+from _console import setup_console  # noqa: E402
+
+setup_console()  # cp949 콘솔에서 유니코드 출력 중 죽는 문제 방지 (_console.py)
+
 OUT_DIR = Path(__file__).resolve().parent.parent / "data" / "test_clips"
 DEFAULT_OUT = OUT_DIR / "synthetic_test_clip.mp4"
 

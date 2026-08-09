@@ -17,6 +17,10 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 
+from _console import setup_console  # noqa: E402
+
+setup_console()  # cp949 콘솔에서 유니코드 출력 중 죽는 문제 방지 (_console.py)
+
 def main():
     parser = argparse.ArgumentParser(description="DualGuard 서버 실행")
     parser.add_argument("--host", default="127.0.0.1",

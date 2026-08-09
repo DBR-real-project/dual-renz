@@ -9,7 +9,7 @@
       "engine": "키워드 규칙",
       "n_scenarios": 21,
       "n_scored": 21,
-      "elapsed_sec": 16.8,
+      "elapsed_sec": 16.6,
       "separation": {
         "real_max": 60.61,
         "real_mean": 26.250999999999998,

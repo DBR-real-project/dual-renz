@@ -19,6 +19,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
+from _console import setup_console  # noqa: E402
+
+setup_console()  # cp949 콘솔에서 유니코드 출력 중 죽는 문제 방지 (_console.py)
+
 from media_detection.deepfake_detector import FrameAggregation  # noqa: E402
 from media_detection.media_risk_dummy import MediaCombineMode  # noqa: E402
 from orchestration.pipeline import analyze  # noqa: E402

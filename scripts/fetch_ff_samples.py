@@ -33,6 +33,10 @@ import urllib.request
 import zipfile
 from pathlib import Path
 
+from _console import setup_console  # noqa: E402
+
+setup_console()  # cp949 콘솔에서 유니코드 출력 중 죽는 문제 방지 (_console.py)
+
 DATASET_URL = (
     "https://huggingface.co/datasets/bitmind/FaceForensicsC23/"
     "resolve/main/FaceForensics%2B%2B_C23.zip"

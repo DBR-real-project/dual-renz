@@ -62,25 +62,39 @@ $env:DUALGUARD_LLM_PROVIDER = "gemini"   # auto(기본) | anthropic | gemini
 
 **우선순위: 중.** (오프라인 분류기로 대체 가능해져 '상'에서 내려왔다)
 
-### 1-1-b. ⭐ 한국어 '초록(안전)' 데모 샘플 녹음 — 30초면 된다
+### 1-1-b. ~~한국어 '초록(안전)' 데모 샘플~~ — 해결됨 (2026-08-09)
 
-**시연에서 가장 아쉬운 지점.** 저장소의 `normal_call.wav`는 Windows TTS라 음성이
-실제로 합성이다. AASIST가 정확히 잡아 미디어 위험도 100 → 결과가 '중간'으로 나온다.
-**판정은 맞지만 초록 등급을 보여줄 수가 없다.**
+**해결됐다.** 사람이 녹음하지 않아도 초록을 보여줄 수 있다.
 
-사람이 30초만 녹음하면 해결된다:
+문제는 저장소의 `normal_call.wav`가 Windows TTS라 음성이 실제로 합성이라는 것이었다.
+AASIST가 정확히 잡아 미디어 위험도 100 → 결과가 '중간'이 됐다. 판정은 맞지만
+초록 등급을 보여줄 수가 없었다.
+
+공개 한국어 음성 코퍼스에서 **실제 사람 발화**를 가져오는 것으로 해결했다:
 
 ```powershell
-.venv\Scripts\python.exe scripts\record_call_sample.py --list      # 마이크 이름 확인
-.venv\Scripts\python.exe scripts\record_call_sample.py --device "마이크(Realtek(R) Audio)"
+.venv\Scripts\python.exe scripts\fetch_korean_speech_samples.py --verify
+# → data\korean_calls\real_normal_call.wav (40초)
 ```
 
-대본이 화면에 뜨니 그대로 읽으면 된다. `--script scam` 으로 하면 "목소리는 진짜인데
-화법이 사기"인 교차검증 시연용 샘플도 만들 수 있다.
+Zeroth-Korean(openslr.org/40, CC BY 4.0) test 스플릿에서 화자 한 명의 발화 5개를
+이어 붙인다. 발화는 **오프라인 분류기로 90개를 전수 채점해 전 카테고리 0점인
+것만** 골랐고, STT가 잘 받아쓰는 일상 어휘인지도 확인했다(자세한 기준은 스크립트
+docstring). 실측:
 
-실측 근거: 진짜 사람 목소리 미디어 위험도 0.0~2.2 → 낮음(초록), 합성 음성 100.
+| 파일 | 콘텐츠 | 미디어 | FRS | 등급 |
+|---|---|---|---|---|
+| `real_normal_call.wav` (진짜 목소리) | 0.0 | 26.7 | **13.3** | 낮음 🟢 |
+| `normal_call.wav` (TTS, 내용 정상) | 0.0 | 100.0 | **50.0** | 중간 🟡 |
+| `scam_call.wav` | 100.0 | 100.0 | **100.0** | 높음 🔴 |
 
-**우선순위: 상.** 시연 품질에 직결된다.
+세 등급이 전부 나오므로 시연 준비물은 더 없다.
+
+**남은 것 하나** — "목소리는 진짜인데 화법이 사기"인 반대 방향 노랑은 여전히
+사람이 읽어야 한다(`record_call_sample.py --script scam`). 공개 낭독 코퍼스에는
+사기 대본이 없다. 없어도 위 표의 노랑으로 교차검증 설명은 된다.
+
+**우선순위: 하.**
 
 ### 1-2. 크롬 확장 실제 로드 테스트
 

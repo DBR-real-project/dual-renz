@@ -12,10 +12,16 @@
 ```powershell
 cd C:\Users\migle\DualGuard-MediaAnalysis
 
-# ① 엔진이 전부 준비됐는지 — 모델을 미리 로드해 첫 분석 지연을 없앤다
+# ① 시연 파일 세 개가 다 있는지
+dir data\korean_calls\scam_call.wav          # 빨강용
+dir data\korean_calls\normal_call.wav        # 노랑용
+dir data\korean_calls\real_normal_call.wav   # 초록용 — 없으면 아래 한 줄로 생성
+.venv\Scripts\python.exe scripts\fetch_korean_speech_samples.py
+
+# ② 엔진이 전부 준비됐는지 — 모델을 미리 로드해 첫 분석 지연을 없앤다
 .venv\Scripts\python.exe scripts\analyze_call.py --input data\korean_calls\scam_call.wav --quiet
 
-# ② 서버 기동
+# ③ 서버 기동
 .venv\Scripts\python.exe scripts\run_server.py
 #    → http://127.0.0.1:8000 접속해서 상단 칩이 초록인지 확인
 ```
@@ -47,41 +53,48 @@ cd C:\Users\migle\DualGuard-MediaAnalysis
 
 ---
 
-## 2. 초록 — 정상 통화
+## 2. 초록 — 정상 통화 (진짜 사람 목소리)
 
-**준비가 필요하다.** 저장소의 `normal_call.wav`는 Windows TTS로 만든 것이라
-음성 자체가 합성이다. AASIST가 정확히 합성으로 잡아 미디어 위험도가 100이 되고,
-결과가 '중간'으로 나온다. **판정은 맞지만 초록을 못 보여준다.**
+`data\korean_calls\real_normal_call.wav` 업로드
 
-시연 전에 **본인 목소리로 30초만 녹음**하면 해결된다:
+파일이 없으면 한 번만 만들면 된다 (사람이 녹음할 필요 없다):
 
 ```powershell
-.venv\Scripts\python.exe scripts\record_call_sample.py --list      # 마이크 이름 확인
-.venv\Scripts\python.exe scripts\record_call_sample.py --device "마이크(Realtek(R) Audio)"
+.venv\Scripts\python.exe scripts\fetch_korean_speech_samples.py --verify
 ```
 
-대본이 화면에 뜨니 그대로 읽으면 된다. 결과는
-`data\korean_calls\real_normal_call.wav`.
+공개 한국어 음성 코퍼스 **Zeroth-Korean**(CC BY 4.0)에서 실제 사람이 녹음한
+발화를 가져와 40초짜리 정상 통화를 만든다. 매번 같은 파일이 나온다.
 
-**기대 결과**: 미디어 위험도 낮음(진짜 목소리) + 콘텐츠 0 → **낮음(초록)**
+**기대 결과** (실측, 재현됨)
+- Fraud Risk Score **13.3 / 낮음** — "특별한 위험 신호가 없습니다"
+- 콘텐츠 위험도 **0.0** — 걸린 기법 없음
+- 미디어 위험도 **26.7** — 진짜 목소리로 판정
 
-> 실측 근거: 진짜 사람 목소리(ASVspoof bonafide) 미디어 위험도 0.0~2.2,
-> 합성 음성 100.
+**말할 것**
+> "같은 파이프라인에 정상 통화를 넣으면 초록이 나옵니다. **헛경보를 내지 않는다는
+> 게 이 시스템에서 가장 중요합니다.** 사기라고 잘못 알리는 순간 아무도 안 씁니다."
+
+> ⚠ 저장소의 `normal_call.wav`(Windows TTS)로는 초록이 안 나온다. 음성 자체가
+> 합성이라 AASIST가 정확히 잡아 미디어 100 → 중간이 된다. 그건 3번에서 쓴다.
+
+본인 목소리로 직접 녹음하고 싶으면 `record_call_sample.py`도 그대로 쓸 수 있다.
 
 ---
 
-## 3. 노랑 — 목소리는 진짜인데 화법이 사기 (교차검증의 핵심)
+## 3. 노랑 — 내용은 정상인데 목소리가 합성 (교차검증 ①)
 
-`record_call_sample.py --script scam` 으로 **사람이 직접 사기 대본을 읽어** 녹음한다.
+`data\korean_calls\normal_call.wav` 업로드 (저장소에 이미 있는 TTS 파일)
 
-**기대 결과**: 미디어 위험도는 낮은데(진짜 목소리) 콘텐츠 위험도가 높아 경고가 뜬다.
+**기대 결과**: 콘텐츠 위험도 **0** / 미디어 위험도 **100** → **50.0 중간(노랑)**
 
 **말할 것**
-> "목소리는 진짜입니다. 딥페이크 탐지만 하는 솔루션은 이걸 놓칩니다.
-> 저희는 대화 내용을 함께 보기 때문에 잡아냅니다. 반대로 화법이 자연스러워도
-> 얼굴이 합성이면 미디어 엔진이 잡습니다. 이게 교차검증입니다."
+> "대화 내용은 완전히 정상입니다. 그런데 목소리가 합성이라 경고가 뜹니다.
+> 화법만 보는 솔루션은 이걸 못 잡습니다."
 
-시간이 없으면 이 대신 아래 명령 하나로 4조합 표를 보여줘도 된다:
+반대 방향(**목소리는 진짜인데 화법이 사기**)까지 보여주려면 사람이 사기 대본을
+읽어 녹음해야 한다 — `record_call_sample.py --script scam`. 시간이 없으면
+아래 4조합 표로 대신해도 된다:
 
 ```powershell
 .venv\Scripts\python.exe scripts\demo_cross_validation.py
@@ -137,6 +150,12 @@ cd C:\Users\migle\DualGuard-MediaAnalysis
 > 통화 길이의 절반 수준입니다. 크롬 확장으로 실시간화하는 코드는 작성돼 있고,
 > 백엔드에 세션 API를 붙이는 것이 다음 단계입니다.
 
+**"시연에 쓴 통화는 실제 녹취인가요?"** ← 물어보면 숨기지 말 것
+> 아닙니다. 세 개 다 시연용으로 만든 파일입니다. 빨강·노랑은 저희가 쓴 대본을
+> TTS로 읽힌 것이고, 초록은 공개 한국어 음성 코퍼스 Zeroth-Korean(CC BY 4.0)에서
+> **실제 사람이 녹음한 발화**를 가져와 이어 붙인 것입니다. 실제 피해 녹취는
+> 개인정보라 쓸 수 없어서, 진짜 사람 목소리가 필요한 초록만 공개 코퍼스로 대체했습니다.
+
 **"오탐이 나면 어떻게 하나요?"**
 > 설계 원칙으로 **확정 판정을 하지 않습니다.** "위험 가능성 약 OO%"로 표시하고,
 > 왜 그렇게 판단했는지 근거 문장과 유사 사례를 항상 함께 보여줍니다.
@@ -153,6 +172,9 @@ cd C:\Users\migle\DualGuard-MediaAnalysis
   검증 조건을 먼저 밝히면 오히려 신뢰를 얻는다.
 - **크롬 확장은 미리 테스트하지 않았다면 시연하지 말 것** — 코드는 있지만
   브라우저 실제 로드 검증이 안 됐다(`blocked_and_next.md` 1-2).
+- **`real_normal_call.wav`를 "실제 통화 녹취"라고 소개하지 말 것** — 공개 코퍼스의
+  낭독 음성을 이어 붙인 것이다. 진짜 사람 목소리인 건 맞지만 통화는 아니다.
+  출처는 `data\korean_calls\real_normal_call_출처.txt` 에 남겨뒀다.
 
 ---
 

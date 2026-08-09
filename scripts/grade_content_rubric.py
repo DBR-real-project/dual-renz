@@ -34,6 +34,10 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPT_DIR))
 sys.path.insert(0, str(SCRIPT_DIR.parent / "src"))
 
+from _console import setup_console  # noqa: E402
+
+setup_console()  # cp949 콘솔에서 유니코드 출력 중 죽는 문제 방지 (_console.py)
+
 from content_analysis import llm_classifier  # noqa: E402
 from content_analysis.content_risk import (  # noqa: E402
     CATEGORY_LABELS_KO,

@@ -73,6 +73,10 @@ scoring 모듈은 이 계약만 알고 있으면 되도록 설계돼 있음.
   dlib을 요구하는 코드를 만나면 설치하지 말고 `face_utils`로 갈아끼울 것.
 - torch는 CPU 전용 휠. `--extra-index-url https://download.pytorch.org/whl/cpu` 없이 설치하면
   CUDA 휠 2GB를 받으려 하니 주의.
+- **콘솔이 cp949라 한글 출력 중에 죽을 수 있다.** `—`(em dash), `█`, `⚠` 같은 글자가
+  cp949에 없어서 `UnicodeEncodeError`가 난다. 분석은 다 끝나고 결과를 찍다가 죽어서
+  원인을 찾기 어렵다. **새 CLI 스크립트를 만들면 `scripts/_console.py`의
+  `setup_console()`을 맨 위에서 호출할 것.** 기존 스크립트에는 전부 넣어놨다.
 
 ## 실행
 
@@ -84,6 +88,7 @@ scoring 모듈은 이 계약만 알고 있으면 되도록 설계돼 있음.
 .venv\Scripts\python.exe scripts\validate_detector.py           # 영상 성능 실측
 .venv\Scripts\python.exe scripts\validate_audio_spoof.py        # 음성 성능 실측
 .venv\Scripts\python.exe scripts\make_korean_call_samples.py    # 한국어 통화 샘플 (TTS)
+.venv\Scripts\python.exe scripts\fetch_korean_speech_samples.py # 초록 시연용 진짜 사람 목소리
 ```
 
 전체 목록과 각 스크립트 설명은 `README.md` 참고.

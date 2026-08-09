@@ -37,6 +37,10 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPT_DIR))
 sys.path.insert(0, str(SCRIPT_DIR.parent / "src"))
 
+from _console import setup_console  # noqa: E402
+
+setup_console()  # cp949 콘솔에서 유니코드 출력 중 죽는 문제 방지 (_console.py)
+
 # validate_detector가 아니라 _metrics에서 직접 가져온다.
 # validate_detector는 모듈 최상단에서 cv2/torch를 끌어오므로, 콘텐츠 검증만
 # 돌리려는 사람에게 미디어 스택 설치를 강요하게 된다.

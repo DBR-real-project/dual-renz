@@ -24,6 +24,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from _console import setup_console  # noqa: E402
+
+setup_console()  # cp949 콘솔에서 유니코드 출력 중 죽는 문제 방지 (_console.py)
+
 from _http_range import HttpRangeFile  # noqa: E402
 
 BASE = ("https://huggingface.co/datasets/SpeechAntiSpoofingBenchmarks/"

@@ -94,7 +94,7 @@
 | LLM 실제 호출 수치 | API 키 필요. 오프라인 분류기(90.5%)로 대체 동작 중 |
 | 크롬 확장 실제 동작 | 브라우저에 로드해봐야 확인 가능 |
 | DFDC 크로스도메인 검증 | Kaggle 계정 + 대회 규칙 동의 필요 |
-| 한국어 '초록' 데모 샘플 | 사람 목소리 30초 녹음 필요 (`scripts/record_call_sample.py`) |
+| "진짜 목소리 + 사기 화법" 샘플 | 사람이 사기 대본을 읽어야 한다 (`scripts/record_call_sample.py --script scam`). 공개 낭독 코퍼스에는 사기 대본이 없다 |
 
 각각의 해결 방법은 **[docs/blocked_and_next.md](docs/blocked_and_next.md)** 에 있다.
 
@@ -134,12 +134,24 @@ git clone --depth 1 https://github.com/ondyari/FaceForensics.git external/FaceFo
 > 차례로 쓴다. **여유 메모리 6GB 아래**에서는 `mkl_malloc` 실패나 프로세스 강제 종료가
 > 발생한다. 서버와 CLI를 동시에 돌리지 말 것.
 
-한국어 테스트 통화가 없다면 Windows TTS로 만들 수 있다:
+시연용 한국어 통화 샘플은 명령 두 개로 세 등급이 다 갖춰진다:
 
 ```powershell
+# 빨강(사기) + 노랑(내용 정상인데 합성 음성) — Windows TTS로 생성
 .venv\Scripts\python.exe scripts\make_korean_call_samples.py
+# 초록(정상) — 공개 코퍼스의 진짜 사람 목소리. 사람이 녹음할 필요 없다
+.venv\Scripts\python.exe scripts\fetch_korean_speech_samples.py
+
 .venv\Scripts\python.exe scripts\analyze_call.py --input data\korean_calls\scam_call.wav
 ```
+
+| 파일 | 콘텐츠 | 미디어 | Fraud Risk Score |
+|---|---|---|---|
+| `real_normal_call.wav` (진짜 목소리 + 정상 대화) | 0.0 | 26.7 | **13.3** 낮음 🟢 |
+| `normal_call.wav` (합성 음성 + 정상 대화) | 0.0 | 100.0 | **50.0** 중간 🟡 |
+| `scam_call.wav` (합성 음성 + 사기 화법) | 100.0 | 100.0 | **100.0** 높음 🔴 |
+
+가운데 줄이 교차검증의 핵심이다 — **대화 내용은 정상인데 목소리가 합성이라 경고가 뜬다.**
 
 ---
 
@@ -186,8 +198,11 @@ scripts/
   grade_content_rubric.py      콘텐츠 카테고리별 정밀 채점 — 기대 점수대(밴드) vs 실제
   compare_stt_models.py        faster-whisper tiny/base/small 비교 (CER·처리시간·노이즈 강건성)
   _metrics.py                  세 validate_* 스크립트 공용 지표 (정탐/오탐/분리도)
+  _console.py                  콘솔 UTF-8 고정 (cp949에서 '—' 출력 시 죽던 문제)
   fetch_ff_samples.py          FF++ 검증 샘플 (16GB zip에서 필요분만)
   fetch_asvspoof_samples.py    ASVspoof 검증 샘플 (parquet 부분 읽기)
+  fetch_korean_speech_samples.py  ★ 초록 시연용 '진짜 사람 목소리' 정상 통화
+                                  (Zeroth-Korean, CC BY 4.0 — 사람 녹음 불필요)
   make_korean_call_samples.py  한국어 통화 샘플 (Windows TTS)
   make_demo_clips.py           교차검증 데모 클립
   download_ff_weights.py       FF++ 가중치 분할 병렬 다운로드

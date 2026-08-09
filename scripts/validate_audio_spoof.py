@@ -25,6 +25,10 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPT_DIR))
 sys.path.insert(0, str(SCRIPT_DIR.parent / "src"))
 
+from _console import setup_console  # noqa: E402
+
+setup_console()  # cp949 콘솔에서 유니코드 출력 중 죽는 문제 방지 (_console.py)
+
 from validate_detector import confusion, best_threshold, separation, fmt_pct  # noqa: E402
 
 from media_detection.audio_spoof_detector import get_shared_detector, is_available  # noqa: E402

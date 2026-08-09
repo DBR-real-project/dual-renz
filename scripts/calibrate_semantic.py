@@ -24,6 +24,10 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
+from _console import setup_console  # noqa: E402
+
+setup_console()  # cp949 콘솔에서 유니코드 출력 중 죽는 문제 방지 (_console.py)
+
 from content_analysis import semantic_classifier as sem  # noqa: E402
 
 DATASET = PROJECT_ROOT / "data_seed" / "content_test_scenarios.json"
