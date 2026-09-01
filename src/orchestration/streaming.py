@@ -111,13 +111,36 @@ class StreamSegment:
         }
 
 
+WEBM_EBML_MAGIC = b"\x1a\x45\xdf\xa3"    # EBML 헤더 시작 바이트열
+WEBM_CLUSTER_MAGIC = b"\x1f\x43\xb6\x75"  # Cluster 엘리먼트 ID
+
+
+def _webm_init_segment(blob: bytes) -> Optional[bytes]:
+    """
+    완결된 WebM 청크(EBML 헤더 포함)라면 첫 Cluster 이전까지(=초기화 세그먼트,
+    EBML/Segment/Info/Tracks)를 잘라 돌려준다. 아니면 None.
+
+    **왜 필요한가**: `MediaRecorder.start(timeslice)`는 EBML 헤더를 **첫 청크에만**
+    싣는다. 두 번째 청크부터는 헤더 없는 Cluster 데이터만 온다(Chromium 실제 동작 —
+    실측: chunk0만 EBML로 시작, chunk1~3은 전부 `EBML header parsing failed`로
+    디코딩 실패). 그래서 첫 청크에서 초기화 세그먼트를 캐싱해두고, 헤더 없는
+    후속 청크 앞에 붙여서 디코딩 가능한 스트림으로 복원한다
+    (Segment 크기가 "unknown/streaming"이라 이어붙이면 유효하게 파싱된다).
+    """
+    if not blob.startswith(WEBM_EBML_MAGIC):
+        return None
+    off = blob.find(WEBM_CLUSTER_MAGIC)
+    return blob[:off] if off > 0 else None
+
+
 def _decode_to_wave(blob: bytes, suffix: str = ".webm") -> np.ndarray:
     """
     브라우저가 보낸 청크(webm/opus 등)를 16kHz 모노 float32로 디코딩한다.
 
     ffmpeg에 파이프로 넣지 않고 임시 파일을 거치는 이유: webm은 컨테이너라
     스트림 중간 조각만으로는 헤더가 없어 파이프 디코딩이 자주 실패한다.
-    확장이 청크마다 완결된 컨테이너를 보내도록 돼 있어서 파일이 안전하다.
+    호출부(`StreamSession.add_chunk`)가 헤더 없는 청크에는 미리 초기화
+    세그먼트를 붙여서 넘기므로, 여기서는 항상 완결된 컨테이너라고 가정한다.
     """
     with tempfile.TemporaryDirectory() as tmp:
         src = Path(tmp) / f"chunk{suffix}"
@@ -164,6 +187,7 @@ class StreamSession:
         self.use_audio_spoof = use_audio_spoof
 
         self._lock = threading.Lock()
+        self._webm_init: Optional[bytes] = None   # 첫 webm 청크에서 뽑아낸 초기화 세그먼트
         self._buffer = np.zeros(0, dtype=np.float32)
         self._consumed_sec = 0.0        # 전사를 끝낸 지점
         self._last_end = 0.0            # 마지막으로 **내보낸** 구간의 끝 (중복 방지용)
@@ -271,6 +295,16 @@ class StreamSession:
 
         with self._lock:
             self.last_activity = time.time()
+
+            if suffix == ".webm":
+                init = _webm_init_segment(blob)
+                if init is not None:
+                    self._webm_init = init          # 완결된 청크 — 다음 청크들을 위해 헤더 캐싱
+                elif self._webm_init is not None:
+                    blob = self._webm_init + blob   # 헤더 없는 청크 — 캐싱해둔 헤더를 붙여 복원
+                # else: 첫 청크인데 헤더가 없는 비정상 상황. 캐시가 없으니 원본 그대로
+                # 시도한다 — 실패하면 아래 _decode_to_wave가 RuntimeError로 알려준다.
+
             wave = _decode_to_wave(blob, suffix)
             if wave.size == 0:
                 return {"new_segments": [], **self._snapshot_locked()}
