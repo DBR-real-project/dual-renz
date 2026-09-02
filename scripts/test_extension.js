@@ -319,10 +319,25 @@ async function main() {
   await new Promise(res => setTimeout(res, 1200));
   check(!bus.offscreenOpen, '오프스크린 문서 닫힘');
 
-  // 세션이 정말 닫혔는지 = 파일 분석이 다시 가능한지로 확인한다
-  const probe = await fetch(`${API}/api/sessions`, { method: 'POST' });
-  check(probe.ok, '세션이 서버에서 해제됨 (새 세션 생성 가능)', `HTTP ${probe.status}`);
-  if (probe.ok) {
+  // 세션이 정말 닫혔는지 = 파일 분석이 다시 가능한지로 확인한다.
+  //
+  // 고정 대기가 아니라 폴링으로 본다. DELETE는 곧바로 처리되지만, 마지막 청크가
+  // 아직 STT 추론 중이면 모델 동시접근을 막는 락 때문에 세션 해제가 몇 초 밀린다.
+  // 예전에는 1.2초만 기다리고 409를 받아 **매번 FAIL이 떴다** — 서버 버그가 아니라
+  // 하네스의 대기 시간이 짧았던 것이다. 실측(2026-09-02)에서는 2초 안팎이면 풀린다.
+  // 15초까지 기다려도 안 풀리면 그건 진짜 문제이므로 FAIL로 남긴다.
+  const RELEASE_TIMEOUT_MS = 15000;
+  const t0 = Date.now();
+  let probe = null;
+  while (Date.now() - t0 < RELEASE_TIMEOUT_MS) {
+    probe = await fetch(`${API}/api/sessions`, { method: 'POST' });
+    if (probe.ok) break;
+    await new Promise(res => setTimeout(res, 300));
+  }
+  const releaseWait = ((Date.now() - t0) / 1000).toFixed(1);
+  check(probe && probe.ok, '세션이 서버에서 해제됨 (새 세션 생성 가능)',
+    probe && probe.ok ? `${releaseWait}초 만에 해제` : `HTTP ${probe && probe.status} (${releaseWait}초 대기)`);
+  if (probe && probe.ok) {
     const { session_id } = await probe.json();
     await fetch(`${API}/api/sessions/${session_id}`, { method: 'DELETE' });
   }

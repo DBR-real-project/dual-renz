@@ -74,10 +74,15 @@ node scripts\verify_extension_chrome.js            # 완전 자동, 사람 개�
 총점은 동률인데 **기법별 분류는 LLM이 낫다**(권위 사칭 2/6→5/6, 신뢰 구축 2/5→4/5).
 대시보드가 보여주는 "왜 위험한가"의 정확도가 달라진다는 뜻이다.
 
-못 잰 건 **상용 모델(Claude/Gemini)의 분류 정확도**뿐이다.
+OpenAI(gpt-4o-mini)는 강동연이 실측했다 — 기준선 62.5에서 정확도 95.2%인데,
+**그 기준선을 평가에 쓴 21건으로 정해서** 과적합 소지가 있다
+(`validation_report.md` 0-10절). 못 잰 건 **Claude/Gemini의 분류 정확도**다.
+
+키는 `.env`로 준다(`.env.example`을 복사해 채운다). 환경변수로 직접 줘도 된다.
 
 ```powershell
-$env:ANTHROPIC_API_KEY = "sk-ant-..."    # 또는 GEMINI_API_KEY
+copy .env.example .env
+# .env 를 열어 ANTHROPIC_API_KEY 또는 GEMINI_API_KEY 를 채운다
 .venv\Scripts\python.exe scripts\validate_content_risk.py --backend both
 ```
 
@@ -187,7 +192,8 @@ $env:ANTHROPIC_API_KEY = "sk-ant-..."    # 또는 GEMINI_API_KEY
 
 ### 3-2. RAG 사례 데이터 확충
 
-지금 18건뿐이고 대부분 팀이 정리한 수법 패턴이다. 기획서 데이터 확보 방안대로
+지금 26건이고(국내 보도 기반 kr-aug-001~008을 더했다) 대부분 팀이 정리하거나
+재구성한 수법 패턴이다. 기획서 데이터 확보 방안대로
 언론 보도·판례·국정원 111센터 통계를 크롤링해 늘려야 한다.
 **출처 표기는 필수** — 근거 없는 사례가 대시보드에 "실제 사례"로 뜨면 신뢰를 해친다.
 

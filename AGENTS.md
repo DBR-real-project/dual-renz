@@ -21,7 +21,10 @@
 두 개의 위험도 신호를 하나의 Fraud Risk Score(0~100)로 합친다.
 
 - **content_risk** — `src/content_analysis/`. STT(faster-whisper) → 8대 사회공학 기법 분류
-  (LLM, 키 없으면 키워드 규칙) + RAG 사례 대조. `content_risk_stub.py`는 구버전이니 쓰지 말 것.
+  (LLM, 키 없으면 **`classify_offline`** = 키워드 + 임베딩) + RAG 사례 대조.
+  `content_risk_stub.py`는 구버전이니 쓰지 말 것.
+  **폴백을 "키워드 규칙"이라고 쓰지 말 것** — 순수 키워드(`classify_by_keywords`)와
+  `classify_offline`은 같은 21건에서 정확도가 66.7% vs 90.5%로 완전히 다르다.
 - **media_risk** — 이상원 담당. `src/media_detection/media_risk.py`가 정식 진입점.
   영상·음성 **둘 다 실제 모델 추론**이다. 더미는 오프라인 폴백용으로만 남아 있다.
 - **통합** — `src/scoring/fraud_risk_score.py`. 이 부분은 완성 상태.
@@ -108,6 +111,12 @@ DFDC에서는 **55%**다(실측, `docs/validation_report.md` 0-3). 파이프라�
 | 얼굴 검출기 | YuNet 1순위, Haar 폴백 | `benchmark_face_detector.py` |
 | STT | 파일 `small`, 스트리밍 `base` | `compare_stt_models.py` |
 | 좌우 반전 TTA | 켬 (`DUALGUARD_FF_TTA=0`으로 끔). 정탐 +3%p, 오탐 동일 | `validate_detector.py` |
+| LLM `auto` 폴백 체인 | Claude → Gemini **둘뿐**. openai/ollama/local은 명시할 때만 | `validate_content_risk.py` |
+
+**⚠ openai 백엔드만 판정 기준선이 다르다(50이 아니라 62.5).** 그래서 auto 체인에
+넣지 않았다 — auto가 조용히 고르면 어긋난 기준선으로 돈다. 근거는
+`docs/validation_report.md` 0-10절과 `scripts/validate_content_risk.py`의
+`OPENAI_LLM_THRESHOLD`. 62.5는 평가에 쓴 21건 위에서 고른 값이라 과적합 소지가 있다.
 
 기본값은 `src/scoring/fraud_risk_score.py`의 `DEFAULT_STRATEGY` / `DEFAULT_CONTENT_WEIGHT`와
 `src/orchestration/pipeline.py`의 `LEVEL_THRESHOLDS` **한 곳씩**에만 있다. 하드코딩하지 말 것.
@@ -129,6 +138,12 @@ scoring 모듈은 이 계약만 알고 있으면 되도록 설계돼 있음.
   받는다(232KB, 없으면 Haar로 자동 폴백).
 - torch는 CPU 전용 휠. `--extra-index-url https://download.pytorch.org/whl/cpu` 없이 설치하면
   CUDA 휠 2GB를 받으려 하니 주의.
+- **API 키는 `.env`로 받는다.** `.env.example`을 복사해 채운다.
+  로딩은 `src/content_analysis/llm_classifier.py` **모듈 최상단 한 곳**에서만 한다
+  (이 모듈이 모든 키를 읽는 단일 지점이라, 진입점마다 로딩할 필요가 없다).
+  `.env`는 gitignore 대상이고 `.env.example`만 커밋한다. **키를 소스에 적지 말 것.**
+- **`.claude/`와 `.mcp.json`은 gitignore 대상이다.** 팀원마다 쓰는 CLI가 달라서
+  추적하지 않기로 했다. 로컬 파일은 그대로 두고 쓰면 된다.
 - **콘솔이 cp949라 한글 출력 중에 죽을 수 있다.** `—`(em dash), `█`, `⚠` 같은 글자가
   cp949에 없어서 `UnicodeEncodeError`가 난다. 분석은 다 끝나고 결과를 찍다가 죽어서
   원인을 찾기 어렵다. **새 CLI 스크립트를 만들면 `scripts/_console.py`의
@@ -156,6 +171,8 @@ node scripts\verify_extension_chrome.js                         # 실제 크롬�
 .venv\Scripts\python.exe scripts\diagnose_audio_fp.py            # 음성 오탐 원인 추적
 .venv\Scripts\python.exe scripts\fetch_korean_conversation.py    # 한국어 자연 대화체(검증용)
 .venv\Scripts\python.exe scripts\validate_normal_calls.py        # 정상 대화 헛경보율
+.venv\Scripts\python.exe scripts\validate_content_risk.py        # 콘텐츠 분류 성능 (기본 offline)
+.venv\Scripts\python.exe scripts\build_rag_index.py              # RAG 재색인 (시드 수정 후)
 .venv\Scripts\python.exe scripts\decide_scoring.py              # 스코어링 설정 재결정
 .venv\Scripts\python.exe scripts\benchmark_face_detector.py     # 얼굴 검출기 비교
 ```

@@ -178,8 +178,9 @@ def health() -> dict:
             "content_llm": {"ready": llm_ok(),
                             "detail": active_provider_label()
                             if llm_ok()
-                            else "ANTHROPIC_API_KEY 또는 GEMINI_API_KEY 필요. "
-                                 "없으면 키워드 규칙으로 폴백"},
+                            else "ANTHROPIC_API_KEY / GEMINI_API_KEY 필요"
+                                 "(OPENAI_API_KEY는 DUALGUARD_LLM_PROVIDER=openai로 명시할 때만). "
+                                 "없으면 오프라인 분류기(키워드+임베딩)로 폴백"},
             "rag": {"ready": rag_mod.is_available(), "detail": "ChromaDB + ko-sroberta"},
             "audio_spoof": {"ready": aasist.is_available(), "detail": "AASIST"},
             "deepfake": {"ready": ff.is_available(),

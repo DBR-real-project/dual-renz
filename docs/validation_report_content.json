@@ -6,20 +6,21 @@
   "backends": {
     "offline": {
       "backend": "offline",
-      "engine": "키워드 규칙",
+      "engine": "오프라인 분류기 (키워드 + 임베딩 의미 유사도)",
       "n_scenarios": 21,
       "n_scored": 21,
-      "elapsed_sec": 16.2,
+      "elapsed_sec": 21.0,
       "separation": {
         "real_max": 60.61,
         "real_mean": 26.250999999999998,
         "real_min": 0.0,
         "fake_max": 100.0,
-        "fake_mean": 79.7790909090909,
+        "fake_mean": 80.74090909090908,
         "fake_min": 33.15,
         "gap": -27.46
       },
-      "at_threshold_50": {
+      "default_threshold": 50.0,
+      "at_default_threshold": {
         "threshold": 50.0,
         "tp": 10,
         "fn": 1,
@@ -83,10 +84,10 @@
             "emotional": 86.5,
             "urgency": 80.0,
             "isolation": 62.43,
+            "trust_building": 60.43,
             "authority": 41.15,
             "credentials": 33.45,
-            "secrecy": 28.67,
-            "trust_building": 0.0
+            "secrecy": 28.67
           }
         },
         {
@@ -104,8 +105,8 @@
             "money_transfer": 96.69,
             "urgency": 80.0,
             "authority": 64.43,
+            "trust_building": 53.43,
             "emotional": 50.11,
-            "trust_building": 50.11,
             "credentials": 0.0,
             "secrecy": 0.0,
             "isolation": 0.0
@@ -138,7 +139,7 @@
           "id": "fraud_05",
           "label": "fake",
           "channel": "call",
-          "score": 68.72,
+          "score": 79.3,
           "top_category": "urgency",
           "expected_techniques": [
             "authority",
@@ -148,13 +149,13 @@
           ],
           "category_scores": {
             "urgency": 80.0,
-            "isolation": 46.17,
+            "trust_building": 77.91,
+            "money_transfer": 77.91,
+            "emotional": 77.91,
             "authority": 46.17,
-            "money_transfer": 44.13,
-            "emotional": 27.07,
+            "isolation": 46.17,
             "credentials": 0.0,
-            "secrecy": 0.0,
-            "trust_building": 0.0
+            "secrecy": 0.0
           }
         },
         {
@@ -175,7 +176,7 @@
             "trust_building": 42.39,
             "authority": 32.01,
             "secrecy": 18.85,
-            "isolation": 5.91,
+            "isolation": 13.87,
             "credentials": 0.0
           }
         },
@@ -184,7 +185,7 @@
           "label": "fake",
           "channel": "call",
           "score": 100.0,
-          "top_category": "money_transfer",
+          "top_category": "urgency",
           "expected_techniques": [
             "emotional",
             "credentials",
@@ -192,14 +193,14 @@
             "secrecy"
           ],
           "category_scores": {
+            "urgency": 100.0,
+            "authority": 100.0,
             "money_transfer": 100.0,
             "secrecy": 100.0,
             "emotional": 100.0,
             "isolation": 100.0,
             "trust_building": 42.59,
-            "urgency": 40.0,
-            "credentials": 40.0,
-            "authority": 25.11
+            "credentials": 40.0
           }
         },
         {
@@ -243,9 +244,9 @@
             "credentials": 80.0,
             "urgency": 40.0,
             "authority": 33.88,
+            "trust_building": 20.5,
             "secrecy": 20.25,
-            "emotional": 3.24,
-            "trust_building": 0.0
+            "emotional": 3.24
           }
         },
         {
@@ -348,8 +349,8 @@
           "category_scores": {
             "urgency": 41.39,
             "emotional": 36.81,
-            "authority": 34.9,
             "isolation": 34.9,
+            "authority": 34.9,
             "trust_building": 32.96,
             "money_transfer": 15.0,
             "credentials": 14.2,
@@ -361,14 +362,14 @@
           "label": "real",
           "channel": "call",
           "score": 45.0,
-          "top_category": "secrecy",
+          "top_category": "urgency",
           "expected_techniques": [],
           "category_scores": {
+            "urgency": 100.0,
+            "authority": 100.0,
             "secrecy": 100.0,
             "emotional": 100.0,
             "isolation": 100.0,
-            "urgency": 0.0,
-            "authority": 0.0,
             "money_transfer": 0.0,
             "credentials": 0.0,
             "trust_building": 0.0
@@ -446,8 +447,8 @@
             "authority": 77.37,
             "credentials": 77.37,
             "secrecy": 38.96,
-            "isolation": 2.58,
-            "trust_building": 0.0
+            "trust_building": 24.44,
+            "isolation": 2.58
           }
         },
         {

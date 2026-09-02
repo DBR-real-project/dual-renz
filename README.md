@@ -22,7 +22,7 @@
 | **웹 대시보드** (업로드 → 진행률 → 결과) | ✅ | `scripts/run_server.py` |
 | **CLI 분석** | ✅ | `scripts/analyze_call.py` |
 | STT (한국어) | ✅ | faster-whisper. 8문장 통화를 정확히 8구간으로 분리 |
-| 8대 사회공학 기법 분류 | ✅ | LLM(**Claude / Gemini / Ollama**) + **오프라인 분류기** 폴백 |
+| 8대 사회공학 기법 분류 | ✅ | LLM(**Claude / Gemini / OpenAI / Ollama / 로컬**) + **오프라인 분류기** 폴백 |
 | RAG 사기사례 대조 | ✅ | 사기/정상 13문장 판별 **13/13** |
 | **콘텐츠 도메인 밖 오탐 검증** | ✅ | 우리가 만들지 않은 한국어 457문장에서 **오탐률 1.53%** (Zeroth-Korean) |
 | **크로스도메인 검증 (영상)** | ✅ | DFDC 50건 실측 — Kaggle 계정 없이 96GB zip에서 431MB만 받아 확보 |
@@ -39,7 +39,7 @@
 | 크롬 확장 (MV3) | ✅ | **실제 크롬에서 전 과정 자동 검증 통과** (`node scripts/verify_extension_chrome.js`). 확장 단축키를 OS 레벨로 눌러 **`activeTab`을 정식으로 부여받고** 탭 오디오 캡처 → 백엔드 → 오버레이까지 확인. 우회 없음 |
 | LLM 연동 경로 | ✅ | 스텁 서버로 클라이언트 코드 실행 검증 (`scripts/test_llm_client.py`) |
 | **키 없이 도는 로컬 LLM** | ✅ | `DUALGUARD_LLM_PROVIDER=local` — transformers로 Qwen2.5-1.5B. **키도 설치도 불필요.** 실측 정탐 90.9% / 오탐 10.0%로 오프라인 분류기와 동률인데 **기법별 회수율은 24/41 → 30/41로 더 낫다** |
-| 상용 LLM 실제 수치 | ⚠️ | `ANTHROPIC_API_KEY`/`GEMINI_API_KEY` 필요. 없어도 오프라인 분류기(90.5%)로 정상 동작 |
+| 상용 LLM 실제 수치 | ⚠️ | Claude/Gemini는 키가 없어 미측정. **OpenAI(gpt-4o-mini)만 실측** — 기준선 62.5에서 정확도 95.2%(21건). 단 그 기준선을 같은 21건으로 정해 과적합 소지가 있다 ([0-10절](docs/validation_report.md)). 키가 없어도 오프라인 분류기(90.5%)로 정상 동작 |
 
 성능 수치의 측정 조건은 **[docs/validation_report.md](docs/validation_report.md)** 에 있다.
 **특히 영상 엔진은 학습 도메인 밖에서 무너진다** — 발표에 인용하기 전에 반드시 읽을 것.
@@ -76,12 +76,12 @@
 | 기획서 항목 | 상태 | 실제 구현 |
 |---|---|---|
 | STT(Whisper)로 대화 텍스트화 | ✅ | faster-whisper. 구간별 타임스탬프까지 |
-| LLM이 8대 사회공학 기법 분류 | ✅ | Claude/Gemini/Ollama 3백엔드 + 오프라인 폴백 |
+| LLM이 8대 사회공학 기법 분류 | ✅ | Claude/Gemini/OpenAI/Ollama/로컬 5백엔드 + 오프라인 폴백 |
 | `콘텐츠위험도 = 0.5×최고 + 0.5×상위3평균` | ✅ | 공식 그대로 |
 | AASIST 음성 스푸핑 판별 | ⚠️ | ASVspoof 안에서는 98.3%. 도메인 밖에서는 신뢰 불가 |
 | 딥페이크 탐지 모델로 얼굴 위조 판별 | ⚠️ | FF++ 안에서는 동작(오탐 2%). 다른 데이터셋에서는 신뢰 불가 |
 | 통합 Fraud Risk Score (교차 가산) | ✅ | 기획서 두 버전 공식 모두 |
-| RAG 실제 사기사례 참조 (ChromaDB) | ✅ | 한국어 임베딩, 사례 18건 |
+| RAG 실제 사기사례 참조 (ChromaDB) | ✅ | 한국어 임베딩, 사례 26건 (18건 + 국내 보도 기반 8건) |
 | 프레임 추출 (초당 1프레임, 224~256px) | ✅ | 명세 그대로 |
 
 ### Phase 1 — 화면 (PDF 2장 [화면 설계])
@@ -224,6 +224,7 @@ scripts/
   validate_detector.py         영상 성능 실측
   validate_audio_spoof.py      음성 성능 실측
   validate_content_risk.py     콘텐츠(8대 기법) 성능 실측 — 키워드 / 오프라인 / LLM 비교
+  build_rag_index.py           RAG 색인 재생성 (기존 사례를 수정·삭제했을 때만 필요)
   test_streaming.py            ★ 실시간 세션 E2E (서버 필요)
   test_extension.js            ★ 크롬 확장 자동 검증 — 브라우저 없이 확장 코드 실행
   decide_scoring.py            통합 공식·가중치·신호등 경계를 실측으로 결정
@@ -265,6 +266,7 @@ docs/
   stt_benchmark.md             STT 모델 크기(tiny/base/small) 실측 — CER·처리시간·노이즈 강건성
   spec_reconciliation.md       기획서 2종 대조
   model_research.md            모델 후보 리서치 + 세팅 실측
+  overnight_report_2026-09-02.md  강동연 야간 작업 로그 (스트리밍 webm 버그 수정 · RAG +8건)
 ```
 
 ---

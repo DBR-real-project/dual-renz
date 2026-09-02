@@ -63,13 +63,22 @@ faster-whisper==1.2.1
 # --- 콘텐츠 분석: LLM 화법 분류 ---
 # 기획서가 "Claude API 또는 Gemini API"를 허용하므로 두 백엔드를 모두 넣는다.
 # 어느 키도 없으면 키워드 규칙으로 폴백하므로, 키 없이도 파이프라인은 돈다.
-# 백엔드 선택은 DUALGUARD_LLM_PROVIDER=auto|anthropic|gemini|ollama (기본 auto).
+# 백엔드 선택은 DUALGUARD_LLM_PROVIDER=auto|anthropic|gemini|openai|ollama|local (기본 auto).
 # ollama는 pip 패키지가 필요 없다 — 표준 라이브러리 urllib.request로 로컬 서버
-# (기본 localhost:11434)와 통신한다. auto 폴백 체인에는 안 들어가고 명시했을 때만 쓴다.
+# (기본 localhost:11434)와 통신한다. local은 이미 깔린 transformers만 쓴다.
+# openai/ollama/local 셋 다 auto 폴백 체인에는 안 들어가고 명시했을 때만 쓴다.
+# .env에서 위 키들을 읽어들이는 데 쓴다(llm_classifier.py 모듈 최상단에서 로드).
+# pydantic-settings의 전이 의존성으로 이미 깔려있었지만 명시적으로 고정한다.
+python-dotenv==1.2.1
 anthropic==0.121.0
 # Gemini 백엔드. 구버전 google-generativeai가 아니라 신규 공식 SDK(google-genai)다.
 # 둘은 API 모양이 완전히 다르니 섞어 쓰지 말 것.
-google-genai==2.17.0
+# 한때 2.17.0으로 적혀 있었으나 실제 설치·검증된 버전이 아니었다. 1.47.0에
+# genai.Client / types.GenerateContentConfig / Schema / Type / ThinkingConfig가
+# 모두 있는 것을 확인하고(2026-09-02) 실제 버전으로 맞췄다.
+google-genai==1.47.0
+# OpenAI(GPT) 백엔드. Gemini 무료 티어 쿼터가 불안정해서(2026-09-02) 대체 옵션으로 추가.
+openai==2.48.0
 
 # --- 콘텐츠 분석: RAG 사례 검색 ---
 # 임베딩 모델은 반드시 한국어 모델(jhgan/ko-sroberta-multitask)을 쓸 것.

@@ -136,14 +136,22 @@ class ScamCaseRetriever:
 
         if collection.count() == 0:
             self._index(collection)
+        else:
+            # 시드에 사례가 더 생겼는데 색인이 옛날 것이면 맞춰준다.
+            #
+            # 예전에는 count() == 0 일 때만 색인했다. 그래서 시드에 사례를 더해도
+            # data/chroma/ 가 이미 있으면 옛 색인을 그대로 쓰고, **새 사례가 조용히
+            # 무시된다.** 실제로 사례를 18 → 26건으로 늘렸을 때(kr-aug-001~008)
+            # 이 문제가 났다. 오류가 안 나고 검색 결과만 예전 것이라 알아채기 어렵다.
+            self._sync(collection)
 
         self._collection = collection
         return collection
 
-    def _index(self, collection) -> int:
-        cases = load_seed()
+    def _seed_documents(self):
+        """시드에서 (id, 본문, 메타데이터) 목록을 만든다. 색인·동기화 공통 경로."""
         ids, docs, metas = [], [], []
-        for case in cases:
+        for case in load_seed():
             for i, d in enumerate(_documents_from_case(case)):
                 ids.append(f"{case['id']}::{d['kind']}::{i}")
                 docs.append(d["text"])
@@ -157,11 +165,55 @@ class ScamCaseRetriever:
                     "source": case.get("source", ""),
                     "kind": d["kind"],
                 })
+        return ids, docs, metas
+
+    def _sync(self, collection) -> int:
+        """
+        이미 있는 색인을 시드에 맞춘다. 새로 추가된 문서만 넣는다.
+
+        **디렉터리를 지우고 다시 만드는 방식(rebuild)을 여기서 쓰면 안 된다.**
+        실측(2026-09-02): 같은 프로세스 안에서 PersistentClient를 한 번 만든 뒤
+        db_path를 rmtree하고 다시 만들어도 count()가 그대로 나온다.
+        `SharedSystemClient.clear_system_cache()`를 불러도 마찬가지다 — rust 바인딩이
+        컬렉션을 메모리에 들고 있다. 즉 **rebuild는 새 프로세스에서만 유효**하고
+        (그래서 `scripts/build_rag_index.py`가 따로 있다), 여기서 부르면 조건이
+        영원히 안 풀려 무한 재귀에 빠진다(실제로 그렇게 만들었다가 RecursionError).
+
+        그래서 지우지 않고 **부족한 id만 add** 한다. id가 `case_id::kind::i`로
+        결정적이라 추가분을 정확히 골라낼 수 있다. 사례 "추가"는 이걸로 다 잡힌다.
+        기존 사례의 문장을 고치거나 지운 경우는 id가 그대로라 반영되지 않으니,
+        그때는 `scripts/build_rag_index.py`로 통째 재색인할 것.
+        """
+        ids, docs, metas = self._seed_documents()
+        try:
+            have = set(collection.get(ids=ids, include=[])["ids"])
+        except Exception:
+            # 조회 방식이 버전마다 달라질 수 있다. 실패하면 동기화를 건너뛴다 —
+            # 옛 색인으로도 검색 자체는 되므로 파이프라인을 죽이지 않는다.
+            return 0
+        missing = [i for i, _id in enumerate(ids) if _id not in have]
+        if not missing:
+            return 0
+        collection.add(
+            ids=[ids[i] for i in missing],
+            documents=[docs[i] for i in missing],
+            metadatas=[metas[i] for i in missing],
+        )
+        return len(missing)
+
+    def _index(self, collection) -> int:
+        ids, docs, metas = self._seed_documents()
         collection.add(ids=ids, documents=docs, metadatas=metas)
         return len(ids)
 
     def rebuild(self) -> int:
-        """시드 파일을 고친 뒤 다시 색인한다."""
+        """
+        시드 파일을 고친 뒤 통째로 다시 색인한다.
+
+        ⚠ **새 프로세스에서만 제대로 동작한다.** 이 객체로 이미 검색을 한 뒤에
+        부르면 chromadb가 옛 컬렉션을 메모리에 들고 있어 아무 일도 일어나지 않는다
+        (`_sync` docstring의 실측 참고). `scripts/build_rag_index.py`를 쓸 것.
+        """
         self._collection = None
         collection = self._ensure_collection(rebuild=True)
         return collection.count()

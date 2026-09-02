@@ -5,17 +5,28 @@ LLM 기반 8대 사회공학 기법 분류
 기획서: *"LLM이 8대 사회공학 기법을 분류합니다"*, *"Claude API 또는 Gemini API"*
 
 기획서가 두 API(Claude/Gemini)를 허용하므로 **그 둘을 다 구현하고 런타임에 고른다.**
-로컬 LLM(Ollama)은 기획서엔 없지만 프롬프트 구조를 클라우드 호출 전에 공짜로
-검증하는 용도로 세 번째 백엔드로 추가했다(auto 폴백 체인에는 안 들어간다 —
-아래 표 참고). 어느 쪽이든 같은 시스템 프롬프트·같은 JSON 스키마를 쓰고
-ContentRiskBreakdown을 돌려주므로, 파이프라인 입장에서는 구분이 없다.
+나머지 셋(openai/ollama/local)은 기획서엔 없지만 각각 이유가 있어 추가했다
+(셋 다 auto 폴백 체인에는 안 들어간다 — 아래 표 참고). 어느 쪽이든 같은 시스템
+프롬프트·같은 JSON 스키마를 쓰고 ContentRiskBreakdown을 돌려주므로, 파이프라인
+입장에서는 구분이 없다.
 
 | 백엔드      | 환경변수                              | 구조화 출력 방식             |
 |-------------|---------------------------------------|------------------------------|
 | `anthropic` | `ANTHROPIC_API_KEY` / `ant auth login`| Messages API structured outputs |
 | `gemini`    | `GEMINI_API_KEY` / `GOOGLE_API_KEY`   | `response_schema` (JSON 강제) |
+| `openai`    | `OPENAI_API_KEY`                      | `response_format` (json_schema) |
 | `ollama`    | 없음 (로컬 서버 `localhost:11434`)     | `format`에 JSON 스키마 (Ollama 0.5+) |
 | `local`     | 없음 (transformers + 가중치만)         | 없음 — 프롬프트로 지시 후 관용 파싱 |
+
+  openai는 강동연이 추가했다. Gemini 무료 티어 쿼터가 막히는 일이 잦아서(2026-09-02)
+  대체 옵션이 필요했다. **auto 체인에는 넣지 않았다** — 다른 백엔드와 달리 판정
+  기준선이 50이 아니라 62.5이기 때문이다(`scripts/validate_content_risk.py`의
+  `OPENAI_LLM_THRESHOLD`). 실측(21건, gpt-4o-mini, `docs/validation_report_content_openai.json`)
+  에서 threshold 50이면 재현율 100%지만 오탐률 30%로 오프라인 분류기(정확도 90.5%)
+  보다 나빴고, 62.5에서 재현율 100%·오탐률 10%·정확도 95.2%로 앞선다. auto가 조용히
+  openai를 골라버리면 기준선이 어긋난 채로 돈다. `DUALGUARD_LLM_PROVIDER=openai`로
+  명시했을 때만 쓴다.
+  ⚠ 62.5는 같은 21건 위에서 고른 값이라 과적합 소지가 있다. 표본을 늘려 재확인할 것.
 
   ollama는 실제 서비스용이 아니라 **프롬프트 구조를 로컬에서 공짜로 미리 검증**하는
   용도다. Gemini 무료 티어 쿼터가 막혔을 때 특히 쓸모 있다. 그래서 auto 폴백
@@ -53,13 +64,17 @@ torch/transformers만 쓰고 소형 모델 가중치만 받는다. 소형 모델
     강제할 수 있고, 실패해도 예외를 던지지 않고 키워드로 폴백한다.
 
 API 키가 없으면:
-  예외를 던지지 않고 content_risk.classify_by_keywords()로 폴백한다.
+  예외를 던지지 않고 content_risk.classify_offline()으로 폴백한다.
   (해커톤 데모 중 키가 없거나 네트워크가 막혀도 파이프라인이 죽지 않게)
+  순수 키워드 규칙(classify_by_keywords)이 아니라 **키워드 + 임베딩 의미 유사도**를
+  결합한 쪽이다. 실측 차이가 크다 — 같은 21건에서 키워드만은 정확도 66.7%,
+  classify_offline은 90.5%다. 아래 `_fallback()` 주석 참고.
 """
 
 import os
 import threading
 import time
+from pathlib import Path
 from typing import Dict, List, Optional
 
 from .content_risk import (
@@ -69,6 +84,17 @@ from .content_risk import (
     classify_offline,
     compute_content_risk,
 )
+
+# 이 모듈이 이 파일의 모든 LLM API 키/설정(ANTHROPIC_API_KEY, GEMINI_API_KEY,
+# OPENAI_API_KEY, DUALGUARD_LLM_PROVIDER 등)을 읽는 단일 지점이라, .env 로딩도
+# 여기서 한 번만 한다. 서버(run_server.py)든 CLI(analyze_call.py)든 이 모듈을
+# import하는 순간 프로젝트 루트의 .env가 os.environ에 반영되므로, 각 진입점마다
+# 따로 로딩할 필요가 없다. .env가 없으면(팀원이 아직 안 만들었으면) 조용히 넘어간다.
+try:
+    from dotenv import load_dotenv
+    load_dotenv(Path(__file__).resolve().parents[2] / ".env")
+except ImportError:
+    pass
 
 DEFAULT_MODEL = "claude-opus-5"
 
@@ -90,7 +116,11 @@ OLLAMA_DEFAULT_MODEL = os.environ.get("OLLAMA_MODEL", "llama3.1")
 # 로컬 CPU 추론은 클라우드보다 훨씬 느릴 수 있어 넉넉하게 잡는다.
 OLLAMA_TIMEOUT_SEC = float(os.environ.get("OLLAMA_TIMEOUT_SEC", "120"))
 
-# auto | anthropic | gemini | ollama
+# auto | anthropic | gemini | openai | ollama | local
+# OpenAI 쪽 기본값. mini 계열을 쓰는 이유는 Claude(effort=low)/Gemini(flash)와
+# 같다 — 세그먼트마다 부르는 단순 분류 작업이라 정확도보다 지연/비용이 우선이다.
+OPENAI_DEFAULT_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
+
 # 로컬 트랜스포머 백엔드. API 키도, 별도 서버 설치도 필요 없다.
 # 이미 requirements에 있는 transformers/torch만 쓰고 모델 가중치만 내려받는다.
 LOCAL_MODEL = os.environ.get("DUALGUARD_LOCAL_LLM_MODEL", "Qwen/Qwen2.5-1.5B-Instruct")
@@ -386,6 +416,86 @@ class GeminiClassifier:
         return _finalize(json.loads(raw))
 
 
+class OpenAIClassifier:
+    """
+    OpenAI(GPT) 백엔드. Claude/Gemini와 인터페이스(available / classify / label)를 맞춘다.
+
+    Chat Completions의 structured outputs(`response_format=json_schema`,
+    `strict=True`)를 쓴다. strict 모드는 스키마의 모든 object에 대해
+    `additionalProperties: false`와 전체 프로퍼티가 `required`에 들어있을 것을
+    요구하는데, 세 백엔드가 공유하는 `_SCHEMA`가 이미 그 조건을 만족해서
+    수정 없이 그대로 쓸 수 있다.
+    """
+
+    provider = "openai"
+
+    def __init__(self, model: str = OPENAI_DEFAULT_MODEL):
+        self.model = model
+        self._client = None
+        self._system = _build_system()
+
+    @property
+    def label(self) -> str:
+        return f"OpenAI ({self.model})"
+
+    @property
+    def available(self) -> bool:
+        try:
+            import openai  # noqa: F401
+        except ImportError:
+            return False
+        return bool(os.environ.get("OPENAI_API_KEY"))
+
+    def _ensure_client(self):
+        if self._client is None:
+            import openai
+            self._client = openai.OpenAI()
+        return self._client
+
+    def classify(
+        self,
+        text: str,
+        context_before: str = "",
+        context_after: str = "",
+    ) -> ContentRiskBreakdown:
+        client = self._ensure_client()
+
+        response = client.chat.completions.create(
+            model=self.model,
+            # 분류 작업이라 창의성이 필요 없다. Claude(effort=low)/Gemini(temperature=0)와
+            # 같은 이유로 결정적으로 고정한다.
+            temperature=0.0,
+            messages=[
+                {"role": "system", "content": self._system},
+                {"role": "user",
+                 "content": _build_user_prompt(text, context_before, context_after)},
+            ],
+            response_format={
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "content_risk_classification",
+                    "schema": _SCHEMA,
+                    "strict": True,
+                },
+            },
+        )
+
+        choice = response.choices[0]
+        if choice.finish_reason == "content_filter":
+            raise RuntimeError("OpenAI가 콘텐츠 필터로 응답을 거부했습니다.")
+
+        raw = choice.message.content
+        if not raw:
+            # Gemini와 같은 이유로 예외를 던져 폴백시킨다 — 조용히 0점을 주면
+            # 사기 통화를 정상으로 판정해버린다.
+            raise RuntimeError(
+                f"OpenAI가 빈 응답을 돌려줬습니다. (finish_reason={choice.finish_reason})"
+            )
+
+        import json
+        return _finalize(json.loads(raw))
+
+
 def _extract_json(raw: str) -> dict:
     """
     소형 모델 출력에서 JSON 객체를 꺼낸다.
@@ -638,7 +748,7 @@ _shared = None
 def _resolve_provider() -> str:
     """DUALGUARD_LLM_PROVIDER 해석. 잘못된 값이면 auto로 떨어진다."""
     want = (os.environ.get(PROVIDER_ENV) or "auto").strip().lower()
-    return want if want in ("auto", "anthropic", "gemini", "ollama", "local") else "auto"
+    return want if want in ("auto", "anthropic", "gemini", "openai", "ollama", "local") else "auto"
 
 
 def get_shared_classifier(model: Optional[str] = None):
@@ -659,6 +769,8 @@ def get_shared_classifier(model: Optional[str] = None):
         candidates = [GeminiClassifier]
     elif want == "anthropic":
         candidates = [LLMClassifier]
+    elif want == "openai":
+        candidates = [OpenAIClassifier]
     elif want == "ollama":
         candidates = [OllamaClassifier]
     elif want == "local":

@@ -36,13 +36,17 @@ data/*
 .claude/settings.local.json
 
 # API 키 등 비밀값. dual-lens/ 프로토타입에서 키를 소스에 하드코딩했던 전례가
-# 있어서(폐기 완료) 예방선을 그어둔다. 이 프로젝트는 키를 전부 환경변수로만
-# 받으므로(ANTHROPIC_API_KEY/GEMINI_API_KEY) .env 자체가 필요 없지만, 실수로
-# 만들어도 커밋되지 않게.
+# 있어서(폐기 완료) 예방선을 그어둔다. 실제 키가 든 .env는 절대 커밋하지 않는다.
+# .env.example은 키 이름만 있는 템플릿이라 예외적으로 커밋한다 — 팀원이
+# 뭘 채워야 하는지 보는 참고용.
 .env
 .env.*
+!.env.example
 *.key
 
 # OS
 Thumbs.db
 desktop.ini
+
+.mcp.json
+.claude/
