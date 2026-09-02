@@ -94,7 +94,7 @@
 
   <!-- ① 감동 -->
   <section class="scene warm" data-s="1">
-    <p class="line rise d1">2021년,<br>세상을 떠난 가수의 목소리가<br>무대에 다시 올랐습니다.</p>
+    <p class="line rise d1">세상을 떠난 가수의 목소리가<br>무대에 다시 올랐습니다.</p>
     <p class="sub rise d2">AI가 복원한 목소리였습니다.</p>
   </section>
 
@@ -107,8 +107,8 @@
     <video id="clip" src="clip.mp4" muted playsinline
            style="max-width:80vw;max-height:64vh;border-radius:8px;box-shadow:0 0 60px rgba(0,0,0,.85)"></video>
     <img id="shot" src="shot.png" alt=""
-         style="max-width:80vw;max-height:64vh;border-radius:8px;box-shadow:0 0 60px rgba(0,0,0,.85);display:none">
-    <p class="small" id="clipCredit" style="margin-top:16px">출처: ○○방송 「○○○」 (2021.○.○ 방영)</p>
+         style="width:min(62vw,1100px);max-height:64vh;object-fit:contain;border-radius:8px;box-shadow:0 0 60px rgba(0,0,0,.85);display:none">
+    <p class="small" id="clipCredit" style="margin-top:16px">출처: Mnet 「AI 음악 프로젝트 다시 한번」</p>
   </section>
 
   <section class="scene warm" data-s="2">
@@ -132,8 +132,8 @@
     <video id="clip2" src="clip2.mp4" muted playsinline
            style="max-width:80vw;max-height:64vh;border-radius:8px;box-shadow:0 0 60px rgba(0,0,0,.85)"></video>
     <img id="shot2" src="shot2.png" alt=""
-         style="max-width:80vw;max-height:64vh;border-radius:8px;box-shadow:0 0 60px rgba(0,0,0,.85);display:none">
-    <p class="small" id="clip2Credit" style="margin-top:16px">출처: ○○뉴스 (2026.○.○ 보도)</p>
+         style="width:min(78vw,1500px);max-height:64vh;object-fit:contain;border-radius:8px;box-shadow:0 0 60px rgba(0,0,0,.85);display:none">
+    <p class="small" id="clip2Credit" style="margin-top:16px">출처: MBC 「뉴스투데이」</p>
   </section>
 
   <!-- ③ 우리 해법 -->
@@ -176,19 +176,34 @@ let idx = 0, timer = null, paused = false;
 /* 클립은 두 자리다: clip(방송 복원) / clip2(보이스피싱 뉴스).
    파일이 없으면 그 장면을 통째로 건너뛴다 — 발표 당일에 파일이 빠져
    검은 화면이 몇 초 나오는 게 최악이라 그렇게 했다. */
-const clipReady = { clip: false, clip2: false };
+/* 클립은 두 자리다: clip(방송 복원) / clip2(보이스피싱 뉴스).
+   각 자리에 영상(mp4) 또는 캡처 이미지(png)를 넣을 수 있고, 둘 다 없으면
+   그 장면을 통째로 건너뛴다 — 발표 당일에 파일이 빠져 검은 화면이 몇 초
+   나오는 게 최악이라 그렇게 했다.
+
+   ⚠ 영상과 이미지의 준비 상태를 **따로** 들고 있어야 한다. 하나의 플래그로
+   합쳐놨더니, 없는 mp4의 error 이벤트가 이미지보다 늦게 도착하면서 이미지가
+   세워둔 상태를 도로 껐다(실제로 사진을 넣었는데 계속 건너뛰어졌다). */
 const SHOT_OF = { clip: 'shot', clip2: 'shot2' };
+const vidReady = { clip: false, clip2: false };
+const imgReady = { clip: false, clip2: false };
+const clipReady = {
+  get clip()  { return vidReady.clip  || imgReady.clip;  },
+  get clip2() { return vidReady.clip2 || imgReady.clip2; },
+};
 ['clip', 'clip2'].forEach(id => {
   const v = document.getElementById(id);
   if (v) {
-    v.addEventListener('loadeddata', () => { clipReady[id] = true; });
-    v.addEventListener('error', () => { clipReady[id] = false; });
+    v.addEventListener('loadeddata', () => { vidReady[id] = true; });
+    v.addEventListener('error', () => { vidReady[id] = false; });
   }
-  // 영상이 없어도 캡처 이미지가 있으면 그 장면을 쓴다
   const im = document.getElementById(SHOT_OF[id]);
   if (im) {
-    im.addEventListener('load', () => { clipReady[id] = true; });
-    im.addEventListener('error', () => { im.remove(); });
+    // 스크립트가 문서 끝에서 돌기 때문에 로컬 파일은 **이미 로드가 끝나 있을 수 있다.**
+    // 그러면 'load'가 다시 오지 않으므로 현재 상태를 먼저 본다.
+    if (im.complete && im.naturalWidth > 0) imgReady[id] = true;
+    im.addEventListener('load', () => { imgReady[id] = true; });
+    im.addEventListener('error', () => { imgReady[id] = false; });
   }
 });
 
@@ -213,7 +228,7 @@ function showScene(i) {
   if (step.clip) {
     const v = document.getElementById(step.clip);
     const im = document.getElementById(SHOT_OF[step.clip]);
-    const hasVideo = v && v.readyState >= 2;
+    const hasVideo = vidReady[step.clip];
     if (v) v.style.display = hasVideo ? '' : 'none';
     if (im) im.style.display = hasVideo ? 'none' : '';
     if (hasVideo) {
@@ -222,7 +237,7 @@ function showScene(i) {
       v.onended = () => next(i);
       timer = setTimeout(() => { try { v.pause(); } catch { } next(i); }, 20000);  // 길면 잘라낸다
     } else {
-      timer = setTimeout(() => next(i), 4200);   // 캡처 이미지는 고정 노출
+      timer = setTimeout(() => next(i), 5200);   // 캡처 이미지는 고정 노출 (자막 읽을 시간)
     }
     return;
   }
