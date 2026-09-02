@@ -154,6 +154,8 @@ node scripts\verify_extension_chrome.js                         # 실제 크롬�
 .venv\Scripts\python.exe scripts\fetch_real_call_samples.py      # 실제 보이스피싱 녹취(금감원)
 .venv\Scripts\python.exe scripts\validate_real_calls.py          # 실제 통화 탐지 성능
 .venv\Scripts\python.exe scripts\diagnose_audio_fp.py            # 음성 오탐 원인 추적
+.venv\Scripts\python.exe scripts\fetch_korean_conversation.py    # 한국어 자연 대화체(검증용)
+.venv\Scripts\python.exe scripts\validate_normal_calls.py        # 정상 대화 헛경보율
 .venv\Scripts\python.exe scripts\decide_scoring.py              # 스코어링 설정 재결정
 .venv\Scripts\python.exe scripts\benchmark_face_detector.py     # 얼굴 검출기 비교
 ```
@@ -180,6 +182,9 @@ HTTP Range로 원격 파일을 로컬 파일처럼 읽게 해줘서, zipfile과 
   - ASVspoof 음성 120개 ← 464MB parquet
   - **DFDC 영상 50개 ← 96.5GB zip에서 431MB만** (Kaggle 계정 없이 크로스도메인 검증 확보)
   - Zeroth-Korean 문장 457개 ← 오디오 컬럼을 건너뛰고 텍스트 컬럼만
+  - **KsponSpeech 자유대화 30건 ← 426MB parquet에서 21MB만**
+    ⚠ AI Hub 원본이라 이용 약관이 있다. 검증 목적 소량만 쓰고 재배포 금지.
+    자세한 건 `docs/data_roadmap.md`.
 
 ## 컨벤션
 
