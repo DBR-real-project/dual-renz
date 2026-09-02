@@ -11,7 +11,7 @@
   ## 쓰는 법
   1) 이 파일을 크롬에서 연다 (F11로 전체화면 권장)
   2) 화면 녹화 (Win + G  또는  PowerPoint '화면 녹화')
-  3) 약 38초. 끝나면 마지막 화면에서 멈춘다
+  3) 약 23초(클립 제외). 끝나면 마지막 화면에서 멈춘다
   4) R 키 = 다시 재생, 스페이스 = 일시정지/재개
 
   발표에서 라이브로 틀어도 된다 — 그 경우 전체화면으로 열어두고 클릭만 하면 된다.
@@ -98,66 +98,30 @@
     <p class="sub rise d2">AI가 복원한 목소리였습니다.</p>
   </section>
 
+  <!-- ②  실제 방송 클립.
+       docs/intro/clip.mp4 를 넣으면 여기서 재생되고, 없으면 자동으로 건너뛴다.
+       ⚠ 방송 클립은 저작권이 있다. 아래 출처를 반드시 실제 방송사·프로그램명·방영일로 채울 것. -->
+  <section class="scene warm" data-s="45">
+    <!-- 소리까지 내려면 muted 를 지우고, 발표 때 한 번 클릭해 재생을 허용할 것 -->
+    <video id="clip" src="clip.mp4" muted playsinline
+           style="max-width:80vw;max-height:64vh;border-radius:8px;box-shadow:0 0 60px rgba(0,0,0,.85)"></video>
+    <p class="small" id="clipCredit" style="margin-top:16px">출처: ○○방송 「○○○」 (2021.○.○ 방영)</p>
+  </section>
+
   <section class="scene warm" data-s="2">
     <p class="line rise d1">유족이 울었고,<br>시청자도 함께 울었습니다.</p>
     <p class="sub rise d2">기술이 준 선물이었습니다.</p>
   </section>
 
-  <!-- ② 뒤집는다 -->
+  <!-- ③ 뒤집는다 -->
   <section class="scene alarm" data-s="3">
     <p class="line rise d1">그리고 지금,</p>
-    <p class="line rise d2" style="margin-top:18px">같은 기술로<br><mark>당신 아들의 목소리</mark>가 만들어집니다.</p>
+    <p class="line rise d2" style="margin-top:18px">같은 기술로<br><mark>당신의 아들딸 목소리</mark>가 만들어집니다.</p>
   </section>
 
   <section class="scene alarm" data-s="4">
     <p class="line rise d1">“엄마, 나 사고 났어.<br>지금 돈 좀 보내줄 수 있어?”</p>
-    <p class="sub rise d2">목소리는 아들이 맞습니다. 사람은 아닙니다.</p>
-  </section>
-
-  <!-- ②-b 실제 방송 클립 자리.
-       docs/intro/clip.mp4 를 넣으면 여기서 재생된다(없으면 이 장면은 자동으로 건너뛴다).
-       ⚠ 방송 클립은 저작권이 있다. 아래 출처 표기를 반드시 실제 출처로 바꿔서 쓸 것. -->
-  <section class="scene cold" data-s="45">
-    <!-- 소리까지 내려면 muted 를 지우고, 발표 때 한 번 클릭해서 재생을 허용할 것 -->
-    <video id="clip" src="clip.mp4" muted playsinline
-           style="max-width:82vw;max-height:66vh;border-radius:8px;box-shadow:0 0 60px rgba(0,0,0,.8)"></video>
-    <p class="small" id="clipCredit" style="margin-top:18px">출처: (여기에 방송사·프로그램명·방영일을 적을 것)</p>
-  </section>
-
-  <!-- ③ 반전 — 우리 실측 -->
-  <section class="scene cold" data-s="5">
-    <p class="line rise d1">저희는 이 문제를</p>
-    <p class="big rise d2" style="color:#fff;margin-top:12px">799건</p>
-    <p class="bigsub rise d3">으로 검증했습니다.</p>
-  </section>
-
-  <section class="scene cold" data-s="55">
-    <p class="line rise d1">영상 166건 · 음성 120건<br>한국어 문장 478건 · 실제 통화 녹취 5건</p>
-    <p class="sub rise d2">전부 직접 돌린 수치입니다.</p>
-  </section>
-
-  <section class="scene cold" data-s="57">
-    <p class="big rise d1" style="color:#5ee08f">118 / 120</p>
-    <p class="bigsub rise d2">음성 합성 판별 정확도 98.3%</p>
-    <p class="small rise d3">ASVspoof 벤치마크 기준</p>
-  </section>
-
-  <section class="scene cold" data-s="56">
-    <p class="line rise d1">그중 금융감독원이 공개한<br><span class="u">실제 보이스피싱 녹취</span>는</p>
-  </section>
-
-  <section class="scene cold" data-s="6">
-    <p class="big rise d1">5 / 5</p>
-    <p class="bigsub rise d2">전부 ‘높음’으로 경고했습니다.</p>
-  </section>
-
-  <section class="scene cold" data-s="7">
-    <p class="line rise d1">그런데 그 5건은<br><mark>딥페이크가 아니었습니다.</mark></p>
-    <p class="sub rise d2">진짜 사람이 직접 말한 통화였습니다.</p>
-  </section>
-
-  <section class="scene alarm" data-s="8">
-    <p class="line rise d1">딥페이크만 찾는 서비스는<br>이 5건을 <span class="u">한 건도</span> 못 잡습니다.</p>
+    <p class="sub rise d2">목소리는 자녀가 맞습니다. 사람은 아닙니다.</p>
   </section>
 
   <!-- ④ 우리 해법 -->
@@ -182,17 +146,10 @@
    감안해 짧은 장면도 3초 아래로 내리지 않는다 — 읽을 시간이 없으면 임팩트가 죽는다. */
 const TIMELINE = [
   { s: 1,  ms: 4200, wash: 'w-warm'  },
+  { s: 45, ms: 0,    wash: 'w-warm', clip: true },  // 실제 방송 클립. 길이는 영상에 맞춘다
   { s: 2,  ms: 3800, wash: 'w-warm'  },
   { s: 3,  ms: 4600, wash: 'w-alarm', flash: true },
-  { s: 4,  ms: 4200, wash: 'w-alarm' },
-  { s: 45, ms: 0,    wash: 'w-dark', clip: true },  // 실제 방송 클립. 길이는 영상에 맞춘다
-  { s: 5,  ms: 4400, wash: 'w-dark'  },
-  { s: 55, ms: 3400, wash: 'w-dark'  },
-  { s: 57, ms: 3600, wash: 'w-dark'  },
-  { s: 56, ms: 3000, wash: 'w-dark'  },
-  { s: 6,  ms: 3600, wash: 'w-dark'  },
-  { s: 7,  ms: 4000, wash: 'w-dark'  },
-  { s: 8,  ms: 3800, wash: 'w-alarm' },
+  { s: 4,  ms: 4400, wash: 'w-alarm' },
   { s: 9,  ms: 5200, wash: 'w-dark'  },
   { s: 10, ms: 9999, wash: 'w-dark'  },   // 마지막은 멈춰서 대기 (발표자가 이어서 말한다)
 ];
