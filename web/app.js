@@ -107,7 +107,10 @@ async function openRiskPip() {
   if (!pipSupported() || pipWin) return;
   try {
     // 사용자 제스처(공유 시작 클릭) 안에서 호출해야 열린다.
-    pipWin = await documentPictureInPicture.requestWindow({ width: 300, height: 190 });
+    // 크기는 통화 화면을 가리지 않으면서 **멀리서도 읽히게** 잡는다.
+    // 300x190으로 시작했더니 실제로 띄워보고 너무 작다는 피드백이 나왔다.
+    // 사용자가 창 모서리를 끌어 더 키울 수도 있다.
+    pipWin = await documentPictureInPicture.requestWindow({ width: 420, height: 300 });
   } catch (e) {
     pipWin = null;   // 차단됐으면 조용히 포기 — 통화를 방해하지 않는다
     return;
@@ -120,12 +123,12 @@ async function openRiskPip() {
     body{margin:0;font-family:"Malgun Gothic","Pretendard",sans-serif;
          background:#16202e;color:#fff;word-break:keep-all;
          display:flex;flex-direction:column;height:100vh}
-    .hd{padding:9px 12px 0;font-size:11px;color:#9fb0c4;letter-spacing:-.2px}
-    .mid{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
-    .num{font-size:46px;font-weight:800;line-height:1}
-    .lv{font-size:13px;font-weight:700;padding:1px 10px;border-radius:99px}
-    .sub{font-size:11px;color:#9fb0c4}
-    .why{padding:0 12px 10px;font-size:11.5px;line-height:1.4;text-align:center;min-height:32px}
+    .hd{padding:12px 16px 0;font-size:13px;color:#9fb0c4;letter-spacing:-.2px}
+    .mid{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+    .num{font-size:76px;font-weight:800;line-height:1}
+    .lv{font-size:17px;font-weight:700;padding:3px 16px;border-radius:99px}
+    .sub{font-size:14px;color:#9fb0c4}
+    .why{padding:0 16px 14px;font-size:14px;line-height:1.45;text-align:center;min-height:40px}
     .lv-낮음{background:#1e7a45}.lv-중간{background:#a9761a}.lv-높음{background:#c0392b}
     .n-낮음{color:#5ee08f}.n-중간{color:#ffc861}.n-높음{color:#ff8a80}
     body.alert{animation:flash 1s ease-in-out 3}
