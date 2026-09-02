@@ -1,0 +1,206 @@
+<meta charset="utf-8">
+<title>DualGuard 발표 인트로</title>
+<!--
+  발표 도입부 인트로 (화면 녹화용)
+  담당: 이상원
+
+  ## 왜 HTML인가
+  방송 클립을 쓰면 저작권이 걸린다. 이건 전부 직접 만든 원본이라 그 문제가 없고,
+  수치도 우리 실측값(금감원 녹취 5/5)만 쓴다.
+
+  ## 쓰는 법
+  1) 이 파일을 크롬에서 연다 (F11로 전체화면 권장)
+  2) 화면 녹화 (Win + G  또는  PowerPoint '화면 녹화')
+  3) 약 38초. 끝나면 마지막 화면에서 멈춘다
+  4) R 키 = 다시 재생, 스페이스 = 일시정지/재개
+
+  발표에서 라이브로 틀어도 된다 — 그 경우 전체화면으로 열어두고 클릭만 하면 된다.
+-->
+<style>
+  @font-face { font-family: 'x'; src: local('Pretendard'); }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: #000; overflow: hidden; }
+  body {
+    font-family: "Pretendard", "Malgun Gothic", "맑은 고딕", sans-serif;
+    color: #fff; word-break: keep-all;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  #stage { position: relative; width: 100%; height: 100%; }
+
+  .scene {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; padding: 0 8vw;
+    opacity: 0; pointer-events: none;
+  }
+  .scene.on { opacity: 1; }
+
+  /* 장면 전환은 페이드. 컷 전환보다 감정 전환이 부드럽다 */
+  .scene { transition: opacity .9s ease; }
+
+  .line { font-size: clamp(28px, 4.2vw, 64px); font-weight: 800; line-height: 1.35; letter-spacing: -.02em; }
+  .sub  { font-size: clamp(15px, 1.6vw, 24px); color: #8b96a5; margin-top: 26px; font-weight: 500; }
+  .small{ font-size: clamp(13px, 1.15vw, 18px); color: #6b7684; margin-top: 40px; }
+
+  .warm .line { color: #ffd9a0; }
+  .cold .line { color: #fff; }
+  .alarm .line { color: #ff7b6b; }
+
+  /* 배경 분위기 — 따뜻함에서 차가움으로 */
+  #wash { position: absolute; inset: 0; transition: background 1.6s ease; }
+  .w-warm  { background: radial-gradient(ellipse at 50% 55%, #3a2a12 0%, #000 62%); }
+  .w-dark  { background: #000; }
+  .w-alarm { background: radial-gradient(ellipse at 50% 55%, #3a1010 0%, #000 62%); }
+
+  /* 한 글자씩이 아니라 줄 단위로 올라오게 — 읽는 속도에 맞춘다 */
+  .rise { opacity: 0; transform: translateY(18px); transition: opacity .8s ease, transform .8s ease; }
+  .scene.on .rise { opacity: 1; transform: none; }
+  .scene.on .d1 { transition-delay: .15s }
+  .scene.on .d2 { transition-delay: .95s }
+  .scene.on .d3 { transition-delay: 1.75s }
+
+  /* 숫자 강조 */
+  .big {
+    /* line-height 1이면 숫자 아래로 자막이 파고든다(실제로 겹쳤다). 여유를 준다. */
+    font-size: clamp(70px, 13vw, 190px); font-weight: 900; line-height: 1.12;
+    color: #ff5a45; letter-spacing: -.04em;
+  }
+  .bigsub { font-size: clamp(18px, 2.1vw, 32px); font-weight: 700; color: #fff; margin-top: 34px; }
+
+  .flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+  .flash.go { animation: fl .5s ease-out; }
+  @keyframes fl { 0% { opacity: .85 } 100% { opacity: 0 } }
+
+  /* 마지막 로고 */
+  .brand { font-size: clamp(40px, 6vw, 92px); font-weight: 900; letter-spacing: -.03em; }
+  .brand span { color: #4f8ef7; }
+  .tag { font-size: clamp(16px, 1.8vw, 27px); color: #9fb0c4; margin-top: 18px; font-weight: 600; }
+
+  #hint {
+    position: fixed; left: 16px; bottom: 12px; font-size: 12px; color: #3d4753;
+    font-weight: 500; transition: opacity .4s;
+  }
+  #hint.hide { opacity: 0; }
+
+  mark { background: none; color: #ffd05a; }
+  .u { border-bottom: 3px solid currentColor; padding-bottom: 2px; }
+</style>
+
+<div id="stage">
+  <div id="wash" class="w-dark"></div>
+  <div class="flash" id="flash"></div>
+
+  <!-- ① 따뜻하게 연다 -->
+  <section class="scene warm" data-s="1">
+    <p class="line rise d1">2021년, 한 방송에서<br>세상을 떠난 가수의 목소리가 돌아왔습니다.</p>
+    <p class="sub rise d2">AI가 복원한 목소리였습니다.</p>
+  </section>
+
+  <section class="scene warm" data-s="2">
+    <p class="line rise d1">유족이 울었고,<br>시청자도 함께 울었습니다.</p>
+    <p class="sub rise d2">기술이 준 선물이었습니다.</p>
+  </section>
+
+  <!-- ② 뒤집는다 -->
+  <section class="scene alarm" data-s="3">
+    <p class="line rise d1">그리고 지금,</p>
+    <p class="line rise d2" style="margin-top:18px">같은 기술로<br><mark>당신 아들의 목소리</mark>가 만들어집니다.</p>
+  </section>
+
+  <section class="scene alarm" data-s="4">
+    <p class="line rise d1">“엄마, 나 사고 났어.<br>지금 돈 좀 보내줄 수 있어?”</p>
+    <p class="sub rise d2">목소리는 아들이 맞습니다. 사람은 아닙니다.</p>
+  </section>
+
+  <!-- ③ 반전 — 우리 실측 -->
+  <section class="scene cold" data-s="5">
+    <p class="line rise d1">저희는 금융감독원이 공개한<br><span class="u">실제 보이스피싱 녹취</span>를 분석했습니다.</p>
+  </section>
+
+  <section class="scene cold" data-s="6">
+    <p class="big rise d1">5 / 5</p>
+    <p class="bigsub rise d2">전부 ‘높음’으로 경고했습니다.</p>
+  </section>
+
+  <section class="scene cold" data-s="7">
+    <p class="line rise d1">그런데 그 5건은<br><mark>딥페이크가 아니었습니다.</mark></p>
+    <p class="sub rise d2">진짜 사람이 직접 말한 통화였습니다.</p>
+  </section>
+
+  <section class="scene alarm" data-s="8">
+    <p class="line rise d1">딥페이크만 찾는 서비스는<br>이 5건을 <span class="u">한 건도</span> 못 잡습니다.</p>
+  </section>
+
+  <!-- ④ 우리 해법 -->
+  <section class="scene cold" data-s="9">
+    <p class="line rise d1">그래서 저희는<br><mark>목소리가 아니라 ‘무슨 말을 하는가’</mark>를 봅니다.</p>
+  </section>
+
+  <section class="scene cold" data-s="10">
+    <p class="brand rise d1">Dual<span>Guard</span></p>
+    <p class="tag rise d2">화상통화, 상대를 믿기 전에</p>
+    <p class="small rise d3">듀얼렌즈(DualLens)</p>
+  </section>
+</div>
+
+<div id="hint">R 다시 재생 · 스페이스 일시정지 · F11 전체화면</div>
+
+<script>
+/* 장면 타임라인.
+   ms = 그 장면이 화면에 머무는 시간. 글자가 순차로 올라오는 시간(최대 1.75s)을
+   감안해 짧은 장면도 3초 아래로 내리지 않는다 — 읽을 시간이 없으면 임팩트가 죽는다. */
+const TIMELINE = [
+  { s: 1,  ms: 4200, wash: 'w-warm'  },
+  { s: 2,  ms: 3800, wash: 'w-warm'  },
+  { s: 3,  ms: 4600, wash: 'w-alarm', flash: true },
+  { s: 4,  ms: 4200, wash: 'w-alarm' },
+  { s: 5,  ms: 3800, wash: 'w-dark'  },
+  { s: 6,  ms: 3600, wash: 'w-dark'  },
+  { s: 7,  ms: 4000, wash: 'w-dark'  },
+  { s: 8,  ms: 3800, wash: 'w-alarm' },
+  { s: 9,  ms: 4200, wash: 'w-dark'  },
+  { s: 10, ms: 9999, wash: 'w-dark'  },   // 마지막은 멈춰서 대기 (발표자가 이어서 말한다)
+];
+
+const wash = document.getElementById('wash');
+const flashEl = document.getElementById('flash');
+const scenes = [...document.querySelectorAll('.scene')];
+const hint = document.getElementById('hint');
+let idx = 0, timer = null, paused = false;
+
+function showScene(i) {
+  scenes.forEach(el => el.classList.remove('on'));
+  const step = TIMELINE[i];
+  if (!step) return;
+  const el = scenes.find(s => +s.dataset.s === step.s);
+  wash.className = step.wash;
+  if (step.flash) { flashEl.classList.remove('go'); void flashEl.offsetWidth; flashEl.classList.add('go'); }
+  // 다음 프레임에 켜야 rise 트랜지션이 다시 돈다
+  requestAnimationFrame(() => el.classList.add('on'));
+  if (i < TIMELINE.length - 1) {
+    timer = setTimeout(() => { if (!paused) { idx = i + 1; showScene(idx); } }, step.ms);
+  }
+}
+
+function play() {
+  clearTimeout(timer); paused = false; idx = 0;
+  scenes.forEach(el => el.classList.remove('on'));
+  setTimeout(() => showScene(0), 400);   // 검은 화면에서 잠깐 뜸을 들인다
+}
+
+addEventListener('keydown', e => {
+  if (e.key === 'r' || e.key === 'R') play();
+  if (e.code === 'Space') {
+    e.preventDefault();
+    paused = !paused;
+    if (paused) clearTimeout(timer);
+    else showScene(idx);
+  }
+});
+
+// 안내문은 3초 뒤 사라진다 — 녹화 화면에 남으면 안 된다
+setTimeout(() => hint.classList.add('hide'), 3000);
+play();
+</script>
