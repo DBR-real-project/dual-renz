@@ -322,7 +322,7 @@ report.as_dict()["overall_score"]
 | 확장 아이콘 클릭 시 `activeTab` 부여 확인 | 크롬은 **사람이 실제로 아이콘을 눌렀을 때만** 준다. `Runtime.evaluate({userGesture:true})`, `chrome.action.openPopup()`, `Browser.grantPermissions`, `<all_urls>` 전부 실패했다. 자동 검증은 `--allowlisted-extension-id`로 그 검사를 건너뛴 것이므로, **이 한 조각만** 사람이 확인해야 한다: `node scripts/verify_extension_chrome.js --manual` (10초) |
 | LLM 실제 정확도 | API 키 |
 | 영상 엔진 일반화 | 모델 교체 필요. 아래 한계 참고 |
-| 실제 통화 녹취 검증 | 개인정보 처리 방침이 선행돼야 한다 |
+| **정상** 통화 녹취 검증 | 사기 통화는 금감원 공개 녹취로 검증했다(5/5 탐지). 그런데 **정상 통화 녹취는 공개된 게 없다** — 그래서 실제 통화에서의 오탐률을 못 쟀고, 음성 엔진이 실제 녹취를 합성으로 오판하는 문제(0-7절)도 이것 때문에 미해결이다 |
 
 ---
 
