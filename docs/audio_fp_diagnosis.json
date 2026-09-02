@@ -1,0 +1,146 @@
+{
+  "_설명": "진짜 사람 음성에 처리를 하나씩 걸어 AASIST 점수 변화를 본 통제 실험 + 레벨을 통일한 그룹 비교. 결론은 '학습 도메인 밖에서 무너진다'.",
+  "baseline_file": "C:\\Users\\migle\\DualGuard-MediaAnalysis\\data\\korean_calls\\real_normal_call.wav",
+  "rows": [
+    {
+      "group": "기준",
+      "case": "원본 (16kHz 스튜디오)",
+      "score": 16.53,
+      "delta": 0.0
+    },
+    {
+      "group": "코덱",
+      "case": "G.711 μ-law (파형)",
+      "score": null,
+      "error": "RuntimeError: ffmpeg 실패: Output C:\\Users\\migle\\AppData\\Local\\Temp\\tmpyiklsqbs\\c_g711.wav same as Input #0 - exiting\nError opening output file C:\\Users\\migle\\AppData\\Local\\Temp\\tmpyiklsqbs\\c_g711.wav.\nError opening output file"
+    },
+    {
+      "group": "코덱",
+      "case": "G.726 ADPCM 32k (파형)",
+      "score": null,
+      "error": "RuntimeError: ffmpeg 실패: Output C:\\Users\\migle\\AppData\\Local\\Temp\\tmpyiklsqbs\\c_g726.wav same as Input #0 - exiting\nError opening output file C:\\Users\\migle\\AppData\\Local\\Temp\\tmpyiklsqbs\\c_g726.wav.\nError opening output file"
+    },
+    {
+      "group": "코덱",
+      "case": "AMR-NB 12.2k (ACELP 보코더)",
+      "score": 6.28,
+      "delta": -10.25
+    },
+    {
+      "group": "코덱",
+      "case": "AMR-NB 4.75k (최저 비트레이트)",
+      "score": 13.94,
+      "delta": -2.59
+    },
+    {
+      "group": "코덱",
+      "case": "GSM 06.10 (RPE-LTP 보코더)",
+      "score": 6.49,
+      "delta": -10.04
+    },
+    {
+      "group": "코덱",
+      "case": "Speex (CELP 보코더)",
+      "score": 10.97,
+      "delta": -5.56
+    },
+    {
+      "group": "재인코딩",
+      "case": "mp3 64k 1세대",
+      "score": 15.27,
+      "delta": -1.27
+    },
+    {
+      "group": "재인코딩",
+      "case": "mp3 64k 3세대",
+      "score": 12.55,
+      "delta": -3.98
+    },
+    {
+      "group": "재인코딩",
+      "case": "mp3 32k 3세대",
+      "score": 12.41,
+      "delta": -4.12
+    },
+    {
+      "group": "편집",
+      "case": "화자 혼합 30%",
+      "score": 100.0,
+      "delta": 83.46
+    },
+    {
+      "group": "편집",
+      "case": "화자 혼합 50%",
+      "score": 99.99,
+      "delta": 83.46
+    },
+    {
+      "group": "편집",
+      "case": "AGC + 라우드니스 정규화",
+      "score": 100.0,
+      "delta": 83.47
+    },
+    {
+      "group": "편집",
+      "case": "잡음 제거(afftdn)",
+      "score": 5.62,
+      "delta": -10.91
+    },
+    {
+      "group": "편집",
+      "case": "마스킹 삐- 삽입",
+      "score": 8.33,
+      "delta": -8.21
+    }
+  ],
+  "level_sweep": [
+    {
+      "group": "ASVspoof 진짜 (학습 도메인)",
+      "n": 5,
+      "levels_db": [
+        -39,
+        -30,
+        -25,
+        -20
+      ],
+      "scores": [
+        0.8,
+        0.4,
+        0.2,
+        0.3
+      ]
+    },
+    {
+      "group": "Zeroth 낭독 (도메인 밖)",
+      "n": 1,
+      "levels_db": [
+        -39,
+        -30,
+        -25,
+        -20
+      ],
+      "scores": [
+        16.9,
+        81.1,
+        98.9,
+        100.0
+      ]
+    },
+    {
+      "group": "실제 통화 녹취 (도메인 밖)",
+      "n": 4,
+      "levels_db": [
+        -39,
+        -30,
+        -25,
+        -20
+      ],
+      "scores": [
+        45.4,
+        98.1,
+        100.0,
+        100.0
+      ]
+    }
+  ]
+}

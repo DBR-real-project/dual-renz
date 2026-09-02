@@ -52,10 +52,12 @@ FF++ 가중치가 없는 환경에서 파이프라인이 통째로 죽는 걸 �
 **⚠ FF++는 얼굴 크롭 전용이다.** 얼굴이 검출 안 되면 점수를 내지 않고 예외를 던진다.
 이건 버그가 아니라 의도된 동작 — 전체 프레임을 넣으면 아무 값이나 나온다.
 
-**⚠⚠ 음성 엔진도 실제 통화 녹취에서 오작동한다.** 금감원 공개 녹취 5건을 전부
-합성(100)으로 판정했다. 전화망·코덱은 원인이 아님을 통제 실험으로 확인했고
-(G.711 통과 시 오히려 6.5로 내려간다) 원인은 아직 모른다.
-`docs/validation_report.md` 0-7절. **"음성 엔진은 도메인에 강하다"고 쓰지 말 것.**
+**⚠⚠ 음성 엔진도 학습 도메인 밖에서 무너진다(규명 완료).** 레벨을 통일해 비교하면
+ASVspoof(학습 도메인)는 0점대인데 Zeroth 낭독과 실제 통화 녹취는 100까지 올라간다.
+코덱·전화망·재인코딩·편집은 전부 기각됐다. 음량은 방아쇠일 뿐이다.
+`docs/validation_report.md` 0-7절, 재현 `scripts/diagnose_audio_fp.py`.
+**"음성 엔진은 도메인에 강하다"고 쓰지 말 것.** 레벨 정규화로 고치려 들지도 말 것 —
+조용한 입력을 100으로 올릴 뿐이다.
 
 **⚠⚠ 영상 엔진은 학습 도메인 밖에서 못 쓴다.** FF++ 안에서는 오탐 2%인데
 DFDC에서는 **55%**다(실측, `docs/validation_report.md` 0-3). 파이프라인이 영상 분석
@@ -149,6 +151,7 @@ node scripts\verify_extension_chrome.js                         # 실제 크롬�
 .venv\Scripts\python.exe scripts\validate_content_fpr.py         # 콘텐츠 도메인 밖 오탐률
 .venv\Scripts\python.exe scripts\fetch_real_call_samples.py      # 실제 보이스피싱 녹취(금감원)
 .venv\Scripts\python.exe scripts\validate_real_calls.py          # 실제 통화 탐지 성능
+.venv\Scripts\python.exe scripts\diagnose_audio_fp.py            # 음성 오탐 원인 추적
 .venv\Scripts\python.exe scripts\decide_scoring.py              # 스코어링 설정 재결정
 .venv\Scripts\python.exe scripts\benchmark_face_detector.py     # 얼굴 검출기 비교
 ```
