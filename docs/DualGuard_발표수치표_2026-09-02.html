@@ -1,0 +1,335 @@
+<meta charset="utf-8">
+<title>DualGuard 발표용 실측 수치표</title>
+<style>
+  @page { size: A4; margin: 14mm 13mm; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Malgun Gothic", "맑은 고딕", sans-serif;
+    font-size: 10.2px; line-height: 1.55; color: #16202e; margin: 0;
+    word-break: keep-all; overflow-wrap: anywhere;
+  }
+  h1 { font-size: 20px; margin: 0 0 2px; letter-spacing: -.4px; }
+  .sub { color: #6b7684; font-size: 10px; margin-bottom: 14px; }
+  h2 {
+    font-size: 13.5px; margin: 20px 0 7px; padding: 6px 9px;
+    background: #16202e; color: #fff; border-radius: 4px;
+  }
+  h3 { font-size: 11.5px; margin: 13px 0 5px; color: #16202e;
+       border-left: 3px solid #2f6fd0; padding-left: 7px; }
+  table { width: 100%; border-collapse: collapse; margin: 6px 0 9px; }
+  th, td { border: 1px solid #d8dee7; padding: 4.5px 6px; text-align: left; vertical-align: top; }
+  th { background: #eef2f7; font-weight: 700; }
+  td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .big { font-weight: 800; color: #16202e; }
+  .red { color: #c0392b; font-weight: 700; }
+  .green { color: #1e7a45; font-weight: 700; }
+  .warn {
+    background: #fff6e5; border-left: 4px solid #e2960f;
+    padding: 7px 10px; margin: 8px 0; border-radius: 0 4px 4px 0;
+  }
+  .danger {
+    background: #fdeeee; border-left: 4px solid #c0392b;
+    padding: 7px 10px; margin: 8px 0; border-radius: 0 4px 4px 0;
+  }
+  .say { background: #eef4fd; border-left: 4px solid #2f6fd0;
+         padding: 7px 10px; margin: 8px 0; border-radius: 0 4px 4px 0; }
+  .small { font-size: 9.2px; color: #6b7684; }
+  .pill { display: inline-block; background: #eef2f7; border-radius: 3px;
+          padding: 0 5px; font-size: 9px; color: #4a5566; }
+  .page-break { page-break-before: always; }
+  ul { margin: 4px 0 8px; padding-left: 17px; }
+  li { margin: 2px 0; }
+  code { background: #f2f4f7; padding: 0 3px; border-radius: 3px; font-size: 9.4px; }
+</style>
+
+<h1>DualGuard — 발표용 실측 수치표</h1>
+<div class="sub">
+  듀얼렌즈(DualLens) · 2026-09-02 기준 · 제8회 K-디지털 트레이닝 해커톤 자유과제<br>
+  <b>이 문서의 모든 숫자는 저장소의 검증 리포트에서 그대로 뽑은 값이다.</b>
+  출처 파일명을 각 표에 적어뒀으니, 질문이 들어오면 그 파일을 열어 보여주면 된다.
+</div>
+
+<div class="danger">
+  <b>인용 원칙 — 이것만 지키면 질의응답에서 안 무너진다</b>
+  <ul>
+    <li><b>정확도만 말하지 말고 “몇 건에서”를 항상 붙인다.</b> 표본이 작은 항목이 많다.</li>
+    <li><b>영상 수치는 반드시 “FF++ 기준”을 함께 말한다.</b> 다른 데이터셋에서는 무너진다.</li>
+    <li>한계는 <b>먼저</b> 밝힌다. 지적당한 뒤 인정하면 변명이 되고, 먼저 밝히면 근거가 된다.</li>
+  </ul>
+</div>
+
+<h2>① 발표에서 가장 강한 수치 세 개 (이건 꼭 넣어라)</h2>
+
+<table>
+  <tr>
+    <th style="width:26%">수치</th><th style="width:16%">값</th><th>왜 강한가 / 어떻게 말하나</th>
+  </tr>
+  <tr>
+    <td><b>실제 보이스피싱 녹취 탐지</b><br><span class="small">금감원 「그놈 목소리」 5건</span></td>
+    <td class="n"><span class="big green" style="font-size:15px">5 / 5</span><br><span class="small">전부 ‘높음’</span></td>
+    <td>우리가 만든 대본이 아니라 <b>실제 사기범 통화</b>다. 게다가 이 5건은
+      <b>딥페이크가 아니라 진짜 사람 목소리</b> — 딥페이크 탐지만 하는 솔루션은
+      <b>한 건도</b> 못 잡는다. 화법을 주축으로 삼은 근거 그 자체.</td>
+  </tr>
+  <tr>
+    <td><b>정상 대화 헛경보 ‘높음’</b><br><span class="small">한국어 자유대화 30건</span></td>
+    <td class="n"><span class="big green" style="font-size:15px">0 %</span><br><span class="small">0 / 30건</span></td>
+    <td>정상 대화에 “즉시 통화를 끊으세요”를 띄운 적이 <b>한 번도 없다</b>.
+      제품이 쓸 수 없을 만큼 시끄럽지 않다는 증거.</td>
+  </tr>
+  <tr>
+    <td><b>도메인 밖 오탐률</b><br><span class="small">우리가 안 만든 한국어 457문장</span></td>
+    <td class="n"><span class="big green" style="font-size:15px">1.53 %</span><br><span class="small">7 / 457건</span></td>
+    <td>“자기가 만든 문제를 자기가 푼 것 아니냐”에 대한 답.
+      <b>남이 만든 문장</b>(Zeroth-Korean, CC BY 4.0)으로 쟀다.</td>
+  </tr>
+</table>
+
+<div class="say">
+  <b>이렇게 말하면 된다</b> —
+  “실제 사기범은 <b>사람이 직접 말합니다.</b> 금융감독원 공개 녹취 5건이 전부 그랬고,
+  저희는 5건 모두 잡았습니다. <b>딥페이크 탐지만 하는 방식으로는 이 5건이 하나도 안 잡힙니다.</b>
+  그래서 저희는 얼굴·목소리보다 <b>화법</b>에 비중을 뒀습니다.”
+</div>
+
+<h2>② 콘텐츠 분석 (화법) — 주 축, 가중치 0.65</h2>
+
+<h3>2-1. 자체 시나리오 21건 (사기 11 / 정상 10)</h3>
+<table>
+  <tr><th>분류기</th><th class="n">정탐률</th><th class="n">오탐률</th><th class="n">정확도</th><th>비고</th></tr>
+  <tr><td>순수 키워드 규칙 <span class="small">(개선 전 기준선)</span></td>
+      <td class="n">63.6%</td><td class="n">30.0%</td><td class="n">66.7%</td><td class="small">표현이 조금만 달라지면 놓친다</td></tr>
+  <tr><td><b>오프라인 분류기</b> <span class="small">키워드 + 한국어 임베딩</span></td>
+      <td class="n"><b>90.9%</b></td><td class="n"><b>10.0%</b></td><td class="n"><b>90.5%</b></td>
+      <td class="small"><b>API 키가 없어도 도는 기본 경로</b></td></tr>
+  <tr><td>로컬 LLM <span class="small">Qwen2.5-1.5B, 키·설치 불필요</span></td>
+      <td class="n">90.9%</td><td class="n">10.0%</td><td class="n">90.5%</td>
+      <td class="small">총점은 동률인데 <b>기법별 회수율은 24/41 → 30/41로 더 낫다</b></td></tr>
+  <tr><td>OpenAI gpt-4o-mini <span class="small">기준선 62.5</span></td>
+      <td class="n">100%</td><td class="n">10.0%</td><td class="n">95.2%</td>
+      <td class="small">아래 주의 필독</td></tr>
+</table>
+<div class="small">출처: <code>docs/validation_report_content.json</code>,
+  <code>_locallm.json</code>, <code>_openai.json</code> · 재현 <code>scripts/validate_content_risk.py</code></div>
+
+<div class="warn">
+  <b>⚠ OpenAI 수치를 인용할 때</b> — 기준선 <b>62.5</b>는 <b>평가에 쓴 그 21건 위에서 고른 값</b>이라
+  과적합 소지가 있다. 기본 기준선 50을 쓰면 오탐 <b>30%</b>로 오프라인 분류기(90.5%)보다 <b>나쁘다.</b>
+  “OpenAI 95.2%”만 떼어 말하면 안 되고, 표본 21건과 기준선을 그 데이터로 정했다는 점을 함께 밝혀야 한다.
+  그래서 <code>auto</code> 폴백 체인에도 넣지 않았다.
+</div>
+
+<h3>2-2. 도메인 밖 오탐률 — 우리가 만들지 않은 문장</h3>
+<table>
+  <tr><th>판정 기준선</th><th class="n">오탐 건수</th><th class="n">오탐률</th></tr>
+  <tr><td>30</td><td class="n">84 / 457</td><td class="n">18.38%</td></tr>
+  <tr><td><b>50 (실제 사용값)</b></td><td class="n"><b>7 / 457</b></td><td class="n"><b class="green">1.53%</b></td></tr>
+  <tr><td>70</td><td class="n">2 / 457</td><td class="n">0.44%</td></tr>
+</table>
+<div class="small">Zeroth-Korean test split (CC BY 4.0), 뉴스·책 낭독 457문장. 사기와 무관하므로 넘으면 전부 오탐.<br>
+  출처: <code>docs/validation_report_content_fpr.json</code> · 재현 <code>scripts/validate_content_fpr.py</code></div>
+
+<h2>③ 음성 위조 판별 (AASIST) — 보조 축</h2>
+<table>
+  <tr><th>조건</th><th class="n">정탐률</th><th class="n">오탐률</th><th class="n">정확도</th><th class="n">표본</th></tr>
+  <tr><td>ASVspoof2019 LA <span class="small">(학습 도메인 안)</span></td>
+      <td class="n">97.1%</td><td class="n">0.0%</td><td class="n"><b>98.3%</b></td><td class="n">120건<br><span class="small">진짜50/합성70</span></td></tr>
+</table>
+
+<div class="danger">
+  <b>⚠⚠ 학습 도메인 밖에서는 무너진다 (원인 규명 완료)</b><br>
+  레벨을 통일해 같은 조건으로 비교하면 이렇게 갈린다 — <b>음량은 방아쇠일 뿐이고 원인은 도메인 일반화 실패다.</b>
+  <table style="margin-top:6px">
+    <tr><th>음원 그룹</th><th class="n">−39 dB</th><th class="n">−30 dB</th><th class="n">−25 dB</th><th class="n">−20 dB</th></tr>
+    <tr><td>ASVspoof 진짜 <span class="small">(학습 도메인)</span></td>
+        <td class="n green">0.8</td><td class="n green">0.4</td><td class="n green">0.2</td><td class="n green">0.3</td></tr>
+    <tr><td>Zeroth 낭독 <span class="small">(도메인 밖, 진짜 사람)</span></td>
+        <td class="n">16.9</td><td class="n red">81.1</td><td class="n red">98.9</td><td class="n red">100.0</td></tr>
+    <tr><td>실제 통화 녹취 <span class="small">(도메인 밖, 진짜 사람)</span></td>
+        <td class="n">45.4</td><td class="n red">98.1</td><td class="n red">100.0</td><td class="n red">100.0</td></tr>
+  </table>
+  코덱·전화망·재인코딩·편집은 통제 실험으로 <b>전부 기각</b>됐다.
+  <span class="small">출처: <code>docs/audio_fp_diagnosis.json</code>, <code>validation_report.md</code> 0-7절 ·
+  재현 <code>scripts/diagnose_audio_fp.py</code></span>
+</div>
+
+<div class="say">
+  <b>“음성 정확도 98.3%”라고만 말하지 마라.</b> 반드시 “ASVspoof 벤치마크 안에서”를 붙이고,
+  도메인 밖 한계를 <b>먼저</b> 밝혀라. 결과 화면에도 이 경고가 항상 뜬다.
+</div>
+
+<div class="page-break"></div>
+
+<h2>④ 영상 딥페이크 판별 (FF++ Xception) — 보조 축, 가장 약한 고리</h2>
+<table>
+  <tr><th>데이터셋</th><th class="n">정탐률</th><th class="n">오탐률</th><th class="n">정확도</th><th class="n">표본</th></tr>
+  <tr><td><b>FaceForensics++ C23</b> <span class="small">(학습 도메인 안)</span></td>
+      <td class="n">77.3%</td><td class="n green">2.0%</td><td class="n"><b>86.2%</b></td>
+      <td class="n">116건<br><span class="small">진짜50/가짜66</span></td></tr>
+  <tr><td><b>DFDC</b> <span class="small">(다른 데이터셋 = 안 배운 기법)</span></td>
+      <td class="n">70.0%</td><td class="n red" style="font-size:12px">55.0%</td><td class="n red">60.0%</td>
+      <td class="n">50건<br><span class="small">진짜20/가짜30</span></td></tr>
+</table>
+<div class="small">출처: <code>docs/validation_report.json</code>, <code>validation_report_dfdc.json</code> ·
+  재현 <code>scripts/validate_detector.py</code></div>
+
+<div class="danger">
+  <b>⚠⚠ 영상 수치를 인용할 때는 반드시 “FF++ 기준”을 함께 적어라.</b>
+  DFDC에서 오탐 <b>55%</b>는 사실상 동전 던지기다. 그래서 파이프라인이 영상 결과에
+  <b>항상 경고를 붙인다.</b>
+</div>
+
+<h3>4-1. “모델을 바꾸면 되지 않나” — 공개 모델 4종을 실제로 재봤다</h3>
+<table>
+  <tr><th>모델</th><th class="n">FF++ 정확도</th><th class="n">DFDC 정확도</th><th class="n">DFDC 오탐</th><th class="n">DFDC 분리도</th></tr>
+  <tr><td><b>우리 FF++ Xception</b></td><td class="n"><b>86.2%</b></td><td class="n">60.0%</td><td class="n">55%</td><td class="n">9.5</td></tr>
+  <tr><td>dima806/deepfake_vs_real</td><td class="n">55%</td><td class="n">55%</td><td class="n red">90%</td><td class="n">7.3</td></tr>
+  <tr><td>prithivMLmods/open-deepfake</td><td class="n">55%</td><td class="n">60%</td><td class="n red">50%</td><td class="n red">−2.1</td></tr>
+  <tr><td>Wvolf/ViT_Deepfake_Detection</td><td class="n">55%</td><td class="n">50%</td><td class="n red">100%</td><td class="n">0.5</td></tr>
+  <tr><td>prithivMLmods/Deep-Fake-Detector-v2</td><td class="n">60%</td><td class="n red">30%</td><td class="n red">100%</td><td class="n red">−17.6</td></tr>
+</table>
+<div class="small">분리도 = 가짜 평균점수 − 진짜 평균점수. <b>음수면 가짜를 진짜보다 더 진짜같이 판정한다는 뜻.</b><br>
+  출처: <code>docs/deepfake_model_comparison.json</code> · 재현 <code>scripts/compare_deepfake_models.py</code></div>
+
+<div class="say">
+  <b>“딥페이크 생성이 탐지보다 빠른데 어떻게 따라가나요?” 답변용</b> —
+  “맞습니다. 저희도 실측했습니다. 학습한 기법에서는 오탐 2%인데 다른 데이터셋에서는 <b>55%로 무너집니다.</b>
+  공개 모델 4종을 다 재봤지만 전부 더 나빴고, 한 모델은 <b>가짜를 진짜보다 더 진짜같이</b> 판정했습니다(분리도 −17.6).
+  그래서 저희는 <b>그 경쟁에 서비스를 걸지 않았습니다.</b> 딥페이크가 아무리 좋아져도,
+  돈을 뜯으려면 결국 ‘지금 이체하세요, 아무에게도 말하지 마세요’라고 말해야 합니다.
+  <b>목적이 안 변하니 설득 화법도 안 변합니다.</b>”
+</div>
+
+<h2>⑤ 교차검증 — 두 축을 합치는 근거</h2>
+
+<h3>5-1. 시연 3종 (교차검증이 실제로 동작한다는 증거)</h3>
+<table>
+  <tr><th>샘플</th><th class="n">콘텐츠</th><th class="n">미디어</th><th class="n">통합 점수</th><th>등급</th><th>무엇을 보여주나</th></tr>
+  <tr><td><code>real_normal_call.wav</code><br><span class="small">진짜 사람 + 정상 대화</span></td>
+      <td class="n">0.0</td><td class="n">26.7</td><td class="n"><b>9.3</b></td><td>🟢 낮음</td>
+      <td class="small">헛경보가 없다</td></tr>
+  <tr><td><code>normal_call.wav</code><br><span class="small">합성 음성 + 정상 대화</span></td>
+      <td class="n">0.0</td><td class="n">100.0</td><td class="n"><b>35.0</b></td><td>🟡 중간</td>
+      <td class="small"><b>핵심.</b> 내용은 멀쩡한데 목소리가 합성이라 경고가 뜬다</td></tr>
+  <tr><td><code>scam_call.wav</code><br><span class="small">합성 음성 + 사기 화법</span></td>
+      <td class="n">100.0</td><td class="n">100.0</td><td class="n"><b>100.0</b></td><td>🔴 높음</td>
+      <td class="small">둘 다 걸려 교차 가산</td></tr>
+</table>
+<div class="small">2026-09-02 OpenAI 백엔드로 재측정해도 <b>세 값이 모두 동일</b>했다.</div>
+
+<h3>5-2. 통합 공식·가중치·경계는 격자 탐색으로 정했다 (조합 1,050쌍)</h3>
+<table>
+  <tr><th>항목</th><th>확정값</th><th>근거</th></tr>
+  <tr><td>콘텐츠 / 미디어 가중치</td><td><b>0.65 / 0.35</b></td>
+      <td class="small">0.5일 때 놓침 <b>84건</b> → 0.65일 때 <b>21건</b>. 헛경보는 두 경우 모두 0건</td></tr>
+  <tr><td>신호등 경계</td><td><b>높음 55 / 중간 30</b></td><td class="small">같은 격자 탐색</td></tr>
+  <tr><td>통합 공식</td><td><b>곱연산 가산 (DOCX 버전)</b></td>
+      <td class="small">기획서 버전A(threshold_bonus)는 임계값에서 <b>+15.2점 계단</b>이 생긴다.
+        곱연산은 0.24로 매끄럽다 → 정확도가 2.7%p 낮아도 이쪽을 택함</td></tr>
+  <tr><td>audio / video 결합</td><td><b>max</b></td><td class="small">가중평균은 4조합 중 2개를 놓친다</td></tr>
+</table>
+<div class="small">출처: <code>docs/scoring_decision.json</code>, <code>media_combine_decision.json</code> ·
+  재현 <code>scripts/decide_scoring.py</code>, <code>decide_media_combine.py</code></div>
+
+<h3>5-3. 가중치 0.65의 독립 증거 — 정상 대화 30건</h3>
+<table>
+  <tr><th>항목</th><th class="n">결과</th><th>읽는 법</th></tr>
+  <tr><td>최종 등급 헛경보(‘중간’ 이상)</td><td class="n">7 / 30 = 23.3%</td><td class="small"></td></tr>
+  <tr><td><b>그중 ‘높음’</b></td><td class="n"><b class="green">0 / 30 = 0.0%</b></td><td class="small">최악의 헛경보는 한 번도 없었다</td></tr>
+  <tr><td>콘텐츠 단독 (임계값 50)</td><td class="n green">1 / 30 = 3.3%</td><td class="small" rowspan="2">
+      <b>헛경보의 주범이 음성 엔진이라는 게 수치로 확정됐다.</b>
+      합성 격자로 정한 0.65를, 전혀 다른 실제 대화 데이터가 같은 방향으로 지지한다</td></tr>
+  <tr><td>미디어 단독 (임계값 50)</td><td class="n red">6 / 30 = 20.0%</td></tr>
+</table>
+<div class="small">KsponSpeech(AI Hub 「한국어 음성」) 자유대화 30건. <b>검증 목적 소량만 사용, 재배포하지 않음.</b><br>
+  한계: 전화가 아니라 <b>대면 자유대화</b>라 전화망 대역·코덱이 없다 — 실제 통화보다 유리한 조건.<br>
+  출처: <code>docs/validation_report_normal_calls.json</code> · 재현 <code>scripts/validate_normal_calls.py</code></div>
+
+<div class="page-break"></div>
+
+<h2>⑥ 시스템 성능 · 구성 선택</h2>
+<table>
+  <tr><th>항목</th><th>값</th><th>근거 / 비고</th></tr>
+  <tr><td><b>실시간 처리 속도</b></td><td><b>오디오 78초를 26~29초에</b> <span class="small">(약 3배속)</span></td>
+      <td class="small">실시간을 따라간다. 모델을 세션 동안 상주시켜 얻은 값 · <code>scripts/test_streaming.py</code></td></tr>
+  <tr><td>파일 분석 소요</td><td>1분 18초 통화 → 약 33초</td><td class="small">STT+화법+RAG+음성 전체</td></tr>
+  <tr><td>얼굴 검출기</td><td><b>YuNet</b> 100% / Haar 99%<span class="small"> (정면)</span></td>
+      <td class="small">고개를 돌리면 Haar 84.8%로 떨어져 YuNet을 1순위로 · <code>benchmark_face_detector.py</code></td></tr>
+  <tr><td>STT 모델</td><td>파일 <code>small</code> / 스트리밍 <code>base</code></td>
+      <td class="small">CER·처리시간·노이즈 강건성 실측 · <code>compare_stt_models.py</code></td></tr>
+  <tr><td>좌우 반전 TTA</td><td>켬</td><td class="small">정탐 +3%p, 오탐 동일</td></tr>
+  <tr><td>RAG 사례 데이터</td><td><b>26건</b> <span class="small">(기존 18 + 국내 보도 기반 8)</span></td>
+      <td class="small">한국어 임베딩(ko-sroberta). 색인 문서 103개</td></tr>
+</table>
+
+<div class="warn">
+  <b>⚠ RAG 사례를 소개할 때</b> — 26건 중 실제 기사 인용문은 3건이고,
+  5건은 <b>보도된 사실관계를 바탕으로 팀이 재구성한 대사</b>다.
+  “실제 판례에서 그대로 가져온 대사”라고 말하면 안 되고,
+  <b>“보도된 수법을 바탕으로 구성했다”</b>고 해야 정확하다. 각 사례의 <code>source</code> 필드에 구분해 적어놨다.
+</div>
+
+<h2>⑦ 서비스 범위 — 이 문장으로 통일할 것</h2>
+
+<div class="say" style="font-size:11.5px">
+  <b>온라인에서 처음 만난 상대와의 브라우저 화상통화에서, 대화 화법과 음성·영상 위조를
+  동시에 보고 통화 중에 경고한다.</b>
+</div>
+
+<table>
+  <tr><th>통화 유형</th><th>통화 중 실시간</th><th>통화 후 분석</th></tr>
+  <tr><td>브라우저 화상통화 <span class="small">(Meet / Zoom / Teams / Whereby)</span></td>
+      <td class="green">✅ 크롬 확장 — 통화 페이지 <b>위에 직접</b> 경고</td><td class="green">✅ 웹 대시보드</td></tr>
+  <tr><td>일반 전화 <span class="small">(전화망)</span></td>
+      <td class="red">❌ 플랫폼 제약</td><td class="green">✅ 녹음 파일 업로드</td></tr>
+</table>
+
+<div class="say">
+  <b>“보이스피싱은 폰으로 일어나는데 웹으로 어떻게 하나요?” 답변용</b> —
+  “저희가 만든 건 <b>분석 엔진</b>입니다. 오디오만 있으면 통화 종류를 가리지 않습니다.
+  검증에 쓴 금감원 녹취 5건은 전부 <b>일반 전화 통화</b>였고 5건 다 잡았습니다.<br>
+  문제는 엔진이 아니라 <b>입구</b>입니다. 폰 통화 오디오는 iOS가 앱 접근을 막고,
+  안드로이드도 Android 10 이후 서드파티 통화 녹음을 제한합니다. <b>앱으로 만들어도 똑같습니다</b> —
+  통화 중 실시간은 제조사나 통신사만 할 수 있는 영역입니다.<br>
+  그래서 <b>지금 접근 가능한 입구부터</b> 만들었습니다.
+  <b>엔진과 입구를 분리해 설계했으므로</b> 통신사·제조사와 연계되면 입구만 바꿔 끼우면 됩니다.
+  저희가 B2B·공공 협업을 다음 단계로 잡은 이유입니다.”
+</div>
+
+<div class="warn">
+  <b>간판 / 근거 / 확장을 섞지 마라</b> —
+  <b>간판</b>은 화상통화. <b>보이스피싱(전화)</b>은 “엔진이 실제 사기 통화에서 검증됐다”는 <b>근거</b>로,
+  <b>로맨스 스캠</b>은 “온라인에서 처음 만난 상대와의 화상통화”에 포함되는 <b>확장 사례</b>로 둔다.
+  셋을 나란히 간판에 걸면 <b>말한 범위와 시연이 어긋나</b> 완성도 항목에서 깎인다.
+</div>
+
+<h2>⑧ 심사 배점과의 연결 (자유과제)</h2>
+<table>
+  <tr><th class="n">배점</th><th>항목</th><th>우리가 여기에 쓸 카드</th></tr>
+  <tr><td class="n"><b>30</b></td><td><b>완성도</b><br><span class="small">기획한 아이디어를 충실히 달성 / 안정적 구동</span></td>
+      <td>말한 범위(화상통화)와 시연이 일치. 실시간 3배속 실측, 확장 자동 검증 통과</td></tr>
+  <tr><td class="n"><b>30</b></td><td><b>사용자 친화성</b><br><span class="small">직관적·유용하게 전달 / 편의성</span></td>
+      <td><b>시연 3분에 전부 걸려 있다.</b> 설치 없이 탭 공유, 통화 화면 위 오버레이,
+        안전하면 아무것도 안 뜸, 점수만이 아니라 <b>근거</b> 제시</td></tr>
+  <tr><td class="n">20</td><td>참신성</td>
+      <td>화법 + 미디어 <b>교차검증</b>. “탐지 경쟁에 서비스를 걸지 않는다”는 설계 판단</td></tr>
+  <tr><td class="n">20</td><td>효과성</td>
+      <td>금감원 실제 녹취 5/5, 데이터 로드맵(AI Hub·공공데이터·가명화), B2B·공공 연계</td></tr>
+</table>
+<div class="small">발표 10분 이내 · 질의응답 5분 · 원칙적으로 팀장 발표</div>
+
+<h2>⑨ 절대 하지 말 것</h2>
+<ul>
+  <li><b>“영상 딥페이크 정확도 86.2%”만 말하기.</b> → 반드시 “FF++ 기준”을 붙이고 DFDC 55%를 함께 밝힌다.</li>
+  <li><b>“음성 정확도 98.3%”만 말하기.</b> → “ASVspoof 벤치마크 안에서”를 붙인다.</li>
+  <li><b>“OpenAI 95.2%”만 말하기.</b> → 표본 21건 + 기준선을 그 데이터로 정했다는 점을 함께.</li>
+  <li><b>RAG 사례를 “실제 판례 대사”라고 소개하기.</b> → “보도된 수법을 바탕으로 구성”.</li>
+  <li><b>ViT 백엔드 수치 인용하기.</b> → 판별력이 검증되지 않았다. 정식 경로는 FF++뿐.</li>
+  <li><b>“음성 엔진은 도메인에 강하다”고 말하기.</b> → 정반대다.</li>
+</ul>
+
+<div style="margin-top:16px;padding-top:8px;border-top:1px solid #d8dee7" class="small">
+  전체 측정 조건과 재현 절차: <code>docs/validation_report.md</code> ·
+  시연 순서와 예상 질문: <code>docs/demo_guide.md</code> ·
+  데이터 확보 계획: <code>docs/data_roadmap.md</code>
+</div>
