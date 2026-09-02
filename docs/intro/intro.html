@@ -92,54 +92,60 @@
   <div id="wash" class="w-dark"></div>
   <div class="flash" id="flash"></div>
 
-  <!-- ① 따뜻하게 연다 -->
+  <!-- ① 감동 -->
   <section class="scene warm" data-s="1">
-    <p class="line rise d1">2021년, 한 방송에서<br>세상을 떠난 가수의 목소리가 돌아왔습니다.</p>
+    <p class="line rise d1">2021년,<br>세상을 떠난 가수의 목소리가<br>무대에 다시 올랐습니다.</p>
     <p class="sub rise d2">AI가 복원한 목소리였습니다.</p>
   </section>
 
-  <!-- ②  실제 방송 클립.
-       docs/intro/clip.mp4 를 넣으면 여기서 재생되고, 없으면 자동으로 건너뛴다.
-       ⚠ 방송 클립은 저작권이 있다. 아래 출처를 반드시 실제 방송사·프로그램명·방영일로 채울 것. -->
+  <!-- 방송 클립. docs/intro/clip.mp4 를 넣으면 재생되고, 없으면 건너뛴다.
+       ⚠ 저작권이 있는 자료다. 아래 출처를 실제 방송사·프로그램명·방영일로 채울 것. -->
   <section class="scene warm" data-s="45">
     <!-- 소리까지 내려면 muted 를 지우고, 발표 때 한 번 클릭해 재생을 허용할 것 -->
+    <!-- 영상(clip.mp4)이 없으면 캡처 이미지(shot.png / .jpg)를 대신 쓴다.
+         발표 자료용으로는 정지 캡처 한 장으로도 충분한 경우가 많다. -->
     <video id="clip" src="clip.mp4" muted playsinline
            style="max-width:80vw;max-height:64vh;border-radius:8px;box-shadow:0 0 60px rgba(0,0,0,.85)"></video>
+    <img id="shot" src="shot.png" alt=""
+         style="max-width:80vw;max-height:64vh;border-radius:8px;box-shadow:0 0 60px rgba(0,0,0,.85);display:none">
     <p class="small" id="clipCredit" style="margin-top:16px">출처: ○○방송 「○○○」 (2021.○.○ 방영)</p>
   </section>
 
   <section class="scene warm" data-s="2">
-    <p class="line rise d1">유족이 울었고,<br>시청자도 함께 울었습니다.</p>
-    <p class="sub rise d2">기술이 준 선물이었습니다.</p>
+    <p class="line rise d1">그날 우리는<br>그 기술에 감동했습니다.</p>
   </section>
 
-  <!-- ③ 뒤집는다 -->
+  <!-- ② 전환 -->
   <section class="scene alarm" data-s="3">
-    <p class="line rise d1">그리고 지금,</p>
-    <p class="line rise d2" style="margin-top:18px">같은 기술로<br><mark>당신의 아들딸 목소리</mark>가 만들어집니다.</p>
+    <p class="line rise d1">그리고 지금,<br><mark>같은 기술이 전화를 겁니다.</mark></p>
   </section>
 
   <section class="scene alarm" data-s="4">
     <p class="line rise d1">“엄마, 나 사고 났어.<br>지금 돈 좀 보내줄 수 있어?”</p>
-    <p class="sub rise d2">목소리는 자녀가 맞습니다. 사람은 아닙니다.</p>
+    <p class="sub rise d2">목소리는 분명 내 아들딸입니다.</p>
   </section>
 
-  <!-- 보이스피싱 뉴스 클립 자리. docs/intro/clip2.mp4 를 넣으면 재생되고 없으면 건너뛴다. -->
+  <!-- 보이스피싱 뉴스 클립. docs/intro/clip2.mp4 -->
   <section class="scene alarm" data-s="46">
+    <!-- 영상(clip2.mp4)이 없으면 캡처 이미지(shot2.png / .jpg)를 대신 쓴다.
+         발표 자료용으로는 정지 캡처 한 장으로도 충분한 경우가 많다. -->
     <video id="clip2" src="clip2.mp4" muted playsinline
            style="max-width:80vw;max-height:64vh;border-radius:8px;box-shadow:0 0 60px rgba(0,0,0,.85)"></video>
+    <img id="shot2" src="shot2.png" alt=""
+         style="max-width:80vw;max-height:64vh;border-radius:8px;box-shadow:0 0 60px rgba(0,0,0,.85);display:none">
     <p class="small" id="clip2Credit" style="margin-top:16px">출처: ○○뉴스 (2026.○.○ 보도)</p>
   </section>
 
-  <!-- ④ 우리 해법 -->
+  <!-- ③ 명제 -->
   <section class="scene cold" data-s="9">
-    <p class="line rise d1">목소리 하나로는<br>더 이상 판단할 수 없습니다.</p>
+    <p class="line rise d1">이제 목소리는<br><mark>증거가 되지 못합니다.</mark></p>
   </section>
 
+  <!-- ④ 우리 해법 -->
   <section class="scene cold" data-s="95">
-    <p class="line rise d1">저희는 <mark>여러 신호를 함께 봅니다.</mark></p>
+    <p class="line rise d1">그래서 저희는<br>목소리만 듣지 않습니다.</p>
     <p class="sub rise d2" style="font-size:clamp(17px,2vw,30px);color:#dfe6ee;margin-top:30px">
-      대화 화법 · 음성 위조 · 영상 위조<br>세 가지를 <b>교차 검증</b>해 하나의 위험도로 판단합니다.</p>
+      무슨 말을 하는지, 목소리가 만들어진 것인지,<br>얼굴이 바뀐 것인지 — <b>세 가지를 한 번에</b> 봅니다.</p>
   </section>
 
   <section class="scene cold" data-s="10">
@@ -156,14 +162,14 @@
    ms = 그 장면이 화면에 머무는 시간. 글자가 순차로 올라오는 시간(최대 1.75s)을
    감안해 짧은 장면도 3초 아래로 내리지 않는다 — 읽을 시간이 없으면 임팩트가 죽는다. */
 const TIMELINE = [
-  { s: 1,  ms: 4200, wash: 'w-warm'  },
-  { s: 45, ms: 0,    wash: 'w-warm',  clip: 'clip'  },  // 방송 클립(AI 목소리 복원)
-  { s: 2,  ms: 3800, wash: 'w-warm'  },
-  { s: 3,  ms: 4600, wash: 'w-alarm', flash: true },
+  { s: 1,  ms: 4600, wash: 'w-warm'  },
+  { s: 45, ms: 0,    wash: 'w-warm',  clip: 'clip'  },   // 방송 클립(AI 목소리 복원)
+  { s: 2,  ms: 3200, wash: 'w-warm'  },
+  { s: 3,  ms: 4000, wash: 'w-alarm', flash: true },
   { s: 4,  ms: 4400, wash: 'w-alarm' },
-  { s: 46, ms: 0,    wash: 'w-alarm', clip: 'clip2' },  // 뉴스 클립(보이스피싱)
-  { s: 9,  ms: 3600, wash: 'w-dark'  },
-  { s: 95, ms: 5200, wash: 'w-dark'  },
+  { s: 46, ms: 0,    wash: 'w-alarm', clip: 'clip2' },   // 뉴스 클립(보이스피싱)
+  { s: 9,  ms: 3800, wash: 'w-dark'  },
+  { s: 95, ms: 5400, wash: 'w-dark'  },
   { s: 10, ms: 9999, wash: 'w-dark'  },   // 마지막은 멈춰서 대기 (발표자가 이어서 말한다)
 ];
 
@@ -177,11 +183,19 @@ let idx = 0, timer = null, paused = false;
    파일이 없으면 그 장면을 통째로 건너뛴다 — 발표 당일에 파일이 빠져
    검은 화면이 몇 초 나오는 게 최악이라 그렇게 했다. */
 const clipReady = { clip: false, clip2: false };
+const SHOT_OF = { clip: 'shot', clip2: 'shot2' };
 ['clip', 'clip2'].forEach(id => {
   const v = document.getElementById(id);
-  if (!v) return;
-  v.addEventListener('loadeddata', () => { clipReady[id] = true; });
-  v.addEventListener('error', () => { clipReady[id] = false; });
+  if (v) {
+    v.addEventListener('loadeddata', () => { clipReady[id] = true; });
+    v.addEventListener('error', () => { clipReady[id] = false; });
+  }
+  // 영상이 없어도 캡처 이미지가 있으면 그 장면을 쓴다
+  const im = document.getElementById(SHOT_OF[id]);
+  if (im) {
+    im.addEventListener('load', () => { clipReady[id] = true; });
+    im.addEventListener('error', () => { im.remove(); });
+  }
 });
 
 function next(i) {
@@ -203,12 +217,19 @@ function showScene(i) {
   requestAnimationFrame(() => el.classList.add('on'));
 
   if (step.clip) {
-    // 클립은 고정 시간이 아니라 **영상이 끝나면** 다음으로 넘어간다.
     const v = document.getElementById(step.clip);
-    try { v.currentTime = 0; v.play(); } catch { }
-    v.onended = () => next(i);
-    // 영상이 아주 길면 발표 시간을 잡아먹으므로 상한을 둔다
-    timer = setTimeout(() => { try { v.pause(); } catch { } next(i); }, 20000);
+    const im = document.getElementById(SHOT_OF[step.clip]);
+    const hasVideo = v && v.readyState >= 2;
+    if (v) v.style.display = hasVideo ? '' : 'none';
+    if (im) im.style.display = hasVideo ? 'none' : '';
+    if (hasVideo) {
+      // 영상은 고정 시간이 아니라 **끝나면** 다음으로 넘어간다.
+      try { v.currentTime = 0; v.play(); } catch { }
+      v.onended = () => next(i);
+      timer = setTimeout(() => { try { v.pause(); } catch { } next(i); }, 20000);  // 길면 잘라낸다
+    } else {
+      timer = setTimeout(() => next(i), 4200);   // 캡처 이미지는 고정 노출
+    }
     return;
   }
 
