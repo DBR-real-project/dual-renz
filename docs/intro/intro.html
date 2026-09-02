@@ -114,9 +114,30 @@
     <p class="sub rise d2">목소리는 아들이 맞습니다. 사람은 아닙니다.</p>
   </section>
 
+  <!-- ②-b 실제 방송 클립 자리.
+       docs/intro/clip.mp4 를 넣으면 여기서 재생된다(없으면 이 장면은 자동으로 건너뛴다).
+       ⚠ 방송 클립은 저작권이 있다. 아래 출처 표기를 반드시 실제 출처로 바꿔서 쓸 것. -->
+  <section class="scene cold" data-s="45">
+    <!-- 소리까지 내려면 muted 를 지우고, 발표 때 한 번 클릭해서 재생을 허용할 것 -->
+    <video id="clip" src="clip.mp4" muted playsinline
+           style="max-width:82vw;max-height:66vh;border-radius:8px;box-shadow:0 0 60px rgba(0,0,0,.8)"></video>
+    <p class="small" id="clipCredit" style="margin-top:18px">출처: (여기에 방송사·프로그램명·방영일을 적을 것)</p>
+  </section>
+
   <!-- ③ 반전 — 우리 실측 -->
   <section class="scene cold" data-s="5">
-    <p class="line rise d1">저희는 금융감독원이 공개한<br><span class="u">실제 보이스피싱 녹취</span>를 분석했습니다.</p>
+    <p class="line rise d1">저희는 이 문제를</p>
+    <p class="big rise d2" style="color:#fff;margin-top:12px">799건</p>
+    <p class="bigsub rise d3">으로 검증했습니다.</p>
+  </section>
+
+  <section class="scene cold" data-s="55">
+    <p class="line rise d1">영상 166건 · 음성 120건<br>한국어 문장 478건 · 실제 통화 녹취 5건</p>
+    <p class="sub rise d2">전부 직접 돌린 수치입니다.</p>
+  </section>
+
+  <section class="scene cold" data-s="56">
+    <p class="line rise d1">그중 금융감독원이 공개한<br><span class="u">실제 보이스피싱 녹취</span>는</p>
   </section>
 
   <section class="scene cold" data-s="6">
@@ -135,7 +156,9 @@
 
   <!-- ④ 우리 해법 -->
   <section class="scene cold" data-s="9">
-    <p class="line rise d1">그래서 저희는<br><mark>목소리가 아니라 ‘무슨 말을 하는가’</mark>를 봅니다.</p>
+    <p class="line rise d1">그래서 저희는 <mark>하나만 보지 않습니다.</mark></p>
+    <p class="sub rise d2" style="font-size:clamp(17px,2vw,30px);color:#dfe6ee;margin-top:30px">
+      대화 화법 · 음성 위조 · 영상 위조를 <b>교차 검증</b>해<br>하나의 위험도로 판단합니다.</p>
   </section>
 
   <section class="scene cold" data-s="10">
@@ -156,11 +179,14 @@ const TIMELINE = [
   { s: 2,  ms: 3800, wash: 'w-warm'  },
   { s: 3,  ms: 4600, wash: 'w-alarm', flash: true },
   { s: 4,  ms: 4200, wash: 'w-alarm' },
-  { s: 5,  ms: 3800, wash: 'w-dark'  },
+  { s: 45, ms: 0,    wash: 'w-dark', clip: true },  // 실제 방송 클립. 길이는 영상에 맞춘다
+  { s: 5,  ms: 4400, wash: 'w-dark'  },
+  { s: 55, ms: 3400, wash: 'w-dark'  },
+  { s: 56, ms: 3000, wash: 'w-dark'  },
   { s: 6,  ms: 3600, wash: 'w-dark'  },
   { s: 7,  ms: 4000, wash: 'w-dark'  },
   { s: 8,  ms: 3800, wash: 'w-alarm' },
-  { s: 9,  ms: 4200, wash: 'w-dark'  },
+  { s: 9,  ms: 5200, wash: 'w-dark'  },
   { s: 10, ms: 9999, wash: 'w-dark'  },   // 마지막은 멈춰서 대기 (발표자가 이어서 말한다)
 ];
 
@@ -170,19 +196,45 @@ const scenes = [...document.querySelectorAll('.scene')];
 const hint = document.getElementById('hint');
 let idx = 0, timer = null, paused = false;
 
+const clipEl = document.getElementById('clip');
+let clipOk = false;   // clip.mp4가 실제로 있는지. 없으면 그 장면을 건너뛴다
+
+function next(i) {
+  if (!paused && i < TIMELINE.length - 1) { idx = i + 1; showScene(idx); }
+}
+
 function showScene(i) {
   scenes.forEach(el => el.classList.remove('on'));
   const step = TIMELINE[i];
   if (!step) return;
+
+  // 방송 클립 장면인데 파일이 없으면 조용히 건너뛴다.
+  // 클립을 안 넣어도 인트로가 그대로 돌아가야 한다 — 발표 당일에 파일이
+  // 빠져서 검은 화면이 몇 초 나오는 게 최악이다.
+  if (step.clip && !clipOk) { idx = i + 1; showScene(idx); return; }
+
   const el = scenes.find(s => +s.dataset.s === step.s);
   wash.className = step.wash;
   if (step.flash) { flashEl.classList.remove('go'); void flashEl.offsetWidth; flashEl.classList.add('go'); }
-  // 다음 프레임에 켜야 rise 트랜지션이 다시 돈다
   requestAnimationFrame(() => el.classList.add('on'));
+
+  if (step.clip) {
+    // 클립은 고정 시간이 아니라 **영상이 끝나면** 다음으로 넘어간다.
+    try { clipEl.currentTime = 0; clipEl.play(); } catch { }
+    clipEl.onended = () => next(i);
+    // 영상이 아주 길면 발표 시간을 잡아먹으므로 상한을 둔다
+    timer = setTimeout(() => { try { clipEl.pause(); } catch { } next(i); }, 20000);
+    return;
+  }
+
   if (i < TIMELINE.length - 1) {
-    timer = setTimeout(() => { if (!paused) { idx = i + 1; showScene(idx); } }, step.ms);
+    timer = setTimeout(() => next(i), step.ms);
   }
 }
+
+// 파일 존재 여부는 로드 이벤트로 판단한다(fetch는 file:// 에서 막힌다)
+clipEl.addEventListener('loadeddata', () => { clipOk = true; });
+clipEl.addEventListener('error', () => { clipOk = false; });
 
 function play() {
   clearTimeout(timer); paused = false; idx = 0;
