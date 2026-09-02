@@ -4,25 +4,135 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>듀얼가드 — 통화 사기 위험도 분석</title>
+<link rel="icon" type="image/png" href="/static/assets/favicon.png">
 <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
 <header class="topbar">
-  <div class="brand">
-    <span class="logo">◎</span>
+  <div class="brand" id="brandHome">
+    <img class="brand-logo" src="/static/assets/logo-icon.png" alt="DualGuard 로고">
     <div>
       <h1>듀얼가드 <span class="brand-en">DualGuard</span></h1>
       <p class="tagline">대화 내용과 영상·음성 진위를 <strong>교차 검증</strong>하는 통화 사기 판별</p>
     </div>
   </div>
+  <nav class="topnav" id="topnav" hidden>
+    <button data-nav="home" class="navbtn active">홈</button>
+    <button data-nav="history" class="navbtn">보호 이력</button>
+  </nav>
   <div class="engine-status" id="engineStatus" title="엔진 준비 상태"></div>
 </header>
 
 <main>
 
-<!-- ① 업로드 화면 -->
-<section id="screenUpload" class="screen active">
+<!-- ⓪ 온보딩 -->
+<section id="screenOnboarding" class="screen active onboarding-screen">
+  <div class="onboard">
+    <img class="onboard-logo" src="/static/assets/logo-icon.png" alt="DualGuard 로고">
+    <h2>DualGuard <span class="brand-en">듀얼가드</span></h2>
+    <p class="onboard-slogan">안전한 데이팅을 위한 AI 수호자</p>
+    <p class="onboard-desc">대화 속 사기 화법과 얼굴·음성 위조 가능성을 동시에 분석해,
+      화상통화 로맨스 스캠 피해를 사전에 경고합니다.</p>
+    <button id="onboardStart" class="primary">시작하기 →</button>
+    <p class="onboard-foot">시작 시 <a href="#" id="onboardPolicyLink">이용약관 및 개인정보처리방침</a>에 동의하는 것으로 간주합니다.</p>
+  </div>
+</section>
+
+<!-- ① 홈 대시보드 -->
+<section id="screenHome" class="screen">
+  <button id="ctaRealtime" class="cta-realtime">
+    <span class="cta-title">실시간 화상통화 검증 시작</span>
+    <span class="cta-sub">화면·탭 공유만으로 설치 없이 바로 분석합니다</span>
+  </button>
+  <button id="ctaUpload" class="secondary-cta">저장된 통화 파일로 분석하기</button>
+
+  <div class="stat-row" id="statRow">
+    <div class="stat-card"><span class="stat-num" id="statTotal">–</span><span class="stat-label">검사한 통화 건수</span></div>
+    <div class="stat-card"><span class="stat-num" id="statThreat">–</span><span class="stat-label">감지된 위협 건수</span></div>
+    <div class="stat-card"><span class="stat-num" id="statMedia">–</span><span class="stat-label">미디어 위조 탐지 건수</span></div>
+  </div>
+
+  <section class="card">
+    <div class="card-head-row">
+      <h3>최근 분석 결과</h3>
+      <button class="linklike" data-nav="history">전체 보기 →</button>
+    </div>
+    <div id="recentList" class="history-list"><p class="hist-empty">아직 분석한 통화가 없습니다.</p></div>
+  </section>
+
+  <div class="notice">
+    <h3>이 서비스가 보는 두 가지 신호</h3>
+    <div class="two-col">
+      <div>
+        <h4>콘텐츠 위험도</h4>
+        <p>대화를 텍스트로 바꾼 뒤 8대 사회공학 기법(긴급성·권위사칭·금전요구·개인정보요구·비밀유지·감정압박·신뢰구축·확인회피)으로 분류합니다.</p>
+      </div>
+      <div>
+        <h4>미디어 위험도</h4>
+        <p>음성이 합성된 것인지(AASIST), 영상 속 얼굴이 위조된 것인지(FaceForensics++) 판별합니다.</p>
+      </div>
+    </div>
+    <p class="notice-foot">둘 중 하나만 걸려도 잡아내고, 둘 다 걸리면 교차 가산점이 붙습니다.</p>
+  </div>
+</section>
+
+<!-- ② 실시간 모니터링 오버레이 -->
+<section id="screenRealtime" class="screen">
+  <div id="rtSetup" class="rt-setup">
+    <h2>실시간 화상통화 검증</h2>
+    <p class="card-sub">통화 중인 브라우저 탭 또는 화면을 선택하면, 별도 설치 없이 바로 분석을 시작합니다.
+      공유 선택창에서 <strong>"탭 오디오 공유"</strong>를 반드시 체크하세요.</p>
+    <button id="rtStartBtn" class="primary">화면·탭 공유 시작</button>
+    <p class="err" id="rtErr" hidden></p>
+    <p class="hint">현재 실시간 모드는 <strong>화법·음성만</strong> 분석합니다. 영상 딥페이크 판정은
+      통화 종료 직후 별도로 처리됩니다 (실시간 예산 제약, docs/blocked_and_next.md 참고).</p>
+  </div>
+
+  <div id="rtLive" class="rt-live" hidden>
+    <div class="rt-badge" id="rtBadge">
+      <span class="rt-dot" id="rtDot"></span>
+      <span id="rtBadgeText">듀얼가드 모니터링: 정상</span>
+    </div>
+
+    <!-- 스티치 목업 ② 패널: 대화 패턴(초록) · 미디어 진위(파랑) 엔진 카드 -->
+    <div class="rt-engines">
+      <div class="rt-engine-card content">
+        <div class="rt-engine-head"><b>대화 패턴 분석 (LLM)</b></div>
+        <div class="rt-engine-num" id="rtContent">0</div>
+        <div class="rt-engine-sub">금전 요구 · 긴급성 조성 · 신뢰 유도 감지</div>
+      </div>
+      <div class="rt-engine-card media">
+        <div class="rt-engine-head"><b>미디어 진위 분석 (AASIST)</b></div>
+        <div class="rt-engine-num" id="rtMedia">0</div>
+        <div class="rt-engine-sub">음성 위조 탐지 (영상은 종료 후 분석)</div>
+      </div>
+    </div>
+
+    <div class="rt-overall">
+      <div>
+        <div class="rt-overall-label">통합 위험도</div>
+        <div class="rt-overall-num lv-낮음" id="rtOverall">0</div>
+      </div>
+      <div class="rt-elapsed">경과 <span id="rtElapsed">0:00</span></div>
+    </div>
+
+    <div id="rtWarning" class="rt-warning" hidden>
+      <h3>실시간 위험 감지</h3>
+      <p id="rtWarningReason"></p>
+      <p class="rt-warning-score">통합 위험도 <strong id="rtWarningScore">0</strong>/100</p>
+      <div class="rt-warning-actions">
+        <button id="rtContinueBtn" class="ghost">닫기 (계속 통화)</button>
+        <button id="rtEndBtn" class="danger">안전 종료</button>
+      </div>
+    </div>
+
+    <button id="rtStopBtn" class="ghost rt-stop">모니터링 종료</button>
+  </div>
+</section>
+
+<!-- ③ 업로드 화면 -->
+<section id="screenUpload" class="screen">
   <div class="dropzone" id="dropzone" tabindex="0" role="button"
        aria-label="통화 파일 업로드">
     <div class="dz-icon">↑</div>
@@ -42,35 +152,12 @@
 
   <button id="startBtn" class="primary" disabled>분석 시작</button>
   <p class="err" id="uploadErr" hidden></p>
-
-  <section class="card history-card" id="historyCard" hidden>
-    <h3>분석 히스토리</h3>
-    <p class="card-sub">이전 분석 결과입니다. 클릭하면 리포트를 다시 엽니다.
-      서버를 재시작해도 남아 있습니다.</p>
-    <div id="historyTrend" class="trend"></div>
-    <div id="historyList" class="history-list"></div>
-  </section>
-
-  <div class="notice">
-    <h3>이 서비스가 보는 두 가지 신호</h3>
-    <div class="two-col">
-      <div>
-        <h4>콘텐츠 위험도</h4>
-        <p>대화를 텍스트로 바꾼 뒤 8대 사회공학 기법(긴급성·권위사칭·금전요구·개인정보요구·비밀유지·감정압박·신뢰구축·확인회피)으로 분류합니다.</p>
-      </div>
-      <div>
-        <h4>미디어 위험도</h4>
-        <p>음성이 합성된 것인지(AASIST), 영상 속 얼굴이 위조된 것인지(FaceForensics++) 판별합니다.</p>
-      </div>
-    </div>
-    <p class="notice-foot">둘 중 하나만 걸려도 잡아내고, 둘 다 걸리면 교차 가산점이 붙습니다.</p>
-  </div>
 </section>
 
-<!-- ② 분석 진행 화면 -->
+<!-- ④ 분석 진행 화면 -->
 <section id="screenProgress" class="screen">
   <h2 class="progress-file" id="progressFile"></h2>
-  <div class="progress-outer"><div class="progress-inner" id="progressBar"></div></div>
+  <div class="progress-donut" id="progressDonut"></div>
   <p class="progress-msg" id="progressMsg">준비 중…</p>
   <ul class="stages" id="stages">
     <li data-stage="stt"><b>STT</b><span>음성 → 텍스트</span></li>
@@ -82,23 +169,32 @@
   <p class="hint">첫 실행은 모델을 내려받느라 오래 걸립니다. 이후에는 통화 길이의 절반 정도가 걸립니다.</p>
 </section>
 
-<!-- ③ 결과 대시보드 -->
+<!-- ⑤ 분석 리포트 / 상세 리포트 -->
 <section id="screenResult" class="screen">
+  <!-- 스티치 아이템1 목업: 콘텐츠 위험도 도넛 + 미디어 위험도 게이지 + 통합 점수 -->
   <div class="verdict" id="verdict">
-    <div class="signal" id="signal"><span id="signalDot"></span></div>
-    <div class="verdict-text">
-      <p class="verdict-label">Fraud Risk Score</p>
+    <div class="verdict-metric">
+      <div class="verdict-metric-label">콘텐츠 위험도</div>
+      <div id="contentDonut"></div>
+    </div>
+    <div class="verdict-score-big">
+      <div class="verdict-metric-label">통합 로맨스스캠 위험도</div>
       <p class="verdict-score"><span id="scoreValue">0</span><small>/100</small></p>
+      <span class="verdict-badge" id="verdictBadge"></span>
+    </div>
+    <div class="verdict-metric">
+      <div class="verdict-metric-label">미디어 위험도</div>
+      <div id="mediaGauge"></div>
+    </div>
+    <div class="verdict-foot">
       <p class="verdict-headline" id="verdictHeadline"></p>
       <p class="verdict-prob" id="verdictProb"></p>
-    </div>
-    <div class="verdict-meta">
-      <dl>
-        <dt>파일</dt><dd id="metaFile"></dd>
-        <dt>길이</dt><dd id="metaDuration"></dd>
-        <dt>분석 소요</dt><dd id="metaElapsed"></dd>
-        <dt>통합 공식</dt><dd id="metaStrategy"></dd>
-      </dl>
+      <div class="verdict-meta">
+        <span><b>파일</b> <span id="metaFile"></span></span>
+        <span><b>길이</b> <span id="metaDuration"></span></span>
+        <span><b>분석 소요</b> <span id="metaElapsed"></span></span>
+        <span><b>통합 공식</b> <span id="metaStrategy"></span></span>
+      </div>
     </div>
   </div>
 
@@ -115,7 +211,11 @@
     </div>
   </section>
 
-  <div class="grid2">
+  <div class="grid3">
+    <section class="card">
+      <h3>감지된 주요 순간</h3>
+      <ul id="moments" class="moments"></ul>
+    </section>
     <section class="card">
       <h3>탐지된 사회공학 기법</h3>
       <div id="categories" class="categories"></div>
@@ -138,7 +238,50 @@
     <div id="engines" class="engines"></div>
   </section>
 
-  <button id="againBtn" class="ghost">다른 파일 분석하기</button>
+  <button id="againBtn" class="ghost">다른 파일 분석하기 / 홈으로</button>
+</section>
+
+<!-- ⑥ 보호 이력 -->
+<section id="screenHistory" class="screen">
+  <h2>보호 이력</h2>
+  <p class="card-sub">과거 통화 분석 이력입니다. 클릭하면 리포트를 다시 엽니다. 서버를 재시작해도 남아 있습니다.</p>
+
+  <section class="card">
+    <h3>위험도 추이</h3>
+    <div id="historyTrend" class="trend"></div>
+  </section>
+
+  <section class="card">
+    <h3>전체 기록</h3>
+    <div id="historyList" class="history-list"><p class="hist-empty">아직 분석한 통화가 없습니다.</p></div>
+  </section>
+
+  <section class="card">
+    <h3>설정</h3>
+    <div class="settings-row">
+      <label for="retentionPolicy">자동 삭제 정책 (보관 기간)</label>
+      <select id="retentionPolicy">
+        <option value="7">7일</option>
+        <option value="30" selected>30일</option>
+        <option value="90">90일</option>
+        <option value="forever">영구 보관</option>
+      </select>
+    </div>
+    <p class="settings-note">※ 통화 원본은 분석 완료 즉시 삭제됩니다. 이 설정은 분석 결과(리포트) 보관 기간에만 적용되며,
+      현재 브라우저에만 저장된 선호값입니다 — 서버 측 자동 삭제 자동화는 연동 예정입니다.</p>
+
+    <div class="settings-row">
+      <label for="darkModeToggle">다크 모드</label>
+      <input type="checkbox" id="darkModeToggle">
+    </div>
+
+    <details class="privacy-details" id="privacyDetails">
+      <summary>개인정보처리방침</summary>
+      <p>본인이 직접 참여한 통화에서 스스로 화면 공유를 활성화한 경우에만 분석을 시작합니다.
+        음성·영상 원본은 파일로 저장하지 않고 분석 직후 즉시 삭제하며, 위험 점수와 탐지 이벤트 등
+        분석에 필요한 최소한의 정보만 보관합니다. 분석 결과는 참고 정보이며 법적 판단이 아닙니다.</p>
+    </details>
+  </section>
 </section>
 
 </main>
