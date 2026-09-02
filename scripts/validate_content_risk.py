@@ -19,7 +19,8 @@
 
 백엔드:
   --backend keyword  키워드 규칙 (기본값, API 키 불필요 — 항상 재현 가능한 기준선)
-  --backend llm      LLM 분류 (ANTHROPIC_API_KEY 또는 GEMINI_API_KEY 필요)
+  --backend llm      LLM 분류 (ANTHROPIC_API_KEY / GEMINI_API_KEY / OPENAI_API_KEY 중 하나 필요.
+                      DUALGUARD_LLM_PROVIDER로 백엔드 고정 가능)
   --backend both     둘 다 돌려 비교. LLM이 규칙 대비 얼마나 나은지가 이 표의 핵심이다.
 
 실행:
@@ -58,6 +59,19 @@ PROJECT_ROOT = SCRIPT_DIR.parent
 DATASET_PATH = PROJECT_ROOT / "data_seed" / "content_test_scenarios.json"
 REPORT_PATH = PROJECT_ROOT / "docs" / "validation_report_content.json"
 
+# 콘텐츠 위험도(content_risk) 이진 판정 기준선. 이 스크립트가 fraud/normal 정확도를
+# 재려고 쓰는 값일 뿐, pipeline.py의 LEVEL_THRESHOLDS(55/30, 신호등 3단계)와는
+# 무관하다 — 섞지 말 것.
+DEFAULT_LLM_THRESHOLD = 50.0
+
+# OpenAI(gpt-4o-mini) 전용 기준선. 실측(2026-09-02, 21건 data_seed/content_test_scenarios.json,
+# docs/validation_report_content_openai.json)에서 threshold 50은 recall 100%지만
+# FPR 30%(정상 3건 오탐: boundary_normal_01/02/04)로 offline(90.5%)보다 나빴다.
+# 62.5에서는 recall 100% 유지하며 FPR 10%/accuracy 95.2%로 offline을 앞선다.
+# anthropic/gemini/ollama/offline은 그대로 DEFAULT_LLM_THRESHOLD(50)를 쓴다 —
+# 이 값들을 재검증 없이 62.5로 같이 옮기지 말 것.
+OPENAI_LLM_THRESHOLD = 62.5
+
 
 def load_scenarios(path: Path) -> list:
     data = json.loads(path.read_text(encoding="utf-8"))
@@ -86,8 +100,11 @@ def run_backend(backend: str, scenarios: list) -> dict:
         print("           Gemini → GEMINI_API_KEY (+ pip install google-genai)")
         return {"backend": backend, "note": "API 키 없음 — 실행하지 않음"}
 
+    default_threshold = DEFAULT_LLM_THRESHOLD
     if backend == "llm":
         print(f"  엔진: {llm_classifier.active_provider_label()}")
+        if llm_classifier.get_shared_classifier().provider == "openai":
+            default_threshold = OPENAI_LLM_THRESHOLD
 
     results = []
     t0 = time.time()
@@ -143,11 +160,11 @@ def run_backend(backend: str, scenarios: list) -> dict:
         else:
             print(f"    => 분포 겹침 (겹치는 폭 {-sep['gap']:.2f}) - threshold만으로는 완전 분리 불가")
 
-    at50 = confusion(scored, 50.0)
+    at_default = confusion(scored, default_threshold)
     best = best_threshold(scored)
 
     print("\n  --- 성능 지표 ---")
-    for label, c in (("threshold 50 (기본)", at50),
+    for label, c in ((f"threshold {default_threshold:.2f} (기본)", at_default),
                      (f"threshold {best['threshold']:.2f} (최적)", best)):
         print(f"    [{label}]")
         print(f"      정탐률(Recall)   {fmt_pct(c['recall'])}   사기 {c['tp']}/{c['tp'] + c['fn']}건 탐지")
@@ -175,7 +192,8 @@ def run_backend(backend: str, scenarios: list) -> dict:
         "n_scored": len(scored),
         "elapsed_sec": round(elapsed, 1),
         "separation": sep,
-        "at_threshold_50": at50,
+        "default_threshold": default_threshold,
+        "at_default_threshold": at_default,
         "best_threshold": best,
         "results": results,
     }

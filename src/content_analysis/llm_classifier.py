@@ -14,7 +14,13 @@ ContentRiskBreakdown을 돌려주므로, 파이프라인 입장에서는 구분�
 |-------------|---------------------------------------|------------------------------|
 | `anthropic` | `ANTHROPIC_API_KEY` / `ant auth login`| Messages API structured outputs |
 | `gemini`    | `GEMINI_API_KEY` / `GOOGLE_API_KEY`   | `response_schema` (JSON 강제) |
+| `openai`    | `OPENAI_API_KEY`                      | Chat Completions `response_format=json_schema` (strict) |
 | `ollama`    | 없음 (로컬 서버 `localhost:11434`)     | `format`에 JSON 스키마 (Ollama 0.5+) |
+
+  openai는 2026-09-02에 추가했다. Gemini 무료 티어 쿼터가 불안정해서(5 RPM,
+  자주 429) 유료 크레딧이 있는 팀원이 대체 백엔드로 요청했다. auto 폴백
+  체인에는 안 넣었다 — 기존 auto(Claude→Gemini) 동작을 그대로 유지하기
+  위해서다. 쓰려면 `DUALGUARD_LLM_PROVIDER=openai`로 명시할 것.
 
   ollama는 실제 서비스용이 아니라 **프롬프트 구조를 로컬에서 공짜로 미리 검증**하는
   용도다. Gemini 무료 티어 쿼터가 막혔을 때 특히 쓸모 있다. 그래서 auto 폴백
@@ -85,7 +91,11 @@ OLLAMA_DEFAULT_MODEL = os.environ.get("OLLAMA_MODEL", "llama3.1")
 # 로컬 CPU 추론은 클라우드보다 훨씬 느릴 수 있어 넉넉하게 잡는다.
 OLLAMA_TIMEOUT_SEC = float(os.environ.get("OLLAMA_TIMEOUT_SEC", "120"))
 
-# auto | anthropic | gemini | ollama
+# OpenAI 쪽 기본값. mini 계열을 쓰는 이유는 Claude(effort=low)/Gemini(flash)와
+# 같다 — 세그먼트마다 부르는 단순 분류 작업이라 정확도보다 지연/비용이 우선이다.
+OPENAI_DEFAULT_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
+
+# auto | anthropic | gemini | openai | ollama
 PROVIDER_ENV = "DUALGUARD_LLM_PROVIDER"
 
 _CATEGORY_DESCRIPTIONS = {
@@ -375,6 +385,86 @@ class GeminiClassifier:
         return _finalize(json.loads(raw))
 
 
+class OpenAIClassifier:
+    """
+    OpenAI(GPT) 백엔드. Claude/Gemini와 인터페이스(available / classify / label)를 맞춘다.
+
+    Chat Completions의 structured outputs(`response_format=json_schema`,
+    `strict=True`)를 쓴다. strict 모드는 스키마의 모든 object에 대해
+    `additionalProperties: false`와 전체 프로퍼티가 `required`에 들어있을 것을
+    요구하는데, 세 백엔드가 공유하는 `_SCHEMA`가 이미 그 조건을 만족해서
+    수정 없이 그대로 쓸 수 있다.
+    """
+
+    provider = "openai"
+
+    def __init__(self, model: str = OPENAI_DEFAULT_MODEL):
+        self.model = model
+        self._client = None
+        self._system = _build_system()
+
+    @property
+    def label(self) -> str:
+        return f"OpenAI ({self.model})"
+
+    @property
+    def available(self) -> bool:
+        try:
+            import openai  # noqa: F401
+        except ImportError:
+            return False
+        return bool(os.environ.get("OPENAI_API_KEY"))
+
+    def _ensure_client(self):
+        if self._client is None:
+            import openai
+            self._client = openai.OpenAI()
+        return self._client
+
+    def classify(
+        self,
+        text: str,
+        context_before: str = "",
+        context_after: str = "",
+    ) -> ContentRiskBreakdown:
+        client = self._ensure_client()
+
+        response = client.chat.completions.create(
+            model=self.model,
+            # 분류 작업이라 창의성이 필요 없다. Claude(effort=low)/Gemini(temperature=0)와
+            # 같은 이유로 결정적으로 고정한다.
+            temperature=0.0,
+            messages=[
+                {"role": "system", "content": self._system},
+                {"role": "user",
+                 "content": _build_user_prompt(text, context_before, context_after)},
+            ],
+            response_format={
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "content_risk_classification",
+                    "schema": _SCHEMA,
+                    "strict": True,
+                },
+            },
+        )
+
+        choice = response.choices[0]
+        if choice.finish_reason == "content_filter":
+            raise RuntimeError("OpenAI가 콘텐츠 필터로 응답을 거부했습니다.")
+
+        raw = choice.message.content
+        if not raw:
+            # Gemini와 같은 이유로 예외를 던져 폴백시킨다 — 조용히 0점을 주면
+            # 사기 통화를 정상으로 판정해버린다.
+            raise RuntimeError(
+                f"OpenAI가 빈 응답을 돌려줬습니다. (finish_reason={choice.finish_reason})"
+            )
+
+        import json
+        return _finalize(json.loads(raw))
+
+
 class OllamaClassifier:
     """
     로컬 LLM(Ollama) 백엔드. Claude/Gemini와 인터페이스(available / classify / label)를
@@ -465,7 +555,7 @@ _shared = None
 def _resolve_provider() -> str:
     """DUALGUARD_LLM_PROVIDER 해석. 잘못된 값이면 auto로 떨어진다."""
     want = (os.environ.get(PROVIDER_ENV) or "auto").strip().lower()
-    return want if want in ("auto", "anthropic", "gemini", "ollama") else "auto"
+    return want if want in ("auto", "anthropic", "gemini", "openai", "ollama") else "auto"
 
 
 def get_shared_classifier(model: Optional[str] = None):
@@ -478,6 +568,8 @@ def get_shared_classifier(model: Optional[str] = None):
 
     ollama는 auto 체인에 없다 — 개발자 PC에 우연히 떠 있다고 데모 중 조용히
     그쪽으로 넘어가면 안 되므로, DUALGUARD_LLM_PROVIDER=ollama로 명시했을 때만 쓴다.
+    openai도 같은 이유로 auto 체인에 안 넣었다 — 기존 auto(Claude→Gemini) 순서와
+    동작을 그대로 유지하기 위해서다. DUALGUARD_LLM_PROVIDER=openai로 명시했을 때만 쓴다.
     """
     global _shared
     want = _resolve_provider()
@@ -486,6 +578,8 @@ def get_shared_classifier(model: Optional[str] = None):
         candidates = [GeminiClassifier]
     elif want == "anthropic":
         candidates = [LLMClassifier]
+    elif want == "openai":
+        candidates = [OpenAIClassifier]
     elif want == "ollama":
         candidates = [OllamaClassifier]
     else:
@@ -543,9 +637,11 @@ def classify_segment(
             "LLM API 키가 없습니다. 다음 중 하나를 설정하세요:\n"
             "  Claude → ANTHROPIC_API_KEY 환경변수 또는 `ant auth login`\n"
             "  Gemini → GEMINI_API_KEY 환경변수 (+ pip install google-genai)\n"
+            "  OpenAI → OPENAI_API_KEY 환경변수 (+ pip install openai) 후 "
+            f"{PROVIDER_ENV}=openai (auto 모드에는 자동 포함 안 됨)\n"
             "  Ollama → 로컬 서버 실행 + `ollama pull llama3.1` 후 "
             f"{PROVIDER_ENV}=ollama (auto 모드에는 자동 포함 안 됨)\n"
-            f"백엔드를 고정하려면 {PROVIDER_ENV}=anthropic|gemini|ollama"
+            f"백엔드를 고정하려면 {PROVIDER_ENV}=anthropic|gemini|openai|ollama"
         )
     return classify_offline(text)
 
