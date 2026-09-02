@@ -61,6 +61,7 @@ API 키가 없으면:
 import os
 import threading
 import time
+from pathlib import Path
 from typing import Dict, List, Optional
 
 from .content_risk import (
@@ -70,6 +71,17 @@ from .content_risk import (
     classify_offline,
     compute_content_risk,
 )
+
+# 이 모듈이 이 파일의 모든 LLM API 키/설정(ANTHROPIC_API_KEY, GEMINI_API_KEY,
+# OPENAI_API_KEY, DUALGUARD_LLM_PROVIDER 등)을 읽는 단일 지점이라, .env 로딩도
+# 여기서 한 번만 한다. 서버(run_server.py)든 CLI(analyze_call.py)든 이 모듈을
+# import하는 순간 프로젝트 루트의 .env가 os.environ에 반영되므로, 각 진입점마다
+# 따로 로딩할 필요가 없다. .env가 없으면(팀원이 아직 안 만들었으면) 조용히 넘어간다.
+try:
+    from dotenv import load_dotenv
+    load_dotenv(Path(__file__).resolve().parents[2] / ".env")
+except ImportError:
+    pass
 
 DEFAULT_MODEL = "claude-opus-5"
 
