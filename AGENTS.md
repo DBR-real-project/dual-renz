@@ -84,8 +84,11 @@ DFDC에서는 **55%**다(실측, `docs/validation_report.md` 0-3). 파이프라�
 - `node scripts/test_extension.js` — 브라우저 없이 확장 코드를 그대로 실행. 빠르다.
 - `node scripts/verify_extension_chrome.js` — **진짜 크롬을 띄워** CDP로 조작.
   `--load-extension`은 Chrome 137+에서 막혔으므로 `Extensions.loadUnpacked`를 쓴다.
-  `tabCapture`의 activeTab 검사는 사람의 실제 클릭에만 통과하므로, 자동 실행은
-  `--allowlisted-extension-id`로 그 검사만 건너뛴다. 사람이 눌러 확인하려면 `--manual`.
+  `tabCapture`의 activeTab은 CDP 가짜 제스처로는 절대 안 떨어진다. 대신
+  **확장 단축키(`Ctrl+Shift+Y`)를 OS 레벨 SendKeys로 실제로 눌러** 정식으로 부여받는다.
+  그래서 크롬 창을 화면 안에 띄우고 AttachThreadInput으로 포커스를 잡는다.
+  포커스를 줄 수 없는 환경(CI·원격)에서는 `--allowlist`로 검사를 건너뛸 수 있지만
+  그만큼 검증 강도가 내려간다.
 
 ## 확정된 설정 (2026-08-09, 전부 실측 근거 있음)
 

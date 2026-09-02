@@ -9,13 +9,12 @@
 
 ## 1. 사람이 직접 해야 하는 것 (내가 못 함)
 
-이전에 6건이었다. **5건을 처리했고 실제로 남은 건 아래 3개뿐**이다.
+이전에 6건이었다. **activeTab까지 해결돼 실제로 남은 건 2건뿐**이다.
 처리한 것들은 아래 「해결한 것」에 결과와 함께 적어뒀다.
 
-### 1-1. ⭐ 확장 아이콘 클릭 시 `activeTab` 부여 — 10초면 된다
+### 1-1. ~~확장 아이콘 클릭 시 `activeTab` 부여~~ — 해결됨 (2026-08-18)
 
-**남은 유일한 확장 항목.** 크롬은 `tabCapture` 권한을 **사람이 실제로 확장 아이콘을
-누른 탭**에만 준다. 자동화로 그 제스처를 만들 수 없다는 걸 네 가지 방법으로 확인했다:
+**우회 없이 진짜로 뚫었다.** 예전엔 CDP 가짜 제스처가 전부 막혀서 사람이 눌러야 했다:
 
 | 시도 | 결과 |
 |---|---|
@@ -23,18 +22,28 @@
 | `chrome.action.openPopup()` + 팝업 버튼 클릭 | 실패 |
 | `Browser.grantPermissions` (CDP) | 실패 |
 | `host_permissions: <all_urls>` | 실패 |
+| **확장 단축키를 OS 레벨 SendKeys로 실제 입력** | **성공** |
 
-나머지(확장 설치·권한 부여·서비스 워커·탭 오디오 캡처·백엔드 세션·오버레이·정리)는
-**실제 크롬에서 전부 자동 검증했다.** 자동 실행은 `--allowlisted-extension-id`로
-activeTab 검사만 건너뛴 것이므로, 그 한 조각만 사람이 확인하면 된다:
+크롬 문서상 **확장이 등록한 키보드 단축키는 "사용자 호출"에 포함**되고,
+SendKeys로 보낸 키를 크롬은 사람의 입력과 구분하지 않는다.
+그래서 manifest에 `_execute_action` 단축키(`Ctrl+Shift+Y`)를 추가했다 —
+검증용일 뿐 아니라 **통화 중 빠른 실행**이라는 실용 기능이기도 하다.
 
 ```powershell
 .venv\Scripts\python.exe scripts\run_server.py     # 다른 창에서
-node scripts\verify_extension_chrome.js --manual
-#  → 크롬 창이 뜨면 확장 아이콘 → "분석 시작" 클릭. 나머지는 자동으로 이어진다
+node scripts\verify_extension_chrome.js            # 완전 자동, 사람 개입 없음
 ```
 
-**우선순위: 중.** 확장을 시연할 계획이면 반드시 미리 한 번.
+구현에 걸린 두 가지:
+- **창을 화면 안에 띄워야 한다.** 화면 밖(-2400)이나 헤드리스면 포커스를 못 받아 키가 안 간다.
+- **Windows 포커스 탈취 방지.** `AttachThreadInput`으로 현재 foreground 스레드에
+  입력 큐를 붙여야 `SetForegroundWindow`가 통한다.
+- ⚠ **반드시 우리가 띄운 PID의 창에만 보낼 것.** 프로세스 이름으로 고르면
+  사용자가 쓰던 크롬이 잡혀 엉뚱한 창에 키가 간다(실제로 한 번 그랬다).
+  지금은 foreground PID를 대조해 불일치면 전송하지 않는다.
+
+포커스를 줄 수 없는 환경(CI·원격 세션)에서는 `--allowlist`로 검사를 건너뛸 수 있지만
+그만큼 검증 강도가 내려간다.
 
 ### 1-2. LLM API 키 — 상용 모델 정확도
 
@@ -47,7 +56,7 @@ node scripts\verify_extension_chrome.js --manual
 
    ```powershell
    $env:DUALGUARD_LLM_PROVIDER = "local"
-   .venv\Scripts\python.exe scriptsalidate_content_risk.py --backend llm
+   .venv\Scripts\python.exe scripts\validate_content_risk.py --backend llm
    ```
 
    > 소형 모델이라 상용 LLM 수준이 아니다. **"LLM 경로가 실제 모델로 돈다"를

@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>DualGuard 개발 현황</title>
+<style>
+  @page { size: A4; margin: 16mm 14mm; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Malgun Gothic", "맑은 고딕", sans-serif;
+    font-size: 10pt; line-height: 1.6; color: #1a1a1a; margin: 0;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  h1 { font-size: 20pt; margin: 0 0 2mm; letter-spacing: -0.5px; }
+  h2 {
+    font-size: 13pt; margin: 9mm 0 3mm; padding-bottom: 1.5mm;
+    border-bottom: 2px solid #1a1a1a; page-break-after: avoid;
+  }
+  h3 { font-size: 11pt; margin: 5mm 0 2mm; page-break-after: avoid; }
+  p { margin: 0 0 2.5mm; }
+  .sub { color: #555; font-size: 9pt; margin-bottom: 5mm; }
+  .meta {
+    background: #f4f4f5; border-left: 3px solid #1a1a1a;
+    padding: 3mm 4mm; margin-bottom: 6mm; font-size: 9pt;
+  }
+  .meta b { display: inline-block; min-width: 16mm; }
+  table {
+    width: 100%; border-collapse: collapse; margin: 2mm 0 4mm;
+    font-size: 9pt; page-break-inside: avoid;
+  }
+  th {
+    background: #1a1a1a; color: #fff; text-align: left;
+    padding: 2mm 2.5mm; font-weight: 600;
+  }
+  td { padding: 2mm 2.5mm; border-bottom: 1px solid #ddd; vertical-align: top; }
+  tr:nth-child(even) td { background: #fafafa; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .good { color: #0a7d32; font-weight: 700; }
+  .bad  { color: #c0271a; font-weight: 700; }
+  code {
+    font-family: Consolas, "D2Coding", monospace; font-size: 8.5pt;
+    background: #f0f0f1; padding: 0.5mm 1.2mm; border-radius: 2px;
+  }
+  pre {
+    background: #f7f7f8; border: 1px solid #e3e3e5; border-radius: 3px;
+    padding: 3mm; font-family: Consolas, monospace; font-size: 8pt;
+    line-height: 1.45; overflow: hidden; page-break-inside: avoid; margin: 2mm 0 4mm;
+  }
+  .warn {
+    background: #fff6f5; border-left: 3px solid #c0271a;
+    padding: 3mm 4mm; margin: 3mm 0 4mm; page-break-inside: avoid;
+  }
+  .ok {
+    background: #f2faf4; border-left: 3px solid #0a7d32;
+    padding: 3mm 4mm; margin: 3mm 0 4mm; page-break-inside: avoid;
+  }
+  .note {
+    background: #f4f4f5; border-left: 3px solid #888;
+    padding: 3mm 4mm; margin: 3mm 0 4mm; font-size: 9pt;
+  }
+  ul { margin: 0 0 3mm; padding-left: 5mm; }
+  li { margin-bottom: 1.2mm; }
+  .pb { page-break-before: always; }
+  /* 파이프라인 도식 */
+  table.flow { margin: 3mm 0 1mm; font-size: 9pt; }
+  table.flow td { border: none; background: none !important; padding: 1.2mm 2mm; }
+  table.flow .src {
+    width: 22mm; background: #1a1a1a !important; color: #fff;
+    text-align: center; font-weight: 700; border-radius: 3px; white-space: nowrap;
+  }
+  table.flow .ch {
+    background: #f2f2f3 !important; border-left: 3px solid #999; border-radius: 2px;
+  }
+  table.flow .mid {
+    width: 26mm; text-align: center; font-weight: 700;
+    background: #e8eef6 !important; border-radius: 2px;
+  }
+  table.flow .out {
+    width: 24mm; text-align: center; background: #1a1a1a !important;
+    color: #fff; border-radius: 3px; line-height: 1.35;
+  }
+  table.flow .out span { font-size: 7.5pt; color: #bbb; font-weight: 400; }
+  .flow-out { text-align: center; font-weight: 700; font-size: 9pt; margin: 0 0 5mm; }
+  .foot {
+    margin-top: 8mm; padding-top: 3mm; border-top: 1px solid #ccc;
+    font-size: 8pt; color: #777;
+  }
+  .tag {
+    display: inline-block; padding: 0.3mm 1.8mm; border-radius: 2px;
+    font-size: 8pt; font-weight: 700; color: #fff;
+  }
+  .t-ok { background: #0a7d32; }
+  .t-warn { background: #c0271a; }
+</style>
+</head>
+<body>
+
+<h1>DualGuard 개발 현황</h1>
+<div class="sub">듀얼렌즈(DualLens) 팀 · 통화·화상통화 사기 교차분석 · KDT 본선</div>
+
+<div class="meta">
+  <b>저장소</b> github.com/DBR-real-project/dual-renz (main, 워킹 트리 clean)<br>
+  <b>규모</b> 소스 22파일 4,975줄 · 스크립트 38개 · 문서 6개 + 실측 리포트 18개<br>
+  <b>정리일</b> 2026-08-18
+</div>
+
+<h2>1. 무엇을 만들었나</h2>
+
+<!-- ASCII 아트를 쓰지 않는 이유: Consolas에 한글 글리프가 없어 굴림체로 폴백되고,
+     한글 글자폭이 달라 박스 정렬이 무너진다. 표로 그리면 폰트와 무관하게 정렬된다. -->
+<table class="flow">
+  <tr>
+    <td rowspan="3" class="src">통화 파일</td>
+    <td class="ch">STT (faster-whisper) → 8대 사회공학 기법 분류 + RAG</td>
+    <td class="mid">콘텐츠 위험도</td>
+    <td rowspan="3" class="out"><b>Fraud<br>Risk<br>Score</b><br><span>교차 가산</span></td>
+  </tr>
+  <tr>
+    <td class="ch">음성 → AASIST 합성 판별</td>
+    <td rowspan="2" class="mid">미디어 위험도</td>
+  </tr>
+  <tr><td class="ch">영상 → FF++ Xception 얼굴 위조 판별</td></tr>
+</table>
+<p class="flow-out">↓ &nbsp; 신호등 + 구간별 타임라인 + 3단계 액션 플랜</p>
+
+<p>기획서 <b>본선 범위(Phase 1)는 전부 구현</b>됐고, 원래 범위 밖이던
+<b>Phase 2(실시간 스트리밍 + 크롬 확장)까지</b> 완료했다.</p>
+
+<table>
+  <tr><th style="width:34%">기능</th><th>상태</th></tr>
+  <tr><td>웹 대시보드 (업로드 → 진행률 → 결과)</td><td>업로드·WebSocket 진행률·이중 라인 그래프·근거 표시</td></tr>
+  <tr><td>CLI 전체 분석</td><td><code>analyze_call.py</code> 한 줄로 전체 파이프라인</td></tr>
+  <tr><td>분석 히스토리</td><td>디스크 저장, 서버 재시작 후에도 열람·삭제 + 위험도 추이 그래프</td></tr>
+  <tr><td>실시간 스트리밍</td><td>세션 API. 모델 상주 + 청크 누적. <b>오디오 78초를 26초에 처리(3배속)</b></td></tr>
+  <tr><td>크롬 확장 (MV3)</td><td><b>실제 크롬에 로드해 캡처→분석→오버레이까지 자동 검증 통과</b></td></tr>
+  <tr><td>키 없이 도는 로컬 LLM</td><td><code>DUALGUARD_LLM_PROVIDER=local</code> — API 키도 별도 설치도 불필요</td></tr>
+</table>
+
+<h2>2. 실측 수치</h2>
+
+<h3>발표에 자신 있게 쓸 수 있는 것</h3>
+
+<table>
+  <tr>
+    <th style="width:30%">엔진</th><th class="num">정탐</th><th class="num">오탐</th>
+    <th class="num">정확도</th><th>표본</th>
+  </tr>
+  <tr>
+    <td><b>음성 (AASIST)</b></td><td class="num">97.1%</td>
+    <td class="num good">0.0%</td><td class="num good">98.3%</td>
+    <td>ASVspoof 120건</td>
+  </tr>
+  <tr>
+    <td><b>콘텐츠 (오프라인 분류기)</b></td><td class="num">90.9%</td>
+    <td class="num">10.0%</td><td class="num good">90.5%</td>
+    <td>자체 구성 21건</td>
+  </tr>
+  <tr>
+    <td><b>콘텐츠 도메인 밖 오탐</b></td><td class="num">—</td>
+    <td class="num good">1.53%</td><td class="num">—</td>
+    <td>우리가 안 만든 한국어 457문장</td>
+  </tr>
+  <tr>
+    <td><b>실제 보이스피싱 녹취</b></td><td class="num good">5/5 탐지</td>
+    <td class="num">—</td><td class="num">—</td>
+    <td>금감원 「그놈 목소리」</td>
+  </tr>
+</table>
+
+<div class="ok">
+<b>마지막 두 줄이 가장 강한 근거다.</b> 우리가 만든 데이터가 아니다.
+공개 코퍼스 457문장에서 헛경보 1.53%, 그리고 금융감독원이 공개한
+<b>실제 사기범 통화 녹취 5건을 전부 탐지</b>했다.
+</div>
+
+<h3>조건 없이 인용하면 무너지는 것</h3>
+
+<div class="warn">
+<b>① 영상 엔진 — 학습 도메인 밖에서 붕괴한다</b>
+<table style="margin-bottom:0">
+  <tr><th>데이터셋</th><th class="num">정탐</th><th class="num">오탐</th><th class="num">정확도</th></tr>
+  <tr><td>FaceForensics++ (학습 도메인, 116건)</td><td class="num">77.3%</td>
+      <td class="num good">2.0%</td><td class="num">86.2%</td></tr>
+  <tr><td><b>DFDC (다른 데이터셋, 50건)</b></td><td class="num">70.0%</td>
+      <td class="num bad">55.0%</td><td class="num bad">60.0%</td></tr>
+</table>
+<p style="margin-top:2.5mm;margin-bottom:0">진짜/가짜 점수 분포가 겹친다(48.5 vs 58.0). c40 가중치로 바꾸면 더 나쁘다(오탐 90%).
+<b>발표에서 영상 수치를 말할 때는 반드시 "FF++ 기준"을 붙일 것.</b></p>
+</div>
+
+<div class="warn">
+<b>② 음성 엔진 — 실제 녹취를 합성으로 오판한다</b>
+<p style="margin-bottom:2mm">실제 사기 통화 5건에서 미디어 위험도가 전부 100이었다. 사람이 직접 말한 통화인데도.
+통제 실험으로 추적한 결과:</p>
+<table style="margin-bottom:0">
+  <tr><th>조건</th><th class="num">AASIST 점수</th></tr>
+  <tr><td>스튜디오 원본 (16kHz)</td><td class="num">16.5</td></tr>
+  <tr><td>G.711 전화망 (300~3400Hz + 8kHz + μ-law)</td><td class="num good">6.5</td></tr>
+  <tr><td><b>실제 공개 녹취</b></td><td class="num bad">100.0</td></tr>
+</table>
+<p style="margin-top:2.5mm;margin-bottom:0"><b>전화망도 코덱도 원인이 아니다</b> — 오히려 점수가 내려간다.
+편집·마스킹·화자 혼합이 의심되지만 <b>원인은 미규명</b>이다.</p>
+</div>
+
+<div class="pb"></div>
+
+<h2>3. 실측으로 확정한 설정</h2>
+
+<p>기획서 두 벌이 서로 다르거나 근거 없이 잡아뒀던 값들을 <b>전부 스크립트로 재서</b> 확정했다.
+바꾸려면 해당 스크립트를 다시 돌려 반박 데이터를 내야 한다.</p>
+
+<table>
+  <tr><th style="width:24%">항목</th><th style="width:26%">확정값</th><th>근거</th></tr>
+  <tr><td>통합 공식</td><td>DOCX 버전 (multiplicative)</td>
+      <td>정확도는 동률인데 PDF 버전은 임계값에서 점수가 <b>+15.2 계단</b>으로 튄다</td></tr>
+  <tr><td>가중치</td><td>콘텐츠 0.65 / 미디어 0.35</td>
+      <td>사기를 '낮음'으로 놓치는 건수 84 → 21건, 헛경보 0 유지</td></tr>
+  <tr><td>신호등 경계</td><td>높음 55 / 중간 30</td>
+      <td>756개 조합 스윕에서 최적</td></tr>
+  <tr><td>딥페이크 임계값</td><td><b>결정 항목 자체를 제거</b></td>
+      <td>점수를 재척도해 50 하나만 사용. 최적 임계값이 정확히 50에 온다</td></tr>
+  <tr><td>오디오·영상 결합</td><td>max 유지</td>
+      <td>가중평균은 한쪽만 위조된 경우 4조합 중 2개를 놓친다</td></tr>
+  <tr><td>얼굴 검출기</td><td>YuNet (Haar 폴백)</td>
+      <td>30° 회전에서 검출률 34% → 100%, 판정 불가 영상 13개 → 0개</td></tr>
+  <tr><td>좌우 반전 TTA</td><td>켬</td>
+      <td>정탐 77.3 → 80.3%, 오탐 동일</td></tr>
+  <tr><td>STT 모델</td><td>파일 small / 스트리밍 base</td>
+      <td>5dB 소음 CER 0.34 vs 0.56, 스트리밍은 3.1배 빠른 쪽이 필요</td></tr>
+</table>
+
+<div class="note">
+<b>주의</b> — 가중치·신호등은 콘텐츠 21건 × 음성 50건을 교차한 합성 격자(1,050쌍)로 골랐다.
+실제 통화가 아니고 두 축이 독립이라 가정했다. <b>설정 비교용으로만 유효</b>하며
+격자 정확도(75.3%)를 제품 성능으로 인용하면 안 된다.
+</div>
+
+<h2>4. 진짜 남은 것 — 4개</h2>
+
+<table>
+  <tr><th style="width:30%">항목</th><th>상태 / 필요한 것</th></tr>
+  <tr>
+    <td>확장 <code>activeTab</code> 클릭 확인</td>
+    <td>크롬이 <b>사람의 실제 클릭에만</b> 권한을 준다. 자동화로는 합성 불가.<br>
+    <code>node scripts/verify_extension_chrome.js --manual</code> — <b>10초면 끝</b></td>
+  </tr>
+  <tr>
+    <td>상용 LLM 실제 정확도</td>
+    <td>API 키만 있으면 됨. 연동 경로는 스텁 서버로 검증했고,
+    로컬 LLM(Qwen2.5-1.5B)으로 대체 측정까지 완료</td>
+  </tr>
+  <tr>
+    <td>영상 엔진 일반화</td>
+    <td>측정은 끝났고 <b>결과가 나빴다</b>. 2019년 체크포인트를 교체하지 않으면 개선 안 됨</td>
+  </tr>
+  <tr>
+    <td><b>정상</b> 통화 녹취</td>
+    <td>사기 통화는 금감원 공개 자료로 해결했으나 <b>정상 통화 녹취는 공개된 게 없다</b>.
+    그래서 실제 통화 오탐률을 못 재고, 음성 엔진 오작동 규명도 막혀 있다</td>
+  </tr>
+</table>
+
+<h2>5. 발표 준비 시 참고</h2>
+
+<p><b><code>docs/demo_guide.md</code></b> 에 심사장 대본이 다 들어 있다 —
+시연 순서(빨강 → 초록 → 노랑), 예상 질문 답변, 하지 말아야 할 것.</p>
+
+<h3>이 두 가지는 먼저 밝히는 편이 유리하다</h3>
+
+<table>
+  <tr><th style="width:32%">약점</th><th>이렇게 돌린다</th></tr>
+  <tr>
+    <td>영상 엔진 크로스도메인 붕괴</td>
+    <td>"그래서 이름이 <b>듀얼</b>가드입니다. 음성과 화법이라는 독립적인 두 축이 함께 판단합니다.
+    영상은 가중치 0.35 중 일부이고, 신뢰할 수 없다는 경고를 항상 함께 띄웁니다."</td>
+  </tr>
+  <tr>
+    <td>검증셋이 자체 제작</td>
+    <td>"우리가 만들지 않은 한국어 457문장에서 헛경보 1.53%를 따로 쟀습니다.
+    금감원 공개 실제 녹취 5건은 5/5 탐지했습니다."</td>
+  </tr>
+</table>
+
+<div class="ok">
+<b>가장 강한 한 문장</b><br>
+금감원 공개 녹취 5건은 전부 <b>사람이 직접 말한 통화</b>다.
+즉 <b>딥페이크 탐지만 하는 솔루션은 이 5건을 하나도 못 잡는다.</b>
+대화 내용을 함께 보는 이유가 여기 있다.
+</div>
+
+<div class="foot">
+성능 수치의 측정 조건은 <b>docs/validation_report.md</b> 참고.
+남은 작업과 해결 방법은 <b>docs/blocked_and_next.md</b>.
+시연 담당자는 <b>docs/demo_guide.md</b> 부터.
+</div>
+
+</body>
+</html>

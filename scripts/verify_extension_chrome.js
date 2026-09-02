@@ -26,41 +26,44 @@
    ## 사용자 프로필을 건드리지 않는다
 
    `--user-data-dir`로 임시 프로필을 쓴다. 사용자가 쓰던 크롬 창/로그인/확장에
-   아무 영향이 없고, 끝나면 임시 디렉터리를 지운다. 창은 화면 밖에 띄운다.
+   아무 영향이 없고, 끝나면 임시 디렉터리를 지운다.
+   (창은 화면 안에 띄운다 — 단축키를 받으려면 포커스가 필요하다)
 
-   ## activeTab 문제와 그 우회 (여기가 제일 까다로웠다)
+   ## activeTab 문제를 어떻게 뚫었나 (여기가 제일 까다로웠다)
 
-   `chrome.tabCapture.getMediaStreamId`는 **사용자가 확장 아이콘을 실제로 눌렀을 때만**
-   허용된다(activeTab). CDP의 `Runtime.evaluate({userGesture:true})`로도, 팝업을
-   `chrome.action.openPopup()`으로 열어 버튼을 눌러도 안 된다. 확인한 것:
+   `chrome.tabCapture.getMediaStreamId`는 **사용자가 확장을 실제로 호출한 탭**에만
+   허용된다(activeTab). CDP로 만든 가짜 제스처는 전부 거부당했다:
 
-       --allowlisted-extension-id (엉뚱한 id)   실패
+       Runtime.evaluate({userGesture:true})     실패
+       chrome.action.openPopup() + 버튼 클릭     실패
        Browser.grantPermissions                 실패
        host_permissions <all_urls>              실패
-       chrome.action.openPopup() + 버튼 클릭     실패
 
-   **정확한 확장 id로 `--allowlisted-extension-id`를 주면 통과한다.** 그래서 크롬을
-   두 번 띄운다: 1차로 확장을 로드해 id를 알아내고, 2차에 그 id를 허용 목록에 넣는다.
-   (id는 확장 디렉터리의 절대 경로에서 결정되므로 기계마다 다르다. 하드코딩 불가.)
+   **해결책은 확장 단축키(`_execute_action`)를 OS 레벨로 실제로 누르는 것이다.**
+   크롬 문서상 확장이 등록한 키보드 단축키는 "사용자 호출"에 포함되고,
+   SendKeys로 보낸 진짜 키 입력을 크롬은 사람의 입력과 구분하지 않는다.
+   그래서 이 스크립트는 **activeTab을 정상적으로 부여받아** 캡처를 시작한다
+   — 검사를 건너뛴 게 아니라 실제 경로를 그대로 탄다.
 
-   > ⚠ **이 플래그는 activeTab 검사를 건너뛴다.** 즉 이 검증이 보증하는 것은
-   > "getMediaStreamId 이후의 코드 경로가 실제 크롬에서 동작한다"이지,
-   > "사용자가 아이콘을 눌렀을 때 activeTab이 제대로 부여된다"가 아니다.
-   > 후자는 `--manual`로 사람이 한 번 눌러 확인해야 한다.
+   그러려면 두 가지가 필요하다:
+   1. 크롬 창이 **화면 안에** 있고 포커스를 받을 수 있어야 한다(헤드리스 불가).
+   2. Windows의 포커스 탈취 방지를 AttachThreadInput으로 풀어야 한다.
+   자세한 건 pressExtensionHotkey() 주석 참고.
 
    서버를 먼저 띄워야 한다:
        .venv\Scripts\python.exe scripts\run_server.py
 
    실행:
-       node scripts/verify_extension_chrome.js            (완전 자동)
-       node scripts/verify_extension_chrome.js --manual   (사람이 아이콘 클릭)
+       node scripts/verify_extension_chrome.js             (완전 자동 — 진짜 activeTab)
+       node scripts/verify_extension_chrome.js --manual    (사람이 아이콘 클릭)
+       node scripts/verify_extension_chrome.js --allowlist (포커스를 못 주는 환경용 우회)
        node scripts/verify_extension_chrome.js --keep-open */
 
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const http = require('http');
-const { spawn } = require('child_process');
+const { spawn, execFileSync } = require('child_process');
 
 const ROOT = path.resolve(__dirname, '..');
 const EXT = path.join(ROOT, 'extension');
@@ -73,6 +76,64 @@ const KEEP_OPEN = args.includes('--keep-open');
 // tabCapture는 사람이 확장 아이콘을 눌러야만 허용된다(activeTab). --manual은
 // 그 한 번의 클릭을 사람에게 요청하고, 나머지는 전부 자동으로 검증한다.
 const MANUAL = args.includes('--manual');
+// activeTab 검사를 통째로 건너뛰는 우회. 포커스를 줄 수 없는 환경(CI, 원격 세션,
+// 잠긴 화면)에서만 쓴다. 기본 경로는 단축키로 **진짜 activeTab을 받아내므로**
+// 이 플래그를 쓰면 검증 강도가 내려간다.
+const ALLOWLIST = args.includes('--allowlist');
+
+/* ------------------------------------------------------- OS 레벨 단축키 전송
+   크롬은 `Runtime.evaluate({userGesture:true})`나 `chrome.action.openPopup()`을
+   사용자 제스처로 인정하지 않는다(둘 다 실패를 확인했다). 그런데
+   **확장이 등록한 키보드 단축키(_execute_action)** 는 인정한다.
+   그래서 OS 레벨로 진짜 키 입력을 보내면 activeTab이 정상적으로 부여된다.
+
+   주의 두 가지:
+   1. 반드시 우리가 띄운 PID의 창에만 보낸다. 프로세스 이름이나 창 제목으로 고르면
+      사용자가 쓰던 크롬이 잡혀 엉뚱한 창에 키가 간다(실제로 한 번 그랬다).
+   2. Windows는 백그라운드 프로세스가 포커스를 뺏는 걸 막는다. AttachThreadInput으로
+      현재 foreground 스레드에 입력 큐를 붙여야 SetForegroundWindow가 통한다. */
+function pressExtensionHotkey(pid) {
+  const ps = `
+    Add-Type -AssemblyName System.Windows.Forms
+    Add-Type @"
+      using System;
+      using System.Runtime.InteropServices;
+      public class DGWin {
+        [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr h);
+        [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr h, int c);
+        [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
+        [DllImport("user32.dll")] public static extern int GetWindowThreadProcessId(IntPtr h, out int pid);
+        [DllImport("user32.dll")] public static extern bool AttachThreadInput(uint a, uint b, bool f);
+        [DllImport("user32.dll")] public static extern bool BringWindowToTop(IntPtr h);
+        [DllImport("kernel32.dll")] public static extern uint GetCurrentThreadId();
+        public static void Focus(IntPtr h) {
+          IntPtr fg = GetForegroundWindow();
+          int dummy;
+          uint fgThread = (uint)GetWindowThreadProcessId(fg, out dummy);
+          uint me = GetCurrentThreadId();
+          AttachThreadInput(me, fgThread, true);
+          ShowWindow(h, 9); BringWindowToTop(h); SetForegroundWindow(h);
+          AttachThreadInput(me, fgThread, false);
+        }
+      }
+"@
+    $p = Get-Process -Id ${pid} -ErrorAction SilentlyContinue
+    if (-not $p -or $p.MainWindowHandle -eq 0) { "NO_WINDOW"; exit }
+    [DGWin]::Focus($p.MainWindowHandle)
+    Start-Sleep -Milliseconds 1200
+    $fg = [DGWin]::GetForegroundWindow()
+    $fgPid = 0; [DGWin]::GetWindowThreadProcessId($fg, [ref]$fgPid) | Out-Null
+    if ($fgPid -ne ${pid}) { "FOCUS_MISMATCH:$fgPid"; exit }
+    [System.Windows.Forms.SendKeys]::SendWait("^+y")
+    "OK"
+  `;
+  try {
+    return execFileSync('powershell', ['-NoProfile', '-Command', ps],
+      { encoding: 'utf8', timeout: 30000 }).trim().split(/\r?\n/).pop();
+  } catch (e) {
+    return 'ERROR:' + String(e.message).slice(0, 60);
+  }
+}
 
 const CHROME_CANDIDATES = [
   path.join(process.env['ProgramFiles'] || '', 'Google/Chrome/Application/chrome.exe'),
@@ -213,7 +274,7 @@ async function main() {
   // 확장 id를 알아야 --allowlisted-extension-id를 줄 수 있는데, id는 설치해 봐야 안다.
   // 그래서 1차로 조용히 띄워 id만 확인하고 닫는다. (--manual이면 우회가 필요 없다)
   let allowId = null;
-  if (!MANUAL) {
+  if (ALLOWLIST && !MANUAL) {
     const probeProfile = fs.mkdtempSync(path.join(os.tmpdir(), 'dualguard-probe-'));
     const probe = spawn(chromePath, [
       `--user-data-dir=${probeProfile}`, `--remote-debugging-port=${PORT + 1}`,
@@ -244,7 +305,9 @@ async function main() {
     // 탭 캡처 권한 팝업을 자동 승인한다. 없으면 사람이 눌러야 해서 자동화가 막힌다.
     '--auto-accept-this-tab-capture',
     '--autoplay-policy=no-user-gesture-required',
-    '--window-position=-2400,0', '--window-size=1200,900',
+    // 화면 안에 띄운다. 단축키를 받으려면 창이 포커스를 받을 수 있어야 한다
+    // (화면 밖 창은 SetForegroundWindow가 통하지 않는다).
+    '--window-position=60,60', '--window-size=1180,860',
     'about:blank',
   ], { stdio: 'ignore', detached: false });
 
@@ -348,20 +411,29 @@ async function main() {
     `new Promise(r => chrome.tabs.query({url: "${API}/*"}, ts => r(ts[0] ? ts[0].id : -1)))`);
   check(tabId > 0, '대상 탭 id 확보', String(tabId));
 
-  log('\n5) 캡처 시작 — 실제 팝업을 열고 버튼을 누른다'
-    + (allowId ? ' (activeTab은 허용 목록으로 우회)' : ''));
+  log('\n5) 캡처 시작 — 확장 단축키를 실제로 눌러 activeTab을 받아낸다'
+    + (allowId ? ' (⚠ 허용 목록 우회 모드 — 검증 강도 낮음)' : ''));
   // 서비스 워커에서 startCapture()를 직접 부르면 실패한다:
   //   "Extension has not been invoked for the current page (see activeTab permission)"
-  // tabCapture는 **사용자가 확장을 실제로 호출한 탭**에만 허용된다. 그래서 실사용
-  // 경로 그대로 팝업을 열고 그 안의 버튼을 누른다. (이 실패 자체가 검증의 성과다 —
-  // 하네스로는 절대 드러나지 않는다.)
+  // tabCapture는 **사용자가 확장을 실제로 호출한 탭**에만 허용된다.
+  // 그래서 확장 단축키를 OS 레벨로 실제로 눌러 팝업을 열고(=activeTab 부여),
+  // 그 팝업 안의 버튼을 눌러 실사용 경로를 그대로 탄다.
   let started = false;
-  try {
-    await sw.evaluate('chrome.action.openPopup()', { userGesture: true });
-  } catch (e) {
-    log(`   (openPopup: ${String(e.message).slice(0, 80)})`);
+
+  // 대상 탭을 활성 탭으로 만든다. 단축키는 **활성 탭**에 activeTab을 부여한다.
+  await sw.evaluate(
+    `new Promise(r => chrome.tabs.update(${tabId}, {active: true}, () => r(1)))`);
+  await sleep(500);
+
+  if (!MANUAL) {
+    const sent = pressExtensionHotkey(chrome.pid);
+    check(sent === 'OK', 'Ctrl+Shift+Y 실제 키 입력 전송',
+      sent === 'OK' ? ''
+        : sent.startsWith('FOCUS_MISMATCH')
+          ? '창 포커스를 못 잡았다(다른 창이 앞에 있음). --manual 로 확인할 것'
+          : sent);
+    await sleep(2000);
   }
-  await sleep(1500);
 
   const popupTarget = await waitForTarget(
     t => t.url.includes(extId) && t.url.includes('popup.html'), 12000, '팝업')
@@ -480,14 +552,14 @@ async function main() {
     "document.getElementById('dualguard-overlay') === null");
   check(gone === true, '낮음 등급에서 오버레이가 사라짐');
 
-  log('\n8) 서비스 워커 콘솔 에러 확인');
+  log('\n9) 서비스 워커 콘솔 에러 확인');
   const errs = sw.events.filter(e =>
     (e.method === 'Runtime.consoleAPICalled' && e.params.type === 'error')
     || e.method === 'Runtime.exceptionThrown');
   check(errs.length === 0, '서비스 워커 에러 없음',
     errs.length ? JSON.stringify(errs[0]).slice(0, 200) : '');
 
-  log('\n9) 캡처 종료');
+  log('\n10) 캡처 종료');
   await sw.evaluate('stopCapture()');
   await sleep(2500);
   const afterState = JSON.parse(await sw.evaluate('JSON.stringify(STATE)'));
@@ -528,8 +600,10 @@ async function main() {
     log('※ 크롬이 확장을 로드하고, 실제 탭 오디오를 캡처해 백엔드까지 보내고,');
     log('  경고 오버레이를 실제 페이지에 그리는 것까지 확인했다.');
     if (allowId) {
-      log('※ 단, activeTab 검사는 --allowlisted-extension-id로 건너뛰었다.');
-      log('  "사용자가 아이콘을 눌렀을 때 activeTab이 부여되는가"는 --manual로 확인할 것.');
+      log('※ 단, 이번 실행은 --allowlist 모드라 activeTab 검사를 건너뛰었다.');
+      log('  플래그 없이 돌리면 단축키로 진짜 activeTab을 받아 검증한다.');
+    } else if (!MANUAL) {
+      log('※ activeTab을 우회하지 않았다 — 확장 단축키를 실제로 눌러 정식으로 부여받았다.');
     }
   }
   return failures === 0 ? 0 : 1;
