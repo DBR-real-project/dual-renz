@@ -162,6 +162,7 @@ scoring 모듈은 이 계약만 알고 있으면 되도록 설계돼 있음.
 .venv\Scripts\python.exe scripts\fetch_korean_speech_samples.py # 초록 시연용 진짜 사람 목소리
 .venv\Scripts\python.exe scripts\test_streaming.py              # 실시간 세션 E2E (서버 필요)
 node scripts\test_extension.js                                  # 크롬 확장 검증 (서버 필요)
+node scripts\audit_ui.js                                        # 웹 화면 UI 점검 — 스크린샷 + 글자 잘림 (서버 필요)
 node scripts\verify_extension_chrome.js                         # 실제 크롬으로 확장 검증
 .venv\Scripts\python.exe scripts\test_llm_client.py              # LLM 클라이언트 경로 (키 불필요)
 .venv\Scripts\python.exe scripts\fetch_dfdc_samples.py           # DFDC 크로스도메인 샘플

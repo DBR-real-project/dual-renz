@@ -410,7 +410,12 @@ function svgGauge(value, size = 150) {
   const rad = ((180 - (v / 100) * 180) * Math.PI) / 180;
   const nx = cx + (r - 14) * Math.cos(rad), ny = cy - (r - 14) * Math.sin(rad);
   const gid = 'gaugeGrad' + Math.random().toString(36).slice(2, 9);
-  return `<svg width="${size}" height="${Math.round(size * 0.72)}" viewBox="0 0 ${size} ${Math.round(size * 0.72)}" role="img" aria-label="미디어 위험도 ${Math.round(v)}점">
+  // 캔버스 높이는 **아래 텍스트까지 담을 만큼** 잡아야 한다.
+  // 예전에는 size*0.72(=108px)였는데 값 텍스트가 y=cy+22(=112), "/100"이
+  // y=cy+37(=127)이라 둘 다 밖으로 나갔다 — 실제로 값 아랫부분이 잘리고
+  // "/100"은 아예 안 보였다. 마지막 텍스트 baseline + 글자 아래 여유(5px)까지 잡는다.
+  const h = Math.round(cy + 37 + 5);
+  return `<svg width="${size}" height="${h}" viewBox="0 0 ${size} ${h}" role="img" aria-label="미디어 위험도 ${Math.round(v)}점">
     <defs><linearGradient id="${gid}" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0%" stop-color="#2e9e5b"/><stop offset="50%" stop-color="#e2960f"/><stop offset="100%" stop-color="#e14b4b"/>
     </linearGradient></defs>

@@ -255,6 +255,7 @@ scripts/
   build_rag_index.py           RAG 색인 재생성 (기존 사례를 수정·삭제했을 때만 필요)
   test_streaming.py            ★ 실시간 세션 E2E (서버 필요)
   test_extension.js            ★ 크롬 확장 자동 검증 — 브라우저 없이 확장 코드 실행
+  audit_ui.js                  ★ 웹 화면 UI 점검 — 헤드리스 크롬 스크린샷 + 글자 잘림 검출
   decide_scoring.py            통합 공식·가중치·신호등 경계를 실측으로 결정
   decide_media_combine.py      오디오·영상 결합 방식(max vs 가중평균) 결정
   calibrate_deepfake.py        딥페이크 점수 재척도 파라미터 적합 (5-겹 교차검증)

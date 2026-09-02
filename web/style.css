@@ -45,6 +45,12 @@ body{
   font-family:"Pretendard","Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif;
   line-height:1.65; font-size:15px;
   transition:background .2s ease, color .2s ease;
+  /* 한글은 기본 줄바꿈 규칙에서 **단어 중간이 쪼개진다.** 실제로 화면에서
+     "얼/굴·음성", "개인정보요/구", "판/별합니다", "유사/도" 처럼 깨졌다.
+     keep-all은 단어 안에서 끊지 않게 하고, 영문·URL은 그러면 넘칠 수 있으므로
+     overflow-wrap:anywhere로 그때만 강제로 끊는다. */
+  word-break:keep-all;
+  overflow-wrap:anywhere;
 }
 main{max-width:1120px;margin:0 auto;padding:28px 24px 72px}
 img{max-width:100%;display:block}
@@ -361,4 +367,16 @@ footer{border-top:1px solid var(--line);padding:18px 20px;text-align:center;
   .grid2,.two-col,.grid3,.rt-engines{grid-template-columns:1fr}
   .cat-row{grid-template-columns:104px 1fr 40px}
   .stat-row{grid-template-columns:repeat(2,1fr)}
+
+  /* 좁은 폭에서는 날짜·구간 메타가 nowrap이라 자리를 다 먹고, 파일명이 34px까지
+     눌려 "sca..." 로만 보였다(실측). 파일명과 메타를 위아래 두 줄로 나눈다. */
+  .hist{
+    grid-template-columns:auto 1fr auto;
+    grid-template-areas:"score name del" "score meta del";
+    row-gap:1px; column-gap:10px; align-items:center;
+  }
+  .hist-score{grid-area:score}
+  .hist-name{grid-area:name}
+  .hist-meta{grid-area:meta}
+  .hist-del{grid-area:del}
 }
