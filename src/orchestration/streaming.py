@@ -300,10 +300,21 @@ class StreamSession:
                 init = _webm_init_segment(blob)
                 if init is not None:
                     self._webm_init = init          # 완결된 청크 — 다음 청크들을 위해 헤더 캐싱
+                elif blob.startswith(WEBM_EBML_MAGIC):
+                    # 헤더는 있는데 Cluster가 아직 없는 청크(오디오 데이터 0). 통화가
+                    # 아주 조용하게 시작하면 실제로 나온다. 디코딩할 건 없지만
+                    # **헤더는 반드시 챙겨야 한다** — 이걸 놓치면 이후 청크가 전부
+                    # 복원 불가가 되어 세션 내내 실패한다.
+                    self._webm_init = blob
+                    return {"new_segments": [], **self._snapshot_locked()}
                 elif self._webm_init is not None:
                     blob = self._webm_init + blob   # 헤더 없는 청크 — 캐싱해둔 헤더를 붙여 복원
-                # else: 첫 청크인데 헤더가 없는 비정상 상황. 캐시가 없으니 원본 그대로
-                # 시도한다 — 실패하면 아래 _decode_to_wave가 RuntimeError로 알려준다.
+                # else: 첫 청크인데 헤더가 없다. 캐시가 없으니 원본 그대로 시도한다.
+                # **여기서 예외를 던지면 안 된다** — 확장은 파일명을 항상 chunk.webm으로
+                # 보내지만 내용이 webm이 아닐 수 있고(테스트 하네스는 wav를 보낸다),
+                # ffmpeg은 확장자가 아니라 내용으로 판별하므로 그대로도 디코딩된다.
+                # 실제로 여기서 막았다가 하네스가 전부 실패했다. 진짜 못 읽는 경우만
+                # 아래 _decode_to_wave가 RuntimeError로 알려주게 둔다.
 
             wave = _decode_to_wave(blob, suffix)
             if wave.size == 0:

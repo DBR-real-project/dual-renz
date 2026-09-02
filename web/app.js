@@ -81,6 +81,98 @@ async function loadHomeStats() {
   } catch { /* 통계 실패가 홈 화면 진입을 막지 않는다 */ }
 }
 
+/* ---------- 항상 위에 뜨는 경고창 (Document Picture-in-Picture) ----------
+
+   ## 왜 필요한가
+
+   웹 대시보드로 화면 공유를 하면 분석은 되는데 **경고를 볼 수가 없다.** 사용자는
+   통화 화면을 보고 있고 우리 탭은 뒤에 있기 때문이다. 브라우저 보안상 웹페이지는
+   다른 사이트 위에 아무것도 그릴 수 없다(그게 가능하면 피싱 도구가 된다).
+
+   크롬 확장이 그 권한을 정식으로 받는 경로지만, 확장은 설치가 필요하다.
+   **Document Picture-in-Picture**(크롬 116+)를 쓰면 설치 없이도 된다 —
+   항상 위에 떠 있는 작은 창을 만들 수 있고, 브라우저 밖 다른 프로그램 위에도 뜬다.
+
+   즉 통화 화면을 전체화면으로 보면서 위험도를 계속 볼 수 있다.
+
+   지원하지 않는 브라우저면 조용히 건너뛴다. 그때는 기존처럼 우리 탭에서 본다. */
+
+let pipWin = null;
+
+function pipSupported() {
+  return 'documentPictureInPicture' in window;
+}
+
+async function openRiskPip() {
+  if (!pipSupported() || pipWin) return;
+  try {
+    // 사용자 제스처(공유 시작 클릭) 안에서 호출해야 열린다.
+    pipWin = await documentPictureInPicture.requestWindow({ width: 300, height: 190 });
+  } catch (e) {
+    pipWin = null;   // 차단됐으면 조용히 포기 — 통화를 방해하지 않는다
+    return;
+  }
+  const d = pipWin.document;
+  d.title = '듀얼가드 실시간 경고';
+  const style = d.createElement('style');
+  style.textContent = `
+    :root{color-scheme:light}
+    body{margin:0;font-family:"Malgun Gothic","Pretendard",sans-serif;
+         background:#16202e;color:#fff;word-break:keep-all;
+         display:flex;flex-direction:column;height:100vh}
+    .hd{padding:9px 12px 0;font-size:11px;color:#9fb0c4;letter-spacing:-.2px}
+    .mid{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+    .num{font-size:46px;font-weight:800;line-height:1}
+    .lv{font-size:13px;font-weight:700;padding:1px 10px;border-radius:99px}
+    .sub{font-size:11px;color:#9fb0c4}
+    .why{padding:0 12px 10px;font-size:11.5px;line-height:1.4;text-align:center;min-height:32px}
+    .lv-낮음{background:#1e7a45}.lv-중간{background:#a9761a}.lv-높음{background:#c0392b}
+    .n-낮음{color:#5ee08f}.n-중간{color:#ffc861}.n-높음{color:#ff8a80}
+    body.alert{animation:flash 1s ease-in-out 3}
+    @keyframes flash{0%,100%{background:#16202e}50%{background:#5a1a1a}}
+  `;
+  d.head.appendChild(style);
+  d.body.innerHTML = `
+    <div class="hd">듀얼가드 · 통화 위험도</div>
+    <div class="mid">
+      <div class="num n-낮음" id="pNum">0</div>
+      <div class="lv lv-낮음" id="pLv">분석 중</div>
+      <div class="sub"><span id="pC">0</span> 화법 · <span id="pM">0</span> 음성</div>
+    </div>
+    <div class="why" id="pWhy">통화를 듣고 있습니다…</div>`;
+
+  // 사용자가 PiP 창을 직접 닫으면 참조를 정리한다(다시 열 수 있게).
+  pipWin.addEventListener('pagehide', () => { pipWin = null; });
+}
+
+function updateRiskPip(snap, reason) {
+  if (!pipWin || pipWin.closed) return;
+  const d = pipWin.document;
+  const lv = snap.overall_level || '낮음';
+  const num = d.getElementById('pNum');
+  const lvEl = d.getElementById('pLv');
+  if (!num || !lvEl) return;
+  num.textContent = Math.round(snap.overall_score);
+  num.className = `num n-${lv}`;
+  lvEl.textContent = lv;
+  lvEl.className = `lv lv-${lv}`;
+  d.getElementById('pC').textContent = Math.round(snap.content_risk);
+  d.getElementById('pM').textContent = Math.round(snap.media_risk);
+  d.getElementById('pWhy').textContent =
+    lv === '낮음' ? '지금까지 위험 신호 없음' : (reason || '위험 신호가 감지되었습니다.');
+  // '높음'으로 올라간 순간에만 깜빡인다. 계속 깜빡이면 통화를 방해한다.
+  if (lv === '높음' && !d.body.classList.contains('alert')) {
+    d.body.classList.add('alert');
+  } else if (lv !== '높음') {
+    d.body.classList.remove('alert');
+  }
+}
+
+function closeRiskPip() {
+  try { pipWin && !pipWin.closed && pipWin.close(); } catch { }
+  pipWin = null;
+}
+
 /* ---------- 실시간 화상통화 검증 (getDisplayMedia + 세션 스트리밍 API) ---------- */
 let rtSession = null;      // { session_id, ... }
 let rtRecorder = null;
@@ -148,6 +240,10 @@ async function startRealtime() {
   rtAudioStream = new MediaStream([audioTrack]);
   audioTrack.addEventListener('ended', () => endRealtime(false)); // 사용자가 브라우저 UI로 공유 중단
 
+  // 통화 화면을 보는 동안에도 위험도를 볼 수 있게 항상 위에 뜨는 창을 연다.
+  // 지원 안 하면 조용히 넘어가고 기존처럼 이 탭에서 본다.
+  await openRiskPip();
+
   rtSegments = [];
   rtStartedAt = Date.now();
   rtWarningDismissedFor = null;
@@ -195,15 +291,20 @@ function applyRtSnapshot(snap) {
   rtCurrentLevel = snap.overall_level;
   setRtBadge(snap.overall_level);
 
+  // 판단 근거는 등급과 무관하게 만든다 — 항상 위에 뜨는 창(PiP)에도 넘겨야 하고,
+  // 거기서는 '중간'이어도 왜 올라갔는지 보여주는 게 쓸모 있다.
+  const last = snap.new_segments && snap.new_segments.length ? snap.new_segments[snap.new_segments.length - 1] : null;
+  const reason = last && last.top_category
+    ? `감지된 패턴: ${esc(last.top_category)}${last.matched_terms && last.matched_terms.length ? ' · "' + esc(last.matched_terms[0]) + '"' : ''}`
+    : (snap.media_risk >= 50 ? '음성 위조 위험 신호가 감지되었습니다.' : '누적된 대화 패턴에서 위험 신호가 감지되었습니다.');
+
   if (snap.overall_level !== '낮음' && rtWarningDismissedFor !== snap.overall_level) {
-    const last = snap.new_segments && snap.new_segments.length ? snap.new_segments[snap.new_segments.length - 1] : null;
-    const reason = last && last.top_category
-      ? `감지된 패턴: ${esc(last.top_category)}${last.matched_terms && last.matched_terms.length ? ' · "' + esc(last.matched_terms[0]) + '"' : ''}`
-      : (snap.media_risk >= 50 ? '음성 위조 위험 신호가 감지되었습니다.' : '누적된 대화 패턴에서 위험 신호가 감지되었습니다.');
     $('rtWarningReason').textContent = reason;
     $('rtWarningScore').textContent = Math.round(snap.overall_score);
     $('rtWarning').hidden = false;
   }
+
+  updateRiskPip(snap, reason);
 }
 
 function setRtBadge(level) {
@@ -215,6 +316,7 @@ function setRtBadge(level) {
 
 async function endRealtime(userInitiatedFromWarning) {
   clearInterval(rtTimer);
+  closeRiskPip();   // 통화가 끝나면 항상 위에 뜨던 창도 같이 닫는다
   if (rtRecorder && rtRecorder.state !== 'inactive') { try { rtRecorder.stop(); } catch {} }
   if (rtDisplayStream) rtDisplayStream.getTracks().forEach(t => t.stop());
   if (rtAudioStream) rtAudioStream.getTracks().forEach(t => t.stop());

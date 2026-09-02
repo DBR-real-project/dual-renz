@@ -41,14 +41,32 @@ let stopping = false;
 let sessionId = null;
 let busy = false;
 let dropped = 0;
+// 첫 청크(EBML 헤더 포함)를 보냈는지. 크기 필터를 헤더 뒤부터만 적용하려고 쓴다.
+let headerSent = false;
+// AudioContext를 모듈 스코프에 둔다. 지역변수로 두면 stop()에서 닫을 수가 없는데,
+// **닫지 않으면 탭 캡처가 계속 살아있는 것으로 남는다.** 트랙을 stop()해도
+// AudioContext가 그 스트림을 물고 있으면 크롬이 탭을 '캡처 중'으로 유지해서,
+// 다시 시작할 때 getUserMedia가 "Cannot capture a tab with an active stream"으로
+// 거부한다(실측). 탭을 새로고침해야만 풀렸다.
+let audioCtx = null;
 
 chrome.runtime.onMessage.addListener((msg) => {
   if (msg.target !== 'offscreen') return;
-  if (msg.type === 'start') start(msg.streamId);
+  // start는 async라 실패하면 unhandled rejection이 된다. 그러면 사용자에게는
+  // 영어 원문 에러만 보이고 정리도 안 된 채 상태만 어긋난다(실제로 그랬다).
+  if (msg.type === 'start') start(msg.streamId).catch(async (e) => {
+    await stop();
+    notifyError('탭 오디오 캡처를 시작하지 못했습니다. 통화 탭을 새로고침한 뒤 다시 시도하세요.', String(e));
+  });
   if (msg.type === 'stop') stop();
 });
 
 async function start(streamId) {
+  // 이미 캡처 중이면 먼저 정리한다. 안 그러면 getUserMedia가 거부한다.
+  // 앞선 시도가 중간에 실패해 스트림만 남는 경우가 실제로 생긴다
+  // (예: 서버가 409를 돌려줘 세션을 못 연 뒤 다시 누르는 경우).
+  if (stream || audioCtx) await stop();
+
   stopping = false;
   dropped = 0;
 
@@ -58,8 +76,8 @@ async function start(streamId) {
 
   // 탭 캡처는 탭 소리를 가로채므로, 사용자가 통화를 계속 들을 수 있게 되돌려준다.
   // 이 처리를 빼면 캡처 시작과 동시에 통화 소리가 끊긴다.
-  const ctx = new AudioContext();
-  ctx.createMediaStreamSource(stream).connect(ctx.destination);
+  audioCtx = new AudioContext();
+  audioCtx.createMediaStreamSource(stream).connect(audioCtx.destination);
 
   // 세션을 먼저 연다. 서버가 모델을 올리는 동안(수십 초) 기다리므로,
   // 녹음은 응답을 받은 뒤에 시작해야 첫 청크가 버려지지 않는다.
@@ -84,9 +102,17 @@ async function start(streamId) {
     .find(t => MediaRecorder.isTypeSupported(t));
   recorder = new MediaRecorder(stream, { mimeType: mime });
 
+  headerSent = false;
   recorder.ondataavailable = (e) => {
-    if (stopping || !e.data || e.data.size < MIN_CHUNK_BYTES) return;
+    if (stopping || !e.data) return;
+    // **첫 청크는 크기와 상관없이 반드시 보낸다.**
+    // MediaRecorder는 EBML(webm) 헤더를 첫 청크에만 싣는다. 통화 초반이 조용하면
+    // 그 첫 청크가 MIN_CHUNK_BYTES 미만이라 여기서 버려지는데, 그러면 헤더까지
+    // 같이 사라져서 **이후 모든 청크가 서버에서 디코딩 불가(400)** 가 된다.
+    // 실측: Meet 통화 시작 직후 전 청크가 400으로 거부됐다.
+    if (headerSent && e.data.size < MIN_CHUNK_BYTES) return;
     if (busy) { dropped += 1; return; }   // 밀림 방지 (위 주석 참고)
+    headerSent = true;
     sendChunk(e.data);
   };
   recorder.start(CHUNK_MS);
@@ -96,8 +122,12 @@ async function stop() {
   stopping = true;
   try { recorder && recorder.state !== 'inactive' && recorder.stop(); } catch { }
   try { stream && stream.getTracks().forEach(t => t.stop()); } catch { }
+  // 트랙만 멈추면 부족하다. AudioContext가 스트림을 물고 있는 한 탭이
+  // '캡처 중'으로 남아 다음 시작이 막힌다(위 audioCtx 선언부 주석 참고).
+  try { audioCtx && await audioCtx.close(); } catch { }
   recorder = null;
   stream = null;
+  audioCtx = null;
 
   // 세션을 반드시 닫아야 서버가 모델을 내리고 다음 분석이 가능해진다.
   if (sessionId) {
@@ -116,7 +146,16 @@ async function sendChunk(blob) {
   try {
     const r = await fetch(`${API}/api/sessions/${sessionId}/chunk`,
       { method: 'POST', body: fd });
-    if (!r.ok) return;
+    if (!r.ok) {
+      // 예전에는 여기서 조용히 return했다. 그래서 서버가 청크를 전부 400으로
+      // 거부해도 **화면에는 아무 표시가 없고** 위험도만 안 움직였다 — 원인을
+      // 찾는 데 한참 걸렸다. 실패는 사용자에게 올린다.
+      const detail = await r.text().catch(() => '');
+      notifyError(r.status === 404
+        ? '분석 세션이 끊겼습니다. 분석을 다시 시작하세요.'
+        : `서버가 오디오 조각을 처리하지 못했습니다 (HTTP ${r.status}).`, detail);
+      return;
+    }
     const res = await r.json();
     chrome.runtime.sendMessage({
       type: 'result',
