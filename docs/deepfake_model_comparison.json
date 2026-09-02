@@ -1,0 +1,131 @@
+{
+  "_설명": "공개 딥페이크 탐지 모델 후보를 FF++/DFDC 양쪽에서 비교. 교체 가치를 판단하기 위한 것. 분리도가 핵심 지표.",
+  "videos_per_dataset": 20,
+  "frames_per_video": 6,
+  "results": [
+    {
+      "model": "dima806/deepfake_vs_real_image_detection",
+      "id2label": {
+        "0": "Real",
+        "1": "Fake"
+      },
+      "fake_index": 1,
+      "datasets": {
+        "FF++": {
+          "n_real": 10,
+          "n_fake": 10,
+          "real_mean": 81.0,
+          "fake_mean": 99.0,
+          "separation": 18.0,
+          "recall": 100.0,
+          "fpr": 90.0,
+          "accuracy": 55.0
+        },
+        "DFDC": {
+          "n_real": 10,
+          "n_fake": 10,
+          "real_mean": 91.7,
+          "fake_mean": 99.0,
+          "separation": 7.3,
+          "recall": 100.0,
+          "fpr": 90.0,
+          "accuracy": 55.0
+        }
+      },
+      "elapsed_sec": 73.7
+    },
+    {
+      "model": "prithivMLmods/open-deepfake-detection",
+      "id2label": {
+        "0": "Fake",
+        "1": "Real"
+      },
+      "fake_index": 0,
+      "datasets": {
+        "FF++": {
+          "n_real": 10,
+          "n_fake": 10,
+          "real_mean": 77.6,
+          "fake_mean": 81.7,
+          "separation": 4.2,
+          "recall": 90.0,
+          "fpr": 80.0,
+          "accuracy": 55.0
+        },
+        "DFDC": {
+          "n_real": 10,
+          "n_fake": 10,
+          "real_mean": 57.6,
+          "fake_mean": 55.5,
+          "separation": -2.1,
+          "recall": 70.0,
+          "fpr": 50.0,
+          "accuracy": 60.0
+        }
+      },
+      "elapsed_sec": 69.7
+    },
+    {
+      "model": "Wvolf/ViT_Deepfake_Detection",
+      "id2label": {
+        "0": "Real",
+        "1": "Fake"
+      },
+      "fake_index": 1,
+      "datasets": {
+        "FF++": {
+          "n_real": 10,
+          "n_fake": 10,
+          "real_mean": 81.7,
+          "fake_mean": 99.8,
+          "separation": 18.1,
+          "recall": 100.0,
+          "fpr": 90.0,
+          "accuracy": 55.0
+        },
+        "DFDC": {
+          "n_real": 10,
+          "n_fake": 10,
+          "real_mean": 99.1,
+          "fake_mean": 99.7,
+          "separation": 0.5,
+          "recall": 100.0,
+          "fpr": 100.0,
+          "accuracy": 50.0
+        }
+      },
+      "elapsed_sec": 62.0
+    },
+    {
+      "model": "prithivMLmods/Deep-Fake-Detector-v2-Model",
+      "id2label": {
+        "0": "Realism",
+        "1": "Deepfake"
+      },
+      "fake_index": 1,
+      "datasets": {
+        "FF++": {
+          "n_real": 10,
+          "n_fake": 10,
+          "real_mean": 60.5,
+          "fake_mean": 79.6,
+          "separation": 19.1,
+          "recall": 100.0,
+          "fpr": 80.0,
+          "accuracy": 60.0
+        },
+        "DFDC": {
+          "n_real": 10,
+          "n_fake": 10,
+          "real_mean": 72.0,
+          "fake_mean": 54.4,
+          "separation": -17.6,
+          "recall": 60.0,
+          "fpr": 100.0,
+          "accuracy": 30.0
+        }
+      },
+      "elapsed_sec": 29.1
+    }
+  ]
+}

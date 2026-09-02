@@ -101,7 +101,7 @@
 <div class="meta">
   <b>저장소</b> github.com/DBR-real-project/dual-renz (main, 워킹 트리 clean)<br>
   <b>규모</b> 소스 22파일 4,975줄 · 스크립트 38개 · 문서 6개 + 실측 리포트 18개<br>
-  <b>정리일</b> 2026-08-18
+  <b>정리일</b> 2026-08-18 (2차 — 확장 activeTab 해결, 음성 원인 규명, 모델 비교 반영)
 </div>
 
 <h2>1. 무엇을 만들었나</h2>
@@ -132,7 +132,7 @@
   <tr><td>CLI 전체 분석</td><td><code>analyze_call.py</code> 한 줄로 전체 파이프라인</td></tr>
   <tr><td>분석 히스토리</td><td>디스크 저장, 서버 재시작 후에도 열람·삭제 + 위험도 추이 그래프</td></tr>
   <tr><td>실시간 스트리밍</td><td>세션 API. 모델 상주 + 청크 누적. <b>오디오 78초를 26초에 처리(3배속)</b></td></tr>
-  <tr><td>크롬 확장 (MV3)</td><td><b>실제 크롬에 로드해 캡처→분석→오버레이까지 자동 검증 통과</b></td></tr>
+  <tr><td>크롬 확장 (MV3)</td><td><b>실제 크롬에서 전 과정 자동 검증 통과.</b> 확장 단축키를 OS 레벨로 눌러 <code>activeTab</code>을 정식으로 부여받는다 — 우회 없음</td></tr>
   <tr><td>키 없이 도는 로컬 LLM</td><td><code>DUALGUARD_LLM_PROVIDER=local</code> — API 키도 별도 설치도 불필요</td></tr>
 </table>
 
@@ -184,22 +184,29 @@
   <tr><td><b>DFDC (다른 데이터셋, 50건)</b></td><td class="num">70.0%</td>
       <td class="num bad">55.0%</td><td class="num bad">60.0%</td></tr>
 </table>
-<p style="margin-top:2.5mm;margin-bottom:0">진짜/가짜 점수 분포가 겹친다(48.5 vs 58.0). c40 가중치로 바꾸면 더 나쁘다(오탐 90%).
-<b>발표에서 영상 수치를 말할 때는 반드시 "FF++ 기준"을 붙일 것.</b></p>
+<p style="margin-top:2.5mm;margin-bottom:2mm">진짜/가짜 점수 분포가 겹친다(48.5 vs 58.0).
+<b>공개 딥페이크 모델 4종을 같은 조건에서 재봤는데 전부 더 나빴다</b> —
+DFDC 분리도 +7.3 / +0.5 / −2.1 / −17.6, 오탐 50~100%. (우리는 +9.4)
+음수는 진짜를 가짜보다 높게 준다는 뜻이다. <b>모델 교체로는 풀리지 않는다.</b></p>
+<p style="margin-bottom:0"><b>발표에서 영상 수치를 말할 때는 반드시 "FF++ 기준"을 붙일 것.</b></p>
 </div>
 
 <div class="warn">
-<b>② 음성 엔진 — 실제 녹취를 합성으로 오판한다</b>
-<p style="margin-bottom:2mm">실제 사기 통화 5건에서 미디어 위험도가 전부 100이었다. 사람이 직접 말한 통화인데도.
-통제 실험으로 추적한 결과:</p>
+<b>② 음성 엔진 — 같은 문제를 공유한다 (원인 규명 완료)</b>
+<p style="margin-bottom:2mm">실제 사기 통화 5건에서 미디어 위험도가 전부 100이었다 — 사람이 직접 말한 통화인데도.
+코덱·전화망·재인코딩·편집을 하나씩 통제 실험으로 배제하고, <b>음량을 통일해 비교하니</b> 답이 나왔다:</p>
 <table style="margin-bottom:0">
-  <tr><th>조건</th><th class="num">AASIST 점수</th></tr>
-  <tr><td>스튜디오 원본 (16kHz)</td><td class="num">16.5</td></tr>
-  <tr><td>G.711 전화망 (300~3400Hz + 8kHz + μ-law)</td><td class="num good">6.5</td></tr>
-  <tr><td><b>실제 공개 녹취</b></td><td class="num bad">100.0</td></tr>
+  <tr><th>그룹</th><th class="num">-39dB</th><th class="num">-30dB</th><th class="num">-25dB</th><th class="num">-20dB</th></tr>
+  <tr><td><b>ASVspoof 진짜 (학습 도메인)</b></td><td class="num good">0.8</td>
+      <td class="num good">0.4</td><td class="num good">0.2</td><td class="num good">0.3</td></tr>
+  <tr><td>Zeroth 낭독 (도메인 밖)</td><td class="num">16.9</td>
+      <td class="num">81.1</td><td class="num bad">98.9</td><td class="num bad">100.0</td></tr>
+  <tr><td>실제 통화 녹취 (도메인 밖)</td><td class="num">45.4</td>
+      <td class="num bad">98.1</td><td class="num bad">100.0</td><td class="num bad">100.0</td></tr>
 </table>
-<p style="margin-top:2.5mm;margin-bottom:0"><b>전화망도 코덱도 원인이 아니다</b> — 오히려 점수가 내려간다.
-편집·마스킹·화자 혼합이 의심되지만 <b>원인은 미규명</b>이다.</p>
+<p style="margin-top:2.5mm;margin-bottom:0"><b>학습 도메인 안에서는 음량과 무관하게 안정적인데, 도메인 밖 진짜 음성은
+음량이 올라가면 합성으로 판정된다.</b> 음량은 방아쇠일 뿐 근본 원인은 영상과 똑같은 일반화 실패다.
+초록 시연 샘플이 낮은 점수인 것도 <b>"진짜 목소리라서"가 아니라 "조용해서"</b>(-39dB)다.</p>
 </div>
 
 <div class="pb"></div>
@@ -235,28 +242,24 @@
 격자 정확도(75.3%)를 제품 성능으로 인용하면 안 된다.
 </div>
 
-<h2>4. 진짜 남은 것 — 4개</h2>
+<h2>4. 진짜 남은 것 — 3개</h2>
 
 <table>
   <tr><th style="width:30%">항목</th><th>상태 / 필요한 것</th></tr>
-  <tr>
-    <td>확장 <code>activeTab</code> 클릭 확인</td>
-    <td>크롬이 <b>사람의 실제 클릭에만</b> 권한을 준다. 자동화로는 합성 불가.<br>
-    <code>node scripts/verify_extension_chrome.js --manual</code> — <b>10초면 끝</b></td>
-  </tr>
   <tr>
     <td>상용 LLM 실제 정확도</td>
     <td>API 키만 있으면 됨. 연동 경로는 스텁 서버로 검증했고,
     로컬 LLM(Qwen2.5-1.5B)으로 대체 측정까지 완료</td>
   </tr>
   <tr>
-    <td>영상 엔진 일반화</td>
-    <td>측정은 끝났고 <b>결과가 나빴다</b>. 2019년 체크포인트를 교체하지 않으면 개선 안 됨</td>
+    <td>미디어 두 엔진의 일반화</td>
+    <td>원인까지 규명했고 <b>공개 대안 모델도 전부 재봤다</b>. 통화 도메인 데이터로
+    미세조정하거나 비공개 최신 모델이 필요하다 — 이번 대회 범위 밖</td>
   </tr>
   <tr>
     <td><b>정상</b> 통화 녹취</td>
     <td>사기 통화는 금감원 공개 자료로 해결했으나 <b>정상 통화 녹취는 공개된 게 없다</b>.
-    그래서 실제 통화 오탐률을 못 재고, 음성 엔진 오작동 규명도 막혀 있다</td>
+    그래서 실제 통화에서의 오탐률만 아직 못 쟀다</td>
   </tr>
 </table>
 
