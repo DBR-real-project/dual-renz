@@ -288,6 +288,7 @@ scripts/
 
 docs/
   demo_guide.md                ★ 심사장 시연 대본 — 순서 / 예상 질문 / 하지 말 것
+  qa_prep.md                   ★ 예상 질의응답 — 답변 문안 + 절대 하지 말 것
   mentoring_log.md             멘토링 일지 + 반영 내역
   data_roadmap.md              ★ 데이터 확보 로드맵 (공공데이터·AI Hub·가명화)
   blocked_and_next.md          ★ 막힌 것 / 팀 결정 사항 / 다음 작업
