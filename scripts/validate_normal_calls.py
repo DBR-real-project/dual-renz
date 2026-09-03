@@ -94,7 +94,11 @@ def main():
             "overall_level": rep["overall_level"],
             "content_risk": rep["content_risk"],
             "media_risk": rep["media_risk"],
-            "transcript": " ".join(s["transcript"] for s in rep["segments"])[:120],
+            # ⚠ 전사 본문은 리포트에 저장하지 않는다.
+            # KsponSpeech는 AI Hub 이용 약관이 있는 데이터라 **재배포 금지**이고,
+            # 자유대화라 실명이 그대로 들어있다(docs/data_roadmap.md 참고).
+            # 화면에는 확인용으로 잠깐 찍되 파일에는 길이만 남긴다.
+            "transcript_len": len(" ".join(s["transcript"] for s in rep["segments"])),
         })
         print(f"[{i:>2}/{len(files)}] {rep['overall_score']:>5.1f} {rep['overall_level']:<3} "
               f"(콘텐츠 {rep['content_risk']:>5.1f} / 미디어 {rep['media_risk']:>5.1f}){mark}",
@@ -127,7 +131,7 @@ def main():
         print("\n  헛경보가 난 대화 (원인 파악용)")
         for r in sorted(fp_any, key=lambda x: -x["overall_score"])[:5]:
             print(f"    {r['overall_score']:>5.1f} {r['overall_level']}  "
-                  f"C{r['content_risk']:>5.1f}/M{r['media_risk']:>5.1f}  {r['transcript'][:52]}")
+                  f"C{r['content_risk']:>5.1f}/M{r['media_risk']:>5.1f}  {r['transcript_len']}자")
 
     Path(args.out).write_text(json.dumps({
         "_설명": "정상 대화(KsponSpeech 자유대화)에서의 헛경보율. 전부 일상 대화이므로 "
