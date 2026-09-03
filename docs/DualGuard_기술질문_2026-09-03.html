@@ -1,0 +1,345 @@
+<meta charset="utf-8">
+<title>DualGuard 기술 질문 예상지</title>
+<style>
+  @page { size: A4; margin: 13mm 12mm; }
+  * { box-sizing: border-box; }
+  body { font-family: "Malgun Gothic","맑은 고딕",sans-serif; font-size: 10.1px;
+         line-height: 1.54; color: #16202e; margin: 0; word-break: keep-all; }
+  h1 { font-size: 19px; margin: 0 0 2px; letter-spacing: -.4px; }
+  .sub { color: #6b7684; font-size: 10px; margin-bottom: 12px; }
+  h2 { font-size: 12.6px; margin: 17px 0 6px; padding: 6px 9px;
+       background: #16202e; color: #fff; border-radius: 4px; }
+  h3 { font-size: 11.2px; margin: 11px 0 3px; border-left: 3px solid #2f6fd0; padding-left: 7px; }
+  table { width: 100%; border-collapse: collapse; margin: 5px 0 8px; }
+  th, td { border: 1px solid #d8dee7; padding: 4.2px 6px; text-align: left; vertical-align: top; }
+  th { background: #eef2f7; font-weight: 700; }
+  td.n, th.n { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .a { background:#eef4fd; border-left:4px solid #2f6fd0; padding:6px 10px; margin:4px 0 9px; border-radius:0 4px 4px 0; }
+  .warn { background:#fff6e5; border-left:4px solid #e2960f; padding:6px 10px; margin:6px 0; border-radius:0 4px 4px 0; }
+  .danger { background:#fdeeee; border-left:4px solid #c0392b; padding:6px 10px; margin:6px 0; border-radius:0 4px 4px 0; }
+  .small { font-size: 9.1px; color: #6b7684; }
+  .red { color:#c0392b; font-weight:700 } .green { color:#1e7a45; font-weight:700 }
+  ul { margin: 3px 0 6px; padding-left: 17px; } li { margin: 1.5px 0; }
+  code { background:#f2f4f7; padding:0 3px; border-radius:3px; font-size:9.2px }
+  .pb { page-break-before: always; }
+  .q { font-weight:700 }
+</style>
+
+<h1>DualGuard — 기술 질문 예상지</h1>
+<div class="sub">
+  2026-09-03 · 심사위원 중 개발자가 있을 때 나올 만한 질문 · <b>모르면 "안 쟀습니다"가 정답이다</b><br>
+  값은 전부 코드와 검증 리포트에서 확인한 것이다.
+</div>
+
+<div class="warn">
+  <b>기술 질문에 답하는 요령</b> — 파라미터를 외워 읊는 것보다 <b>"왜 그 값인가"</b>를 말하는 게 낫다.
+  대부분의 값은 실측으로 정했으므로 <b>"○○를 재봤더니 이래서 이렇게 했습니다"</b> 형태로 답하면
+  전부 커버된다. 근거가 없는 값은 솔직히 "기본값을 그대로 썼습니다"라고 말할 것.
+</div>
+
+<h2>1. STT · 오디오 전처리</h2>
+
+<h3 class="q">"STT는 뭘 쓰고, 왜 그걸 골랐습니까?"</h3>
+<div class="a">
+  <b>faster-whisper</b>입니다. openai-whisper가 아니라 CTranslate2 백엔드 구현체인데,
+  같은 정확도에서 <b>CPU 추론이 4배 이상 빠릅니다.</b> 시연 환경에 GPU가 없을 가능성이
+  커서 그렇게 골랐습니다.<br>
+  모델 크기는 <b>용도별로 다르게</b> 씁니다 — 파일 분석은 <code>small</code>,
+  실시간 스트리밍은 <code>base</code>입니다. tiny/base/small을 CER·처리시간·화이트노이즈
+  강건성으로 비교해서 정한 값입니다.
+</div>
+
+<h3 class="q">"오디오 리샘플링은 어떻게 합니까?"</h3>
+<div class="a">
+  <code>scipy.signal.resample_poly</code>를 씁니다. 실제 통화는 전화망 8kHz거나 44.1kHz
+  녹음이라 거의 항상 리샘플링을 거치는데, <b>선형 보간은 저역통과 필터가 없어 에일리어싱이
+  생깁니다.</b> 그 인공물을 음성 판별기가 합성 흔적으로 오인할 수 있어서 다상 필터를 씁니다.
+  scipy가 없으면 선형 보간으로 폴백합니다.
+</div>
+
+<h2>2. 화법 분류 (콘텐츠 엔진)</h2>
+
+<h3 class="q">"LLM이 없으면 어떻게 동작합니까? 단순 키워드 매칭인가요?"</h3>
+<div class="a">
+  <b>키워드만은 아닙니다.</b> 폴백은 <b>키워드 규칙 + 한국어 임베딩 의미 유사도</b>를
+  결합한 분류기입니다. 두 방식의 성능 차이가 큽니다 —
+  같은 21건에서 <b>순수 키워드는 66.7%, 결합은 90.5%</b>입니다.<br>
+  결합 방식은 카테고리별로 두 점수 중 <b>높은 쪽</b>을 택하되,
+  <b>면책·경고 문장이면 키워드 점수까지 함께 억제</b>합니다.
+  "저희는 비밀번호를 절대 요구하지 않습니다" 같은 정상 안내에서, 임베딩만 억제하고
+  키워드를 두면 결합 결과가 여전히 오탐이기 때문입니다.
+</div>
+
+<h3 class="q">"콘텐츠 위험도는 어떻게 하나의 숫자가 됩니까?"</h3>
+<div class="a">
+  <b>0.5 × 최고 카테고리 점수 + 0.5 × 상위 3개 평균</b>입니다. 기획서 공식 그대로입니다.<br>
+  최고점만 쓰면 한 카테고리가 튀는 것만으로 위험도가 올라가고, 평균만 쓰면 여러 기법이
+  동시에 쓰인 상황이 희석됩니다. 둘을 절반씩 섞은 형태입니다.
+</div>
+
+<h3 class="q">"LLM을 통화 전체가 아니라 구간마다 부르면 비용이 크지 않습니까?"</h3>
+<div class="a">
+  맞습니다. 통화 하나에 수십 번 호출됩니다. 그래도 구간 단위로 하는 이유는
+  결과 화면이 <b>"언제 무엇이 걸렸는지" 타임라인</b>을 요구하기 때문입니다.<br>
+  비용은 이렇게 줄였습니다 — Claude는 <b>reasoning effort를 low로 두고 시스템 프롬프트에
+  캐시 breakpoint</b>를 걸었고, Gemini는 무료 티어 RPM 제한(실측 5 RPM)에 걸리므로
+  호출 간격을 강제할 수 있게 했습니다. 실패해도 예외를 던지지 않고 오프라인 분류기로 폴백합니다.<br>
+  구간 하나만 떼면 맥락이 없어서("네 알겠습니다"만으로는 판단 불가) <b>앞뒤 구간을 함께</b> 넘깁니다.
+</div>
+
+<h3 class="q">"LLM 출력이 JSON이 아니면 어떻게 합니까?"</h3>
+<div class="a">
+  백엔드마다 <b>구조화 출력을 강제</b>합니다 — Claude는 structured outputs,
+  Gemini는 <code>response_schema</code>, OpenAI는 <code>response_format</code>,
+  Ollama는 <code>format</code>에 JSON 스키마를 넣습니다. 그래서 "JSON만 출력하세요"라고
+  프롬프트에 빌고 파싱 실패를 재시도로 때우는 코드가 없습니다.<br>
+  다만 <b>수치 범위 제약(minimum/maximum)은 어느 스키마도 보장하지 않아서</b>,
+  0~100 범위 검증은 백엔드에 맡기지 않고 <b>모든 백엔드의 공통 경로에서 한 번 더</b> 합니다.
+</div>
+
+<h2>3. RAG</h2>
+
+<h3 class="q">"임베딩 모델은 뭘 씁니까? 다국어 모델을 쓰면 안 됩니까?"</h3>
+<div class="a">
+  <b><code>jhgan/ko-sroberta-multitask</code></b>, 한국어 전용입니다.
+  다국어 모델을 써봤는데 <b>무관한 한국어 문장을 동일 문장보다 가깝게 판정</b>했습니다.
+  실측표를 코드 주석에 남겨놨습니다. 벡터DB는 ChromaDB, 거리는 코사인입니다.
+</div>
+
+<h3 class="q">"유사도 임계값은 어떻게 정했습니까?"</h3>
+<div class="a">
+  코사인 유사도 <b>0.55 이상</b>만 채택합니다(거리 0.45 이하).
+  한국어 문장 임베딩은 관련/무관 경계가 넓어서 그 사이 어디에 둬도 되는 구간이 있는데,
+  <b>보수적인 쪽</b>으로 잡았습니다.<br>
+  채점은 유사도 절댓값이 아니라 <b>마진</b>으로 하고, <b>14자 미만 짧은 문장은 채점하지
+  않습니다</b> — 짧으면 임베딩이 불안정해서 아무 사례에나 붙습니다.
+</div>
+
+<h3 class="q">"사례가 26건이면 RAG라고 부르기엔 작지 않습니까?"</h3>
+<div class="a">
+  맞습니다. 26건에서 문서 <b>103개</b>를 만들어 색인합니다(사례 하나가 요약·대사 등
+  여러 문서로 쪼개집니다). 규모로 승부하는 게 아니라
+  <b>"왜 위험한지 근거를 보여주는 용도"</b>입니다.
+  확충 경로는 공공데이터포털의 사기 수법 통계로 잡아뒀습니다.
+</div>
+
+<h2 class="pb">4. 음성 위조 판별 (AASIST)</h2>
+
+<h3 class="q">"AASIST는 4초 입력인데 긴 통화는 어떻게 처리합니까?"</h3>
+<div class="a">
+  원본 학습 길이가 <b>16kHz 64,600 샘플(약 4.04초)</b> 고정입니다.
+  통화는 훨씬 기니까 <b>슬라이딩 윈도우</b>로 잘라 각각 추론하고 집계합니다.
+  4초보다 짧은 조각은 패딩합니다.<br>
+  집계는 <b>상위 k개 평균(topk_mean)</b>입니다. 최댓값만 쓰면 윈도우 하나의 노이즈가
+  전체 판정을 흔들고, 단순 평균은 짧은 위조 구간을 희석합니다.
+</div>
+
+<h3 class="q">"배치 크기나 메모리 제약은요?"</h3>
+<div class="a">
+  <b>배치는 4를 넘기지 않습니다.</b> Whisper·AASIST·Xception·임베딩 모델을 순차로 쓰는데
+  여유 메모리가 6GB 아래로 떨어지면 <b><code>mkl_malloc</code> 실패나 네이티브 크래시</b>가
+  납니다. 후자는 try/except로 못 잡아서 애초에 피해야 합니다.
+  그래서 파이프라인이 <b>단계마다 모델을 해제</b>합니다.
+</div>
+
+<h3 class="q">"음성 오탐 원인을 어떻게 규명했습니까?" ← 깊게 물어올 수 있다</h3>
+<div class="a">
+  <b>가설을 하나씩 통제해 제거했습니다.</b>
+  코덱(G.711 μ-law, G.726 ADPCM, AMR-NB, GSM 06.10, Speex), 전화망 대역 제한,
+  재인코딩, 편집 — <b>전부 기각</b>됐습니다.<br>
+  남은 게 음량이었는데, <b>레벨을 통일해 비교</b>하니 갈렸습니다:
+  <table style="margin-top:5px">
+    <tr><th>음원</th><th class="n">−39dB</th><th class="n">−30dB</th><th class="n">−25dB</th><th class="n">−20dB</th></tr>
+    <tr><td>ASVspoof 진짜 (학습 도메인)</td><td class="n green">0.8</td><td class="n green">0.4</td><td class="n green">0.2</td><td class="n green">0.3</td></tr>
+    <tr><td>Zeroth 낭독 (도메인 밖·진짜 사람)</td><td class="n">16.9</td><td class="n red">81.1</td><td class="n red">98.9</td><td class="n red">100.0</td></tr>
+    <tr><td>실제 통화 녹취 (도메인 밖·진짜 사람)</td><td class="n">45.4</td><td class="n red">98.1</td><td class="n red">100.0</td><td class="n red">100.0</td></tr>
+  </table>
+  즉 <b>음량은 방아쇠일 뿐이고 원인은 도메인 일반화 실패</b>입니다.
+  <b>레벨 정규화로는 못 고칩니다</b> — 조용한 입력을 100으로 올릴 뿐입니다.
+</div>
+
+<h2>5. 딥페이크 판별 (FF++ Xception)</h2>
+
+<h3 class="q">"프레임을 어떻게 뽑고 몇 장을 봅니까?"</h3>
+<div class="a">
+  <b>초당 1프레임</b>으로 뽑고 상한을 둡니다. 각 프레임에서 <b>얼굴을 검출해 크롭</b>한 뒤
+  Xception에 넣습니다. 집계는 음성과 같은 <b>상위 k개 평균</b>입니다.
+</div>
+
+<h3 class="q">"얼굴이 안 잡히면 어떻게 됩니까?"</h3>
+<div class="a">
+  <b>점수를 내지 않고 예외를 던집니다.</b> 이건 버그가 아니라 의도한 동작입니다 —
+  FF++ Xception은 <b>얼굴 크롭으로 학습된 모델</b>이라 전체 프레임을 넣으면
+  의미 없는 값이 나옵니다. 얼굴이 없으면 "영상 판정 불가"로 표시하고
+  음성·화법만으로 판단합니다.
+</div>
+
+<h3 class="q">"얼굴 검출기는 뭘 씁니까? dlib은요?"</h3>
+<div class="a">
+  <b>YuNet이 1순위, Haar cascade가 폴백</b>입니다. 둘 다 OpenCV 내장이라
+  dlib을 설치하지 않았습니다 — 시연 환경에서 빌드가 필요한 의존성을 늘리고 싶지 않았습니다.<br>
+  실측하면 정면은 YuNet 100% / Haar 99%로 비슷한데, <b>고개를 돌리면 Haar가 84.8%로
+  떨어집니다.</b> 그래서 YuNet을 앞에 뒀습니다.
+</div>
+
+<h3 class="q">"TTA를 쓴다고 했는데 어떤 방식입니까?"</h3>
+<div class="a">
+  <b>좌우 반전본을 함께 넣고 큰 쪽을 씁니다.</b> 평균이 아니라 최댓값인 이유는,
+  한쪽이 깨끗하게 나오면 <b>평균이 신호를 희석</b>하기 때문입니다.
+  실측으로 정탐 +3%p, 오탐은 동일했습니다. 환경변수로 끌 수 있습니다.
+</div>
+
+<h3 class="q">"점수 재척도(calibration)는 왜 하고 어떻게 했습니까?"</h3>
+<div class="a">
+  원점수가 <b>0 아니면 100으로 극단적으로 쏠려서</b> 그대로 보여주면 과신을 부릅니다.
+  또 임계값을 여러 개 관리해야 해서, <b>로짓 공간 1차 변환</b>으로 재척도해
+  <b>판정 경계가 50 하나</b>가 되도록 맞췄습니다. FF++ 116건 위에서 적합했고,
+  오탐 상한 2%를 앵커로 잡았습니다.<br>
+  <b>중요한 건 순서입니다</b> — 프레임 점수는 원점수로 두고,
+  <b>집계한 뒤 재척도를 한 번만</b> 적용합니다. 프레임마다 변환한 뒤 집계하면
+  적합 방식(영상 단위)과 어긋나 <b>판정 경계가 50에서 32로 밀립니다.</b> 실제로 겪은 문제입니다.
+</div>
+
+<h2 class="pb">6. 통합 스코어링</h2>
+
+<h3 class="q">"audio와 video 점수는 어떻게 합칩니까?"</h3>
+<div class="a">
+  <b>최댓값</b>입니다. 가중평균도 비교해봤는데, 4가지 조합(진짜/위조 × 음성/영상) 중
+  <b>2개를 놓쳤습니다.</b> 한쪽만 위조된 경우가 희석되기 때문입니다.<br>
+  한계도 있습니다 — max라서 <b>"영상만 위조"와 "둘 다 위조"의 미디어 점수가 똑같이 100</b>입니다.
+  구분이 필요하면 다른 결합을 써야 합니다. 문서에 적어놨습니다.
+</div>
+
+<h3 class="q">"가중치와 임계값이 코드 여러 곳에 흩어져 있지 않습니까?"</h3>
+<div class="a">
+  <b>한 곳씩만 있습니다.</b> 가중치와 공식은 <code>fraud_risk_score.py</code>의
+  <code>DEFAULT_STRATEGY</code>·<code>DEFAULT_CONTENT_WEIGHT</code>,
+  신호등 경계는 <code>pipeline.py</code>의 <code>LEVEL_THRESHOLDS</code>입니다.
+  다른 곳에 하드코딩하지 않는 것을 팀 규칙으로 문서에 적어놨습니다.
+</div>
+
+<h2>7. 실시간 스트리밍 아키텍처</h2>
+
+<h3 class="q">"실시간은 어떻게 3배속이 나옵니까?"</h3>
+<div class="a">
+  <b>모델을 세션 동안 메모리에 상주</b>시킵니다. 예전에는 청크마다
+  <code>/api/analyze</code>를 부르고 결과를 폴링했는데, 그러면 <b>청크마다 모델을
+  다시 로드</b>해서 5초 청크 하나에 30초 넘게 걸렸습니다.<br>
+  지금은 세션 API로 바꿔서 <b>왕복이 한 번</b>이고, 오디오 78초를 26~29초에 처리합니다.
+</div>
+
+<h3 class="q">"동시 사용자는 몇 명까지 됩니까?" ← 아픈 질문</h3>
+<div class="a">
+  <b>지금 구조는 동시에 한 세션만 받습니다.</b> 두 번째 요청은 409로 막습니다.
+  메모리 때문입니다 — 모델을 여러 벌 올리면 프로세스가 죽습니다.
+  추론도 <b>워커 1개짜리 스레드 풀</b>에 넘겨 직렬화합니다.<br>
+  이건 <b>프로토타입의 한계이고 확장 방향은 명확합니다</b> — 추론을 별도 워커
+  프로세스로 분리하고 큐를 두면 수평 확장이 됩니다. 오늘 발표 범위에서는
+  하지 않았습니다.
+</div>
+<div class="warn"><b>여기서 변명하지 마라.</b> "메모리 때문에 한 세션"이라고 말하고
+  확장 방향만 한 줄 붙이는 게 제일 깔끔하다.</div>
+
+<h3 class="q">"추론이 5초보다 오래 걸리면 청크가 밀리지 않습니까?"</h3>
+<div class="a">
+  밀립니다. 그래서 <b>처리 중이면 새 청크를 버립니다.</b> 큐에 쌓지 않습니다.
+  실시간 경고에서는 <b>오래된 결과를 늦게 보여주는 것보다 최신 상태를 보는 게</b> 낫기
+  때문입니다. 버린 청크 수는 화면에 표시됩니다.
+</div>
+
+<h3 class="q">"브라우저가 보내는 청크를 서버가 어떻게 디코딩합니까?" ← 실제로 고생한 부분</h3>
+<div class="a">
+  여기서 <b>실제로 버그를 겪었습니다.</b> <code>MediaRecorder</code>에 timeslice를 주면
+  <b>WebM(EBML) 헤더가 첫 청크에만</b> 실립니다. 두 번째부터는 헤더 없는 Cluster
+  데이터만 와서 독립적으로 디코딩이 안 됩니다.<br>
+  그래서 <b>첫 청크에서 초기화 세그먼트를 캐싱</b>해두고, 헤더 없는 후속 청크 앞에
+  붙여서 복원합니다. Segment 크기가 "unknown/streaming"이라 이어붙이면 유효하게 파싱됩니다.<br>
+  클라이언트에서도 무음 청크를 버리는 필터가 <b>헤더가 든 첫 청크까지 버리는</b> 문제가
+  있어서, 첫 청크는 크기와 무관하게 보내도록 고쳤습니다.
+</div>
+
+<h3 class="q">"세션이 안 닫히면 어떻게 됩니까?"</h3>
+<div class="a">
+  청크가 <b>90초간 끊기면 죽은 세션으로 보고 자동 정리</b>합니다.
+  브라우저가 종료 요청을 못 보내고 죽는 경우가 실제로 있어서 넣었습니다.
+</div>
+
+<h2>8. 프론트엔드 · 브라우저</h2>
+
+<h3 class="q">"차트 라이브러리를 왜 안 썼습니까?"</h3>
+<div class="a">
+  <b>외부 의존성을 하나도 안 씁니다.</b> 차트도 SVG를 직접 그립니다.
+  시연 환경의 네트워크를 믿을 수 없어서입니다 — <b>CDN이 막히면 화면이 통째로 죽습니다.</b>
+  번들링을 하면 빌드 단계가 생기는데 그것도 시연 직전에 깨질 수 있는 요소입니다.
+</div>
+
+<h3 class="q">"통화 화면 위에 경고를 띄운다는 게 기술적으로 어떻게 가능합니까?"</h3>
+<div class="a">
+  <b>Document Picture-in-Picture</b> API(크롬 116+)를 씁니다.
+  웹페이지는 보안상 다른 사이트 위에 아무것도 그릴 수 없습니다 —
+  그게 가능하면 피싱 도구가 되니까요. PiP는 <b>브라우저가 정식으로 허용한 별도 창</b>이고,
+  <b>브라우저 밖 다른 프로그램 위에도</b> 뜹니다.<br>
+  지원하지 않는 브라우저면 조용히 넘어가고 기존처럼 대시보드 탭에서 봅니다.
+</div>
+
+<h3 class="q">"확장 프로그램도 만들었다고 했는데 어떻게 검증했습니까?"</h3>
+<div class="a">
+  <b>실제 크롬을 띄워 CDP로 자동 검증</b>합니다. <code>--load-extension</code>이
+  Chrome 137+에서 막혀서 <code>Extensions.loadUnpacked</code>를 씁니다.<br>
+  까다로웠던 건 <b><code>tabCapture</code>의 activeTab 권한</b>입니다. CDP로 만든
+  가짜 제스처로는 절대 안 떨어져서, <b>확장 단축키를 OS 레벨로 실제로 눌러</b>
+  정식으로 부여받습니다. 우회가 아니라 진짜 사용자 호출입니다.
+</div>
+
+<h2>9. 평가 방법론 · 재현성</h2>
+
+<h3 class="q">"대용량 공개 데이터셋을 어떻게 다 받았습니까?"</h3>
+<div class="a">
+  <b>다 받지 않았습니다.</b> HTTP Range 요청으로 원격 파일을 로컬 파일처럼 읽는
+  래퍼를 만들어서, <code>zipfile</code>과 <code>pyarrow</code>가 그대로 동작합니다.<br>
+  실적으로 FF++ 영상 116개를 16.66GB zip에서, ASVspoof 음성 120개를 464MB parquet에서,
+  <b>DFDC 영상 50개를 96.5GB zip에서 431MB만</b> 받아 뽑았습니다.
+  Kaggle 계정 없이 크로스도메인 검증을 확보한 것이 이 방식 덕분입니다.
+</div>
+
+<h3 class="q">"수치를 재현할 수 있습니까?"</h3>
+<div class="a">
+  네. 각 수치마다 <b>재현 스크립트가 저장소에 있고</b> 결과는 JSON으로 저장됩니다.
+  영상은 <code>validate_detector.py</code>, 음성은 <code>validate_audio_spoof.py</code>,
+  콘텐츠는 <code>validate_content_risk.py</code>, 스코어링 결정은
+  <code>decide_scoring.py</code>입니다. 커밋 이력에 측정 시점과 값이 남아 있습니다.
+</div>
+
+<h3 class="q">"모델을 직접 학습했습니까?"</h3>
+<div class="a">
+  <b>안 했습니다.</b> 공개 모델(AASIST, FF++ Xception, faster-whisper, ko-sroberta)을
+  조합하고 <b>한국어 통화 도메인에서 검증·보정</b>한 것이 저희 기여입니다.
+  재척도 파라미터, 가중치 0.65/0.35, 경계 55/30은
+  <b>1,050쌍 격자 탐색으로 저희가 적합</b>했습니다.
+</div>
+
+<h2>10. 답이 없는 질문 — 이렇게 말할 것</h2>
+<table>
+  <tr><th style="width:44%">질문</th><th>답</th></tr>
+  <tr><td>"지연 시간 p95는?"</td><td>구간별 p95는 안 쟀습니다. 전체 처리량 기준으로 78초 오디오를 26~29초에 처리한다는 값만 있습니다.</td></tr>
+  <tr><td>"동시 100명이면?"</td><td>지금 구조로는 안 됩니다. 한 세션만 받습니다. 워커 분리가 다음 단계입니다.</td></tr>
+  <tr><td>"모바일 브라우저에서도 실시간이 됩니까?"</td><td>화면이 반응형이라 열리고 파일 업로드는 되지만, <b>모바일 탭 오디오 공유는 확인하지 않았습니다.</b></td></tr>
+  <tr><td>"영어나 다른 언어는?"</td><td>범위 밖입니다. 화법 분류기와 임베딩이 한국어 전용입니다.</td></tr>
+  <tr><td>"A/B 테스트나 사용자 검증은?"</td><td>못 했습니다. 멘토링에서도 지적받았고, 주변 사람 대상 검증이 다음 단계입니다.</td></tr>
+</table>
+
+<div class="danger">
+  <b>기술 질문에서 절대 하지 말 것</b>
+  <ul>
+    <li>안 쟀는데 숫자를 말하기 — <b>후속 질문 한 번에 무너진다</b></li>
+    <li>"확장성은 문제없습니다" — 지금은 <b>한 세션</b>이다. 인정하고 방향만 말해라</li>
+    <li>"모델을 튜닝했습니다" — 학습은 안 했다. <b>검증·보정</b>이 정확한 표현이다</li>
+    <li>도메인 밖 한계를 빼고 정확도만 말하기</li>
+  </ul>
+</div>
+
+<div class="small" style="margin-top:12px;padding-top:8px;border-top:1px solid #d8dee7">
+  근거: <code>docs/validation_report.md</code>(측정 조건 전체) ·
+  <code>AGENTS.md</code>(확정된 설정과 이유) ·
+  <code>docs/DualGuard_예상질문_2026-09-03.pdf</code>(발표 내용 기반 Q&amp;A)
+</div>
