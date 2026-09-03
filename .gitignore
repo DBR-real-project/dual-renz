@@ -50,3 +50,8 @@ desktop.ini
 
 .mcp.json
 .claude/
+
+# 발표 자료 원본 — 카톡 캡처(휴대폰 UI 포함)라 저장소에 둘 이유가 없다.
+# 정리된 결과물은 docs/ 에 PDF로 들어가 있다.
+ppt/
+0902_OT자료*.pdf

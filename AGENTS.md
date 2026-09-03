@@ -36,7 +36,7 @@
 | `media_risk.py` | **정식 진입점.** 영상+음성 둘 다 실제 모델. 실패 시 더미 폴백 |
 | `media_risk_dummy.py` | 전체 더미. 오프라인 데모 안전판이므로 지우지 말 것 |
 | `faceforensics_detector.py` | **FF++ Xception (영상) — 정식 경로** |
-| `audio_spoof_detector.py` | **AASIST (음성) — ASVspoof 98.3%. 단, 실제 통화 녹취를 합성으로 오판한다(원인 미규명)** |
+| `audio_spoof_detector.py` | **AASIST (음성) — ASVspoof 98.3%. 단, 학습 도메인 밖에서는 진짜 목소리를 합성으로 오판한다(원인 규명 완료 — 아래 참고)** |
 | `calibration.py` | 딥페이크 점수 재척도 (임계값 50 하나만 쓰게 만드는 부분) |
 | `deepfake_detector.py` | HuggingFace ViT (영상) — 폴백 전용 |
 | `face_utils.py` | YuNet(1순위) + Haar(폴백) 얼굴 검출/크롭. dlib 대체 |
@@ -178,7 +178,7 @@ node scripts\verify_extension_chrome.js                         # 실제 크롬�
 .venv\Scripts\python.exe scripts\benchmark_face_detector.py     # 얼굴 검출기 비교
 ```
 
-전체 목록과 각 스크립트 설명은 `README.md` 참고.
+전체 목록과 각 스크립트 설명은 `docs/project_detail.md` 참고.
 
 ## 코드 컨벤션
 
